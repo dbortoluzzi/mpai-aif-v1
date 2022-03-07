@@ -81,6 +81,10 @@ void th_subscribe_sensors_data(void *dummy1, void *dummy2, void *dummy3)
 			#endif
 
 			#ifdef CONFIG_LPS22HB
+				/* temperature */
+				printk("LPS22HB: Temperature: %.1f C\n",
+					sensor_value_to_double(sensor_data->lps22hb_temp));
+
 				/* pressure */
 				printk("LPS22HB: Pressure:%.3f kpa\n",
 					sensor_value_to_double(sensor_data->lps22hb_press));
