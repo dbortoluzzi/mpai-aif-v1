@@ -61,6 +61,11 @@ static sensor_result_t sensor_result = {
 		.lsm6dso_accel = {{0,0}, {0,0}, {0,0}},
 		.lsm6dso_gyro = {{0,0}, {0,0}, {0,0}}
 	#endif
+	#ifdef CONFIG_LSM6DSL
+		,
+		.lsm6dsl_accel = {{0,0}, {0,0}, {0,0}},
+		.lsm6dsl_gyro = {{0,0}, {0,0}, {0,0}}
+	#endif
 	#ifdef CONFIG_STTS751
 		,
 		.stts751_temp = &stts751_temp
@@ -117,6 +122,34 @@ static void lsm6dso_temp_trig_handler(const struct device *dev,
 {
 	sensor_sample_fetch_chan(dev, SENSOR_CHAN_DIE_TEMP);
 	lsm6dso_temp_trig_cnt++;
+}
+#endif
+
+#ifdef CONFIG_LSM6DSL_TRIGGER
+static int lsm6dsl_trig_cnt;
+static void lsm6dsl_trigger_handler(const struct device *dev,
+				    struct sensor_trigger *trig)
+{
+	static struct sensor_value accel_x, accel_y, accel_z;
+	static struct sensor_value gyro_x, gyro_y, gyro_z;
+#if defined(CONFIG_LSM6DSL_EXT0_LIS2MDL)
+	static struct sensor_value magn_x, magn_y, magn_z;
+#endif
+#if defined(CONFIG_LSM6DSL_EXT0_LPS22HB)
+	static struct sensor_value press, temp;
+#endif
+	lsm6dsl_trig_cnt++;
+
+	sensor_sample_fetch_chan(dev, SENSOR_CHAN_ACCEL_XYZ);
+	sensor_channel_get(dev, SENSOR_CHAN_ACCEL_X, &accel_x);
+	sensor_channel_get(dev, SENSOR_CHAN_ACCEL_Y, &accel_y);
+	sensor_channel_get(dev, SENSOR_CHAN_ACCEL_Z, &accel_z);
+
+	/* lsm6dsl gyro */
+	sensor_sample_fetch_chan(dev, SENSOR_CHAN_GYRO_XYZ);
+	sensor_channel_get(dev, SENSOR_CHAN_GYRO_X, &gyro_x);
+	sensor_channel_get(dev, SENSOR_CHAN_GYRO_Y, &gyro_y);
+	sensor_channel_get(dev, SENSOR_CHAN_GYRO_Z, &gyro_z);
 }
 #endif
 
@@ -267,6 +300,39 @@ static void lsm6dso_config(const struct device *lsm6dso)
 #endif
 }
 
+static void lsm6dsl_config(const struct device *lsm6dsl)
+{
+	struct sensor_value odr_attr;
+
+	/* set accel/gyro sampling frequency to 104 Hz */
+	odr_attr.val1 = 104;
+	odr_attr.val2 = 0;
+
+	if (sensor_attr_set(lsm6dsl, SENSOR_CHAN_ACCEL_XYZ,
+			    SENSOR_ATTR_SAMPLING_FREQUENCY, &odr_attr) < 0) {
+		printk("Cannot set sampling frequency for accelerometer.\n");
+		return;
+	}
+
+	if (sensor_attr_set(lsm6dsl, SENSOR_CHAN_GYRO_XYZ,
+			    SENSOR_ATTR_SAMPLING_FREQUENCY, &odr_attr) < 0) {
+		printk("Cannot set sampling frequency for gyro.\n");
+		return;
+	}
+
+	#ifdef CONFIG_LSM6DSL_TRIGGER
+	struct sensor_trigger trig;
+
+	trig.type = SENSOR_TRIG_DATA_READY;
+	trig.chan = SENSOR_CHAN_ACCEL_XYZ;
+
+	if (sensor_trigger_set(lsm6dsl, &trig, lsm6dsl_trigger_handler) != 0) {
+		printk("Could not set sensor type and channel\n");
+		return;
+	}
+	#endif
+}
+
 static void stts751_config(const struct device *stts751)
 {
 	struct sensor_value odr_attr;
@@ -331,6 +397,7 @@ void produce_sensors_data(void *arg1, void *arg2) {
 	struct sensor_value lis2dw12_accel[3];
 	struct sensor_value iis3dhhc_accel[3];
 	struct sensor_value lsm6dso_accel[3], lsm6dso_gyro[3];
+	struct sensor_value lsm6dsl_accel[3], lsm6dsl_gyro[3];
 	struct sensor_value magn[3];
 
 	/* handle HTS221 sensor */
@@ -352,6 +419,13 @@ void produce_sensors_data(void *arg1, void *arg2) {
 	#ifdef CONFIG_LSM6DSO
 		if (sensor_sample_fetch(sensor_devices_ptr->lsm6dso) < 0) {
 			LOG_ERR("LSM6DSO Sensor sample update error\n");
+			return;
+		}
+	#endif
+
+	#ifdef CONFIG_LSM6DSO
+		if (sensor_sample_fetch(sensor_devices_ptr->lsm6dsl) < 0) {
+			LOG_ERR("LSM6DSL Sensor sample update error\n");
 			return;
 		}
 	#endif
@@ -415,6 +489,13 @@ void produce_sensors_data(void *arg1, void *arg2) {
 		memcpy(sensor_result_ptr->lsm6dso_accel, lsm6dso_accel, sizeof(lsm6dso_accel));
 		memcpy(sensor_result_ptr->lsm6dso_gyro, lsm6dso_gyro, sizeof(lsm6dso_gyro));
 	#endif
+	#ifdef CONFIG_LSM6DSL
+		sensor_channel_get(sensor_devices_ptr->lsm6dsl, SENSOR_CHAN_ACCEL_XYZ, lsm6dsl_accel);
+		sensor_channel_get(sensor_devices_ptr->lsm6dsl, SENSOR_CHAN_GYRO_XYZ, lsm6dsl_gyro);
+
+		memcpy(sensor_result_ptr->lsm6dsl_accel, lsm6dsl_accel, sizeof(lsm6dsl_accel));
+		memcpy(sensor_result_ptr->lsm6dsl_gyro, lsm6dsl_gyro, sizeof(lsm6dsl_gyro));
+	#endif
 	#ifdef CONFIG_STTS751
 		sensor_channel_get(sensor_devices_ptr->stts751, SENSOR_CHAN_AMBIENT_TEMP, sensor_result_ptr->stts751_temp);
 	#endif
@@ -465,6 +546,10 @@ void th_produce_sensors_data(void *arg1, void *dummy2, void *dummy3)
 			,
 			.lsm6dso = device_get_binding(DT_LABEL(DT_INST(0, st_lsm6dso)))
 		#endif
+		#ifdef CONFIG_LSM6DSL
+			,
+			.lsm6dsl = device_get_binding(DT_LABEL(DT_INST(0, st_lsm6dsl)))
+		#endif
 		#ifdef CONFIG_STTS751
 			,
 			.stts751 = device_get_binding(DT_LABEL(DT_INST(0, st_stts751)))
@@ -480,7 +565,7 @@ void th_produce_sensors_data(void *arg1, void *dummy2, void *dummy3)
 	};
 	const sensor_devices_t *sensor_devices_ptr = &sensor_devices;
 
-	// CHECK SENSORS
+	// CHECK AND CONFIG SENSORS
 	#ifdef CONFIG_HTS221
 		if (!sensor_devices_ptr->hts221) {
 			LOG_ERR("Could not get pointer to %s sensor\n",
@@ -494,6 +579,7 @@ void th_produce_sensors_data(void *arg1, void *dummy2, void *dummy3)
 			LOG_ERR("Could not get LIS2DW12 device\n");
 			return;
 		}
+		lis2dw12_config(sensor_devices_ptr->lis2dw12);
 	#endif
 
 	#ifdef CONFIG_LPS22HH
@@ -501,6 +587,7 @@ void th_produce_sensors_data(void *arg1, void *dummy2, void *dummy3)
 			LOG_ERR("Could not get LPS22HH device\n");
 			return;
 		}
+		lps22hh_config(sensor_devices_ptr->lps22hh);
 	#endif
 
 	#ifdef CONFIG_LPS22HB
@@ -515,6 +602,15 @@ void th_produce_sensors_data(void *arg1, void *dummy2, void *dummy3)
 			LOG_ERR("Could not get LSM6DSO device\n");
 			return;
 		}
+		lsm6dso_config(sensor_devices_ptr->lsm6dso);
+	#endif
+
+	#ifdef CONFIG_LSM6DSL
+		if (sensor_devices_ptr->lsm6dsl == NULL) {
+			LOG_ERR("Could not get LSM6DSL device\n");
+			return;
+		}
+		lsm6dsl_config(sensor_devices_ptr->lsm6dsl);
 	#endif
 
 	#ifdef CONFIG_STTS751
@@ -522,6 +618,7 @@ void th_produce_sensors_data(void *arg1, void *dummy2, void *dummy3)
 			LOG_ERR("Could not get STTS751 device\n");
 			return;
 		}
+		stts751_config(sensor_devices_ptr->stts751);
 	#endif
 
 	#ifdef CONFIG_IIS3DHHC
@@ -529,6 +626,7 @@ void th_produce_sensors_data(void *arg1, void *dummy2, void *dummy3)
 			LOG_ERR("Could not get IIS3DHHC device\n");
 			return;
 		}
+		iis3dhhc_config(sensor_devices_ptr->iis3dhhc);
 	#endif
 
 	#ifdef CONFIG_LIS2MDL

@@ -104,18 +104,32 @@ void th_subscribe_sensors_data(void *dummy1, void *dummy2, void *dummy3)
 				   sensor_value_to_double(&(sensor_data->iis3dhhc_accel[2])));
 			#endif
 
-			#ifdef CONFIG_LSM6DSOX
+			#ifdef CONFIG_LSM6DSO
 			printk("LSM6DSOX: Accel (m.s-2): x: %.3f, y: %.3f, z: %.3f\n",
 				   sensor_value_to_double(&(sensor_data->lsm6dso_accel[0])),
 				   sensor_value_to_double(&(sensor_data->lsm6dso_accel[1])),
 				   sensor_value_to_double(&(sensor_data->lsm6dso_accel[2])));
 			#endif
 
-			#ifdef CONFIG_LSM6DSOX
+			#ifdef CONFIG_LSM6DSO
 			printk("LSM6DSOX: Gyro (dps): x: %.3f, y: %.3f, z: %.3f\n",
 				   sensor_value_to_double(&(sensor_data->lsm6dso_gyro[0])),
 				   sensor_value_to_double(&(sensor_data->lsm6dso_gyro[1])),
 				   sensor_value_to_double(&(sensor_data->lsm6dso_gyro[2])));
+			#endif
+
+			#ifdef CONFIG_LSM6DSL
+			printk("LSM6DSL: Accel (m.s-2): x: %.3f, y: %.3f, z: %.3f\n",
+				   sensor_value_to_double(&(sensor_data->lsm6dsl_accel[0])),
+				   sensor_value_to_double(&(sensor_data->lsm6dsl_accel[1])),
+				   sensor_value_to_double(&(sensor_data->lsm6dsl_accel[2])));
+			#endif
+
+			#ifdef CONFIG_LSM6DSL
+			printk("LSM6DSL: Gyro (dps): x: %.3f, y: %.3f, z: %.3f\n",
+				   sensor_value_to_double(&(sensor_data->lsm6dsl_gyro[0])),
+				   sensor_value_to_double(&(sensor_data->lsm6dsl_gyro[1])),
+				   sensor_value_to_double(&(sensor_data->lsm6dsl_gyro[2])));
 			#endif
 
 			#ifdef CONFIG_STTS751

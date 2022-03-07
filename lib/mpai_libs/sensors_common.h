@@ -22,6 +22,9 @@ typedef struct _sensor_devices_t{
 	#ifdef CONFIG_LSM6DSO
 		const struct device *lsm6dso;
 	#endif
+	#ifdef CONFIG_LSM6DSL
+		const struct device *lsm6dsl;
+	#endif
 	#ifdef CONFIG_STTS751
 		const struct device *stts751;
 	#endif
@@ -55,6 +58,10 @@ typedef struct _sensor_result_t{
 	#ifdef CONFIG_LSM6DSO
 		struct sensor_value lsm6dso_accel[3];
 		struct sensor_value lsm6dso_gyro[3];
+	#endif
+	#ifdef CONFIG_LSM6DSL
+		struct sensor_value lsm6dsl_accel[3];
+		struct sensor_value lsm6dsl_gyro[3];
 	#endif
 	#ifdef CONFIG_STTS751
 		struct sensor_value* stts751_temp;
