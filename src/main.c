@@ -23,8 +23,6 @@
 #include <errno.h>
 #include <sys/printk.h>
 #include <sys/byteorder.h>
-#include <zephyr.h>
-#include <drivers/gpio.h>
 #include <logging/log.h>
 
 #include <bluetooth/bluetooth.h>
@@ -237,20 +235,6 @@ void main(void)
 	int cnt = 1;
 	uint32_t dtr = 0;
 
-	// /* Application must enable USB by itself */
-	// if (!device_is_ready(dev) || usb_enable(NULL))
-	// {
-	// 	return;
-	// }
-
-	/* Poll if the DTR flag was set, optional */
-	// while (!dtr)
-	// {
-	// 	uart_line_ctrl_get(dev, UART_LINE_CTRL_DTR, &dtr);
-	// 	k_sleep(K_MSEC(100));
-	// }
-	// k_sleep(K_MSEC(100));
-
 	// LED
 	led0 = device_get_binding(DT_GPIO_LABEL(DT_ALIAS(led0), gpios));
 	gpio_pin_configure(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios),
@@ -273,7 +257,7 @@ void main(void)
 	gpio_pin_set(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios), 0);
 	gpio_pin_set(led1, DT_GPIO_PIN(DT_ALIAS(led1), gpios), 1);
 
-	printk("SensorTile.box INITIALIZING...\n");
+	printk("IoT node INITIALIZING...\n");
 
 	int err;
 

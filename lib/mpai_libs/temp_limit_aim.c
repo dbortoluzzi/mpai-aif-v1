@@ -60,6 +60,7 @@ void th_subscribe_sensors_data(void *dummy1, void *dummy2, void *dummy3)
 
 			sensor_result_t *sensor_data = (sensor_result_t *)aim_message.data;
 
+			#ifdef CONFIG_HTS221
 			/* HTS221 temperature */
 			printk("HTS221: Temperature: %.1f C\n",
 				   sensor_value_to_double(sensor_data->hts221_temp));
@@ -67,19 +68,22 @@ void th_subscribe_sensors_data(void *dummy1, void *dummy2, void *dummy3)
 			/* HTS221 humidity */
 			printk("HTS221: Relative Humidity: %.1f%%\n",
 				   sensor_value_to_double(sensor_data->hts221_hum));
-
+			#endif
 
 			printk("\n");
-			double actual_temperature = sensor_value_to_double(sensor_data->hts221_temp);
-			if (actual_temperature > TEMPERATURE_LIMIT)
-			{
-				printk("Temperature exceeds limit: %.3f > %.3f\n", actual_temperature, TEMPERATURE_LIMIT);
-				gpio_pin_set(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios), 1);
-			}
-			else
-			{
-				gpio_pin_set(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios), 0);
-			}
+
+			#ifdef CONFIG_HTS221
+				double actual_temperature = sensor_value_to_double(sensor_data->hts221_temp);
+				if (actual_temperature > TEMPERATURE_LIMIT)
+				{
+					printk("Temperature exceeds limit: %.3f > %.3f\n", actual_temperature, TEMPERATURE_LIMIT);
+					gpio_pin_set(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios), 1);
+				}
+				else
+				{
+					gpio_pin_set(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios), 0);
+				}
+			#endif
 		}
 		else if (ret == 0)
 		{

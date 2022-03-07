@@ -15,15 +15,51 @@ LOG_MODULE_REGISTER(MPAI_LIBS_SENSORS_AIM, LOG_LEVEL_INF);
 
 /*************** STATIC ***************/
 // INITIALIZE STRUCT
-struct sensor_value hts221_hum = {0,0};
-struct sensor_value hts221_temp = {0,0};
-struct sensor_value lps22hh_press = {0,0};
-struct sensor_value lps22hh_temp = {0,0};
-struct sensor_value stts751_temp = {0,0};
+#ifdef CONFIG_HTS221
+	struct sensor_value hts221_hum = {0,0};
+	struct sensor_value hts221_temp = {0,0};
+#endif
+
+#ifdef CONFIG_LPS22HH
+	struct sensor_value lps22hh_press = {0,0};
+	struct sensor_value lps22hh_temp = {0,0};
+#endif
+#ifdef CONFIG_STTS751
+	struct sensor_value stts751_temp = {0,0};
+#endif
 
 static sensor_result_t sensor_result = {
-	.hts221_hum = &hts221_hum,
-	.hts221_temp = &hts221_temp
+	// TODO: at the moment, the first sensor is mandatory
+	#ifdef CONFIG_HTS221
+		.hts221_hum = &hts221_hum,
+		.hts221_temp = &hts221_temp
+	#endif
+	#ifdef CONFIG_LPS22HH
+		,
+		.lps22hh_press = &lps22hh_press,
+		.lps22hh_temp = &lps22hh_temp
+	#endif		
+	#ifdef CONFIG_LIS2DW12
+		,
+		.lis2dw12_accel = {{0,0}, {0,0}, {0,0}}
+	#endif
+	#ifdef CONFIG_IIS3DHHC
+		,
+		.iis3dhhc_accel = {{0,0}, {0,0}, {0,0}}
+	#endif
+	#ifdef CONFIG_LSM6DSO
+		,
+		.lsm6dso_accel = {{0,0}, {0,0}, {0,0}},
+		.lsm6dso_gyro = {{0,0}, {0,0}, {0,0}}
+	#endif
+	#ifdef CONFIG_STTS751
+		,
+		.stts751_temp = &stts751_temp
+	#endif
+	#ifdef CONFIG_LIS2MDL
+		,
+		.magn = {{0,0}, {0,0}, {0,0}}
+	#endif
 };
 
 #ifdef CONFIG_LPS22HH_TRIGGER
@@ -274,14 +310,88 @@ void produce_sensors_data(void *arg1, void *arg2) {
 	struct sensor_value magn[3];
 
 	/* handle HTS221 sensor */
-	if (sensor_sample_fetch(sensor_devices_ptr->hts221) < 0) {
-		LOG_ERR("HTS221 Sensor sample update error\n");
-		return;
-	}
+	#ifdef CONFIG_HTS221
+		if (sensor_sample_fetch(sensor_devices_ptr->hts221) < 0) {
+			LOG_ERR("HTS221 Sensor sample update error\n");
+			return;
+		}
+	#endif
+
+	#ifdef CONFIG_LIS2DW12
+		/* handle LIS2DW12 sensor */
+		if (sensor_sample_fetch(sensor_devices_ptr->lis2dw12) < 0) {
+			LOG_ERR("LIS2DW12 Sensor sample update error\n");
+			return;
+		}
+	#endif
+
+	#ifdef CONFIG_LSM6DSO
+		if (sensor_sample_fetch(sensor_devices_ptr->lsm6dso) < 0) {
+			LOG_ERR("LSM6DSO Sensor sample update error\n");
+			return;
+		}
+	#endif
+
+	#ifdef CONFIG_LPS22HH
+		if (sensor_sample_fetch(sensor_devices_ptr->lps22hh) < 0) {
+			LOG_ERR("LPS22HH Sensor sample update error\n");
+			return;
+		}
+	#endif
+
+	#ifdef CONFIG_STTS751
+		if (sensor_sample_fetch(sensor_devices_ptr->stts751) < 0) {
+			LOG_ERR("STTS751 Sensor sample update error\n");
+			return;
+		}
+	#endif
+
+	#ifdef CONFIG_IIS3DHHC
+		if (sensor_sample_fetch(sensor_devices_ptr->iis3dhhc) < 0) {
+			LOG_ERR("IIS3DHHC Sensor sample update error\n");
+			return;
+		}
+	#endif
+
+	#ifdef CONFIG_LIS2MDL
+		if (sensor_sample_fetch(sensor_devices_ptr->lis2mdl) < 0) {
+			LOG_ERR("LIS2MDL Sensor sample update error\n");
+			return;
+		}
+	#endif
 
 	// GET SENSORS DATA
-	sensor_channel_get(sensor_devices_ptr->hts221, SENSOR_CHAN_HUMIDITY, sensor_result_ptr->hts221_hum);
-	sensor_channel_get(sensor_devices_ptr->hts221, SENSOR_CHAN_AMBIENT_TEMP, sensor_result_ptr->hts221_temp);
+	#ifdef CONFIG_HTS221
+		sensor_channel_get(sensor_devices_ptr->hts221, SENSOR_CHAN_HUMIDITY, sensor_result_ptr->hts221_hum);
+		sensor_channel_get(sensor_devices_ptr->hts221, SENSOR_CHAN_AMBIENT_TEMP, sensor_result_ptr->hts221_temp);
+	#endif
+
+	#ifdef CONFIG_LPS22HH
+		sensor_channel_get(sensor_devices_ptr->lps22hh, SENSOR_CHAN_AMBIENT_TEMP, sensor_result_ptr->lps22hh_temp);
+		sensor_channel_get(sensor_devices_ptr->lps22hh, SENSOR_CHAN_PRESS, sensor_result_ptr->lps22hh_press);
+	#endif		
+	#ifdef CONFIG_LIS2DW12
+		sensor_channel_get(sensor_devices_ptr->lis2dw12, SENSOR_CHAN_ACCEL_XYZ, lis2dw12_accel);
+		memcpy(sensor_result_ptr->lis2dw12_accel, lis2dw12_accel, sizeof(lis2dw12_accel));
+	#endif
+	#ifdef CONFIG_LSM6DSO
+		sensor_channel_get(sensor_devices_ptr->lsm6dso, SENSOR_CHAN_ACCEL_XYZ, lsm6dso_accel);
+		sensor_channel_get(sensor_devices_ptr->lsm6dso, SENSOR_CHAN_GYRO_XYZ, lsm6dso_gyro);
+
+		memcpy(sensor_result_ptr->lsm6dso_accel, lsm6dso_accel, sizeof(lsm6dso_accel));
+		memcpy(sensor_result_ptr->lsm6dso_gyro, lsm6dso_gyro, sizeof(lsm6dso_gyro));
+	#endif
+	#ifdef CONFIG_STTS751
+		sensor_channel_get(sensor_devices_ptr->stts751, SENSOR_CHAN_AMBIENT_TEMP, sensor_result_ptr->stts751_temp);
+	#endif
+	#ifdef CONFIG_IIS3DHHC
+		sensor_channel_get(sensor_devices_ptr->iis3dhhc, SENSOR_CHAN_ACCEL_XYZ, iis3dhhc_accel);
+		memcpy(sensor_result_ptr->iis3dhhc_accel, iis3dhhc_accel, sizeof(iis3dhhc_accel));
+	#endif
+	#ifdef CONFIG_LIS2MDL
+		sensor_channel_get(sensor_devices_ptr->lis2mdl, SENSOR_CHAN_MAGN_XYZ, magn);
+		memcpy(sensor_result_ptr->magn, magn, sizeof(magn));
+	#endif
 
 	// Publish sensor message 
 	mpai_parser_t msg = {
@@ -302,16 +412,86 @@ void th_produce_sensors_data(void *arg1, void *dummy2, void *dummy3)
 
 	// GET SENSORS
 	sensor_devices_t sensor_devices = {
-		.hts221 = device_get_binding(DT_LABEL(DT_INST(0, st_hts221)))
+		#ifdef CONFIG_HTS221
+		.	hts221 = device_get_binding(DT_LABEL(DT_INST(0, st_hts221)))
+		#endif
+		#ifdef CONFIG_LIS2DW12
+			,
+			.lis2dw12 = device_get_binding(DT_LABEL(DT_INST(0, st_lis2dw12)))
+		#endif
+		#ifdef CONFIG_LPS22HH
+			,
+			.lps22hh = device_get_binding(DT_LABEL(DT_INST(0, st_lps22hh)))
+		#endif
+		#ifdef CONFIG_LSM6DSO
+			,
+			.lsm6dso = device_get_binding(DT_LABEL(DT_INST(0, st_lsm6dso)))
+		#endif
+		#ifdef CONFIG_STTS751
+			,
+			.stts751 = device_get_binding(DT_LABEL(DT_INST(0, st_stts751)))
+		#endif
+		#ifdef CONFIG_IIS3DHHC
+			,
+			.iis3dhhc = device_get_binding(DT_LABEL(DT_INST(0, st_iis3dhhc)))
+		#endif
+		#ifdef CONFIG_LIS2MDL
+			,
+			.lis2mdl = device_get_binding(DT_LABEL(DT_INST(0, st_lis2mdl)))
+		#endif
 	};
 	const sensor_devices_t *sensor_devices_ptr = &sensor_devices;
 
 	// CHECK SENSORS
-	if (!sensor_devices_ptr->hts221) {
-		LOG_ERR("Could not get pointer to %s sensor\n",
-			DT_LABEL(DT_INST(0, st_hts221)));
-		return;
-	}
+	#ifdef CONFIG_HTS221
+		if (!sensor_devices_ptr->hts221) {
+			LOG_ERR("Could not get pointer to %s sensor\n",
+				DT_LABEL(DT_INST(0, st_hts221)));
+			return;
+		}
+	#endif
+
+	#ifdef CONFIG_LIS2DW12
+		if (!sensor_devices_ptr->lis2dw12) {
+			LOG_ERR("Could not get LIS2DW12 device\n");
+			return;
+		}
+	#endif
+
+	#ifdef CONFIG_LPS22HH
+		if (sensor_devices_ptr->lps22hh == NULL) {
+			LOG_ERR("Could not get LPS22HH device\n");
+			return;
+		}
+	#endif
+
+	#ifdef CONFIG_LSM6DSO
+		if (sensor_devices_ptr->lsm6dso == NULL) {
+			LOG_ERR("Could not get LSM6DSO device\n");
+			return;
+		}
+	#endif
+
+	#ifdef CONFIG_STTS751
+		if (sensor_devices_ptr->stts751 == NULL) {
+			LOG_ERR("Could not get STTS751 device\n");
+			return;
+		}
+	#endif
+
+	#ifdef CONFIG_IIS3DHHC
+		if (sensor_devices_ptr->iis3dhhc == NULL) {
+			LOG_ERR("Could not get IIS3DHHC device\n");
+			return;
+		}
+	#endif
+
+	#ifdef CONFIG_LIS2MDL
+		if (sensor_devices_ptr->lis2mdl == NULL) {
+			LOG_ERR("Could not get LIS2MDL device\n");
+			return;
+		}
+	#endif
 
 	while(1) {
 

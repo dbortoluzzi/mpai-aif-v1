@@ -20,7 +20,7 @@ How to build PlatformIO based project
 .. code-block:: bash
 
     # Change directory to example
-    > cd sensortile_box_test_sensors
+    > cd iotnode_box_test_sensors
 
     # Build project
     > platformio run
@@ -29,10 +29,10 @@ How to build PlatformIO based project
     > platformio run --target upload
 
     # Build specific environment
-    > platformio run -e sensortile_box
+    > platformio run -e iotnode_box
 
     # Upload firmware for the specific environment
-    > platformio run -e sensortile_box --target upload
+    > platformio run -e iotnode_box --target upload
 
     # Clean build files
     > platformio run --target clean
