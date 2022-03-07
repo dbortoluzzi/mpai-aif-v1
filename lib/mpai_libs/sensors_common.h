@@ -10,6 +10,9 @@ typedef struct _sensor_devices_t{
 	#ifdef CONFIG_HTS221
 		const struct device *hts221;
 	#endif
+	#ifdef CONFIG_LPS22HB
+		const struct device *lps22hb_press;
+	#endif
 	#ifdef CONFIG_LIS2DW12
 		const struct device *lis2dw12;
 	#endif
@@ -38,6 +41,9 @@ typedef struct _sensor_result_t{
 	#ifdef CONFIG_LPS22HH
 		struct sensor_value* lps22hh_press;
 		struct sensor_value* lps22hh_temp;
+	#endif
+	#ifdef CONFIG_LPS22HB
+		struct sensor_value* lps22hb_press;
 	#endif
 	#ifdef CONFIG_LIS2DW12
 		struct sensor_value lis2dw12_accel[3];

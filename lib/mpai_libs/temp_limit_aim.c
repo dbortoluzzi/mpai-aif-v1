@@ -61,13 +61,70 @@ void th_subscribe_sensors_data(void *dummy1, void *dummy2, void *dummy3)
 			sensor_result_t *sensor_data = (sensor_result_t *)aim_message.data;
 
 			#ifdef CONFIG_HTS221
-			/* HTS221 temperature */
-			printk("HTS221: Temperature: %.1f C\n",
-				   sensor_value_to_double(sensor_data->hts221_temp));
+				/* HTS221 temperature */
+				printk("HTS221: Temperature: %.1f C\n",
+					sensor_value_to_double(sensor_data->hts221_temp));
 
-			/* HTS221 humidity */
-			printk("HTS221: Relative Humidity: %.1f%%\n",
-				   sensor_value_to_double(sensor_data->hts221_hum));
+				/* HTS221 humidity */
+				printk("HTS221: Relative Humidity: %.1f%%\n",
+					sensor_value_to_double(sensor_data->hts221_hum));
+			#endif
+
+			#ifdef CONFIG_LPS22HH
+				/* temperature */
+				printk("LPS22HH: Temperature: %.1f C\n",
+					sensor_value_to_double(sensor_data->lps22hh_temp));
+
+				/* pressure */
+				printk("LPS22HH: Pressure:%.3f kpa\n",
+					sensor_value_to_double(sensor_data->lps22hh_press));
+			#endif
+
+			#ifdef CONFIG_LPS22HB
+				/* pressure */
+				printk("LPS22HB: Pressure:%.3f kpa\n",
+					sensor_value_to_double(sensor_data->lps22hb_press));
+			#endif
+
+			#ifdef CONFIG_LIS2DW12
+			printk("LIS2DW12: Accel (m.s-2): x: %.3f, y: %.3f, z: %.3f\n",
+				   sensor_value_to_double(&(sensor_data->lis2dw12_accel[0])),
+				   sensor_value_to_double(&(sensor_data->lis2dw12_accel[1])),
+				   sensor_value_to_double(&(sensor_data->lis2dw12_accel[2])));
+			#endif
+
+			#ifdef CONFIG_IIS3DHHC
+			printk("IIS3DHHC: Accel (m.s-2): x: %.3f, y: %.3f, z: %.3f\n",
+				   sensor_value_to_double(&(sensor_data->iis3dhhc_accel[0])),
+				   sensor_value_to_double(&(sensor_data->iis3dhhc_accel[1])),
+				   sensor_value_to_double(&(sensor_data->iis3dhhc_accel[2])));
+			#endif
+
+			#ifdef CONFIG_LSM6DSOX
+			printk("LSM6DSOX: Accel (m.s-2): x: %.3f, y: %.3f, z: %.3f\n",
+				   sensor_value_to_double(&(sensor_data->lsm6dso_accel[0])),
+				   sensor_value_to_double(&(sensor_data->lsm6dso_accel[1])),
+				   sensor_value_to_double(&(sensor_data->lsm6dso_accel[2])));
+			#endif
+
+			#ifdef CONFIG_LSM6DSOX
+			printk("LSM6DSOX: Gyro (dps): x: %.3f, y: %.3f, z: %.3f\n",
+				   sensor_value_to_double(&(sensor_data->lsm6dso_gyro[0])),
+				   sensor_value_to_double(&(sensor_data->lsm6dso_gyro[1])),
+				   sensor_value_to_double(&(sensor_data->lsm6dso_gyro[2])));
+			#endif
+
+			#ifdef CONFIG_STTS751
+			/* temperature */
+			printk("STTS751: Temperature: %.1f C\n",
+				   sensor_value_to_double(sensor_data->stts751_temp));
+			#endif
+
+			#ifdef CONFIG_LIS2MDL
+			printk("LIS2MDL: Magn (Gauss): x: %.3f, y: %.3f, z: %.3f\n",
+				   sensor_value_to_double(&(sensor_data->magn[0])),
+				   sensor_value_to_double(&(sensor_data->magn[1])),
+				   sensor_value_to_double(&(sensor_data->magn[2])));
 			#endif
 
 			printk("\n");

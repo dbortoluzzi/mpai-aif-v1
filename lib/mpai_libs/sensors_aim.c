@@ -24,6 +24,9 @@ LOG_MODULE_REGISTER(MPAI_LIBS_SENSORS_AIM, LOG_LEVEL_INF);
 	struct sensor_value lps22hh_press = {0,0};
 	struct sensor_value lps22hh_temp = {0,0};
 #endif
+#ifdef CONFIG_LPS22HB
+	struct sensor_value lps22hb_press = {0,0};
+#endif
 #ifdef CONFIG_STTS751
 	struct sensor_value stts751_temp = {0,0};
 #endif
@@ -38,6 +41,10 @@ static sensor_result_t sensor_result = {
 		,
 		.lps22hh_press = &lps22hh_press,
 		.lps22hh_temp = &lps22hh_temp
+	#endif	
+	#ifdef CONFIG_LPS22HB
+		,
+		.lps22hb_press = &lps22hb_press,
 	#endif		
 	#ifdef CONFIG_LIS2DW12
 		,
@@ -153,6 +160,21 @@ static void lps22hh_config(const struct device *lps22hh)
 	trig.chan = SENSOR_CHAN_ALL;
 	sensor_trigger_set(lps22hh, &trig, lps22hh_trigger_handler);
 #endif
+}
+
+static void lps22hb_config(const struct device *lps22hb_press)
+{
+	struct sensor_value odr_attr;
+
+	/* set LPS22HB sampling frequency to 50 Hz */
+	odr_attr.val1 = 50;
+	odr_attr.val2 = 0;
+
+	if (sensor_attr_set(lps22hb_press, SENSOR_CHAN_ALL,
+			    SENSOR_ATTR_SAMPLING_FREQUENCY, &odr_attr) < 0) {
+		printk("Cannot set sampling frequency for LPS22HB\n");
+		return;
+	}
 }
 
 static void lis2dw12_config(const struct device *lis2dw12)
@@ -339,6 +361,13 @@ void produce_sensors_data(void *arg1, void *arg2) {
 		}
 	#endif
 
+	#ifdef CONFIG_LPS22HB
+		if (sensor_sample_fetch(sensor_devices_ptr->lps22hb_press) < 0) {
+			LOG_ERR("LPS22HB Sensor sample update error\n");
+			return;
+		}
+	#endif
+
 	#ifdef CONFIG_STTS751
 		if (sensor_sample_fetch(sensor_devices_ptr->stts751) < 0) {
 			LOG_ERR("STTS751 Sensor sample update error\n");
@@ -365,10 +394,12 @@ void produce_sensors_data(void *arg1, void *arg2) {
 		sensor_channel_get(sensor_devices_ptr->hts221, SENSOR_CHAN_HUMIDITY, sensor_result_ptr->hts221_hum);
 		sensor_channel_get(sensor_devices_ptr->hts221, SENSOR_CHAN_AMBIENT_TEMP, sensor_result_ptr->hts221_temp);
 	#endif
-
 	#ifdef CONFIG_LPS22HH
 		sensor_channel_get(sensor_devices_ptr->lps22hh, SENSOR_CHAN_AMBIENT_TEMP, sensor_result_ptr->lps22hh_temp);
 		sensor_channel_get(sensor_devices_ptr->lps22hh, SENSOR_CHAN_PRESS, sensor_result_ptr->lps22hh_press);
+	#endif	
+	#ifdef CONFIG_LPS22HB
+		sensor_channel_get(sensor_devices_ptr->lps22hb_press, SENSOR_CHAN_PRESS, sensor_result_ptr->lps22hb_press);
 	#endif		
 	#ifdef CONFIG_LIS2DW12
 		sensor_channel_get(sensor_devices_ptr->lis2dw12, SENSOR_CHAN_ACCEL_XYZ, lis2dw12_accel);
@@ -423,6 +454,10 @@ void th_produce_sensors_data(void *arg1, void *dummy2, void *dummy3)
 			,
 			.lps22hh = device_get_binding(DT_LABEL(DT_INST(0, st_lps22hh)))
 		#endif
+		#ifdef CONFIG_LPS22HB
+			,
+			.lps22hb_press = device_get_binding(DT_LABEL(DT_INST(0, st_lps22hb_press)))
+		#endif
 		#ifdef CONFIG_LSM6DSO
 			,
 			.lsm6dso = device_get_binding(DT_LABEL(DT_INST(0, st_lsm6dso)))
@@ -461,6 +496,13 @@ void th_produce_sensors_data(void *arg1, void *dummy2, void *dummy3)
 	#ifdef CONFIG_LPS22HH
 		if (sensor_devices_ptr->lps22hh == NULL) {
 			LOG_ERR("Could not get LPS22HH device\n");
+			return;
+		}
+	#endif
+
+	#ifdef CONFIG_LPS22HB
+		if (sensor_devices_ptr->lps22hb_press == NULL) {
+			LOG_ERR("Could not get LPS22HB press device\n");
 			return;
 		}
 	#endif
