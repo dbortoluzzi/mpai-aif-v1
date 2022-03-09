@@ -72,7 +72,11 @@ static sensor_result_t sensor_result = {
 	#endif
 	#ifdef CONFIG_LIS2MDL
 		,
-		.magn = {{0,0}, {0,0}, {0,0}}
+		.lis2mdl_magn = {{0,0}, {0,0}, {0,0}}
+	#endif
+	#ifdef CONFIG_LIS3MDL
+		,
+		.lis3mdl_magn = {{0,0}, {0,0}, {0,0}}
 	#endif
 };
 
@@ -132,12 +136,6 @@ static void lsm6dsl_trigger_handler(const struct device *dev,
 {
 	static struct sensor_value accel_x, accel_y, accel_z;
 	static struct sensor_value gyro_x, gyro_y, gyro_z;
-#if defined(CONFIG_LSM6DSL_EXT0_LIS2MDL)
-	static struct sensor_value magn_x, magn_y, magn_z;
-#endif
-#if defined(CONFIG_LSM6DSL_EXT0_LPS22HB)
-	static struct sensor_value press, temp;
-#endif
 	lsm6dsl_trig_cnt++;
 
 	sensor_sample_fetch_chan(dev, SENSOR_CHAN_ACCEL_XYZ);
@@ -398,7 +396,8 @@ void produce_sensors_data(void *arg1, void *arg2) {
 	struct sensor_value iis3dhhc_accel[3];
 	struct sensor_value lsm6dso_accel[3], lsm6dso_gyro[3];
 	struct sensor_value lsm6dsl_accel[3], lsm6dsl_gyro[3];
-	struct sensor_value magn[3];
+	struct sensor_value lis2mdl_magn[3];
+	struct sensor_value lis3mdl_magn[3];
 
 	/* handle HTS221 sensor */
 	#ifdef CONFIG_HTS221
@@ -465,6 +464,13 @@ void produce_sensors_data(void *arg1, void *arg2) {
 		}
 	#endif
 
+	#ifdef CONFIG_LIS3MDL
+		if (sensor_sample_fetch(sensor_devices_ptr->lis3mdl) < 0) {
+			LOG_ERR("LIS3MDL Sensor sample update error\n");
+			return;
+		}
+	#endif
+
 	// GET SENSORS DATA
 	#ifdef CONFIG_HTS221
 		sensor_channel_get(sensor_devices_ptr->hts221, SENSOR_CHAN_HUMIDITY, sensor_result_ptr->hts221_hum);
@@ -504,8 +510,12 @@ void produce_sensors_data(void *arg1, void *arg2) {
 		memcpy(sensor_result_ptr->iis3dhhc_accel, iis3dhhc_accel, sizeof(iis3dhhc_accel));
 	#endif
 	#ifdef CONFIG_LIS2MDL
-		sensor_channel_get(sensor_devices_ptr->lis2mdl, SENSOR_CHAN_MAGN_XYZ, magn);
-		memcpy(sensor_result_ptr->magn, magn, sizeof(magn));
+		sensor_channel_get(sensor_devices_ptr->lis2mdl, SENSOR_CHAN_MAGN_XYZ, lis2mdl_magn);
+		memcpy(sensor_result_ptr->lis2mdl_magn, lis2mdl_magn, sizeof(lis2mdl_magn));
+	#endif
+	#ifdef CONFIG_LIS3MDL
+		sensor_channel_get(sensor_devices_ptr->lis3mdl, SENSOR_CHAN_MAGN_XYZ, lis3mdl_magn);
+		memcpy(sensor_result_ptr->lis3mdl_magn, lis3mdl_magn, sizeof(lis3mdl_magn));
 	#endif
 
 	// Publish sensor message 
@@ -561,6 +571,10 @@ void th_produce_sensors_data(void *arg1, void *dummy2, void *dummy3)
 		#ifdef CONFIG_LIS2MDL
 			,
 			.lis2mdl = device_get_binding(DT_LABEL(DT_INST(0, st_lis2mdl)))
+		#endif
+		#ifdef CONFIG_LIS3MDL
+			,
+			.lis3mdl = device_get_binding(DT_LABEL(DT_INST(0, st_lis3mdl_magn)))
 		#endif
 	};
 	const sensor_devices_t *sensor_devices_ptr = &sensor_devices;
@@ -632,6 +646,12 @@ void th_produce_sensors_data(void *arg1, void *dummy2, void *dummy3)
 	#ifdef CONFIG_LIS2MDL
 		if (sensor_devices_ptr->lis2mdl == NULL) {
 			LOG_ERR("Could not get LIS2MDL device\n");
+			return;
+		}
+	#endif
+	#ifdef CONFIG_LIS3MDL
+		if (sensor_devices_ptr->lis3mdl == NULL) {
+			LOG_ERR("Could not get LIS3MDL device\n");
 			return;
 		}
 	#endif

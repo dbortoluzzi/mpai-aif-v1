@@ -139,10 +139,17 @@ void th_subscribe_sensors_data(void *dummy1, void *dummy2, void *dummy3)
 			#endif
 
 			#ifdef CONFIG_LIS2MDL
-			printk("LIS2MDL: Magn (Gauss): x: %.3f, y: %.3f, z: %.3f\n",
-				   sensor_value_to_double(&(sensor_data->magn[0])),
-				   sensor_value_to_double(&(sensor_data->magn[1])),
-				   sensor_value_to_double(&(sensor_data->magn[2])));
+			printk("LIS2MDL: Magn (Gauss): x: %.5f, y: %.5f, z: %.5f\n",
+				   sensor_value_to_double(&(sensor_data->lis2mdl_magn[0])),
+				   sensor_value_to_double(&(sensor_data->lis2mdl_magn[1])),
+				   sensor_value_to_double(&(sensor_data->lis2mdl_magn[2])));
+			#endif
+
+			#ifdef CONFIG_LIS3MDL
+			printk("LIS3MDL: Magn (Gauss): x: %.5f, y: %.5f, z: %.5f\n",
+				   sensor_value_to_double(&(sensor_data->lis3mdl_magn[0])),
+				   sensor_value_to_double(&(sensor_data->lis3mdl_magn[1])),
+				   sensor_value_to_double(&(sensor_data->lis3mdl_magn[2])));
 			#endif
 
 			printk("\n");

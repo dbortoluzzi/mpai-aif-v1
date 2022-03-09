@@ -34,6 +34,9 @@ typedef struct _sensor_devices_t{
 	#ifdef CONFIG_LIS2MDL
 		const struct device *lis2mdl;
 	#endif
+	#ifdef CONFIG_LIS3MDL
+		const struct device *lis3mdl;
+	#endif
 } sensor_devices_t;
 
 typedef struct _sensor_result_t{
@@ -67,7 +70,10 @@ typedef struct _sensor_result_t{
 		struct sensor_value* stts751_temp;
 	#endif
 	#ifdef CONFIG_LIS2MDL
-		struct sensor_value magn[3];
+		struct sensor_value lis2mdl_magn[3];
+	#endif
+	#ifdef CONFIG_LIS3MDL
+		struct sensor_value lis3mdl_magn[3];
 	#endif
 } sensor_result_t;
 
