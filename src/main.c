@@ -32,6 +32,7 @@
 #include <bluetooth/gatt.h>
 #include "button_svc.h"
 #include "led_svc.h"
+#include "flash_store.h"
 
 LOG_MODULE_REGISTER(MAIN, LOG_LEVEL_INF);
 
@@ -276,6 +277,46 @@ void main(void)
 	if (err) {
 		LOG_ERR("Bluetooth init failed (err %d)", err);
 	}
+
+	/*** START SPI FLASH ***/
+	const char expected[] = "Ciao Daniele";
+	const size_t len = sizeof(expected);
+	char buf[sizeof(expected)];
+
+	LOG_INF("Test 1: Flash erase\n");
+	const struct device* flash_dev = init_flash();
+
+	LOG_INF("Test 2: Flash write\n");
+	int rc_write = write_flash(flash_dev, (void*) expected);
+	if (rc_write != 0) 
+	{
+		return;
+	}
+
+	int rc_read = read_flash(flash_dev, len, (void*) buf);
+	if (rc_read != 0)
+	{
+		return;
+	}
+	if (memcmp(expected, buf, len) == 0) 
+	{
+		LOG_INF("Data read matches data written. Good!!\n");
+	} else 
+	{
+		const char* wp = expected;
+		const char* rp = buf;
+		const char* rpe = rp + len;
+
+		LOG_ERR("Data read does not match data written!!\n");
+		while (rp < rpe) {
+			LOG_ERR("%08x wrote %02x read %02x %s\n",
+			       (uint32_t)(FLASH_TEST_REGION_OFFSET + (rp - buf)),
+			       *wp, *rp, (*rp == *wp) ? "match" : "MISMATCH");
+			++rp;
+			++wp;
+		}
+	}
+	/*** END SPI FLASH ***/
 
 	#if AIW_SENSORS_DATA_ENABLED == true
 		message_store = MPAI_MessageStore_Creator(AIW_TEMP_LIMIT_DETECTION, "SENSORS_DATA", sizeof(mpai_parser_t));
