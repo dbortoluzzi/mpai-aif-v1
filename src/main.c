@@ -33,6 +33,7 @@
 #include "button_svc.h"
 #include "led_svc.h"
 #include "flash_store.h"
+#include <parson.h>
 
 LOG_MODULE_REGISTER(MAIN, LOG_LEVEL_INF);
 
@@ -279,15 +280,17 @@ void main(void)
 	}
 
 	/*** START SPI FLASH ***/
-	const char expected[] = "Ciao Daniele";
+	const char expected[] = "{\"name\":\"Daniele\"}";
 	const size_t len = sizeof(expected);
 	char buf[sizeof(expected)];
 
-	LOG_INF("Test 1: Flash erase\n");
 	const struct device* flash_dev = init_flash();
 
+	LOG_INF("Test 1: Flash erase\n");
+	erase_flash(flash_dev);
+
 	LOG_INF("Test 2: Flash write\n");
-	int rc_write = write_flash(flash_dev, (void*) expected);
+	int rc_write = write_flash(flash_dev, len, (void*) expected);
 	if (rc_write != 0) 
 	{
 		return;
@@ -316,6 +319,10 @@ void main(void)
 			++wp;
 		}
 	}
+	JSON_Value* json = json_parse_string(buf);
+	char* name = json_object_get_string(json_object(json), "name");
+    LOG_INF("Hello, %s.", log_strdup(name));
+	json_value_free(json);
 	/*** END SPI FLASH ***/
 
 	#if AIW_SENSORS_DATA_ENABLED == true

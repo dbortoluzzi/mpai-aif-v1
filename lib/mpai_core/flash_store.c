@@ -34,9 +34,8 @@ int erase_flash(struct device* flash_dev)
 	return rc;
 }
 
-int write_flash(struct device* flash_dev, void* data)
+int write_flash(struct device* flash_dev, size_t len, void* data)
 {
-	const size_t len = sizeof(data);
 	LOG_INF("Attempting to write %zu bytes\n", len);
 	int rc = flash_write(flash_dev, FLASH_TEST_REGION_OFFSET, data, len);
 	if (rc != 0) {
