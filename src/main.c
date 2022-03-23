@@ -32,6 +32,8 @@
 #include <bluetooth/gatt.h>
 #include "button_svc.h"
 #include "led_svc.h"
+#include "flash_store.h"
+#include <parson.h>
 
 LOG_MODULE_REGISTER(MAIN, LOG_LEVEL_INF);
 
@@ -40,6 +42,7 @@ LOG_MODULE_REGISTER(MAIN, LOG_LEVEL_INF);
 
 #define PERIODIC_MODE_ENABLED false
 #define AIW_SENSORS_DATA_ENABLED true
+#define WRITE_TO_FLASH_ENABLED true
 
 static int AIW_TEMP_LIMIT_DETECTION = 1;
 
@@ -276,6 +279,54 @@ void main(void)
 	if (err) {
 		LOG_ERR("Bluetooth init failed (err %d)", err);
 	}
+
+	#if PERIODIC_MODE_ENABLED == true
+		/*** START SPI FLASH ***/
+		const char expected[] = "{\"name\":\"Daniele\"}";
+		const size_t len = sizeof(expected);
+		char buf[sizeof(expected)];
+
+		const struct device* flash_dev = init_flash();
+
+		LOG_INF("Test 1: Flash erase\n");
+		erase_flash(flash_dev);
+
+		LOG_INF("Test 2: Flash write\n");
+		int rc_write = write_flash(flash_dev, len, (void*) expected);
+		if (rc_write != 0) 
+		{
+			return;
+		}
+
+		int rc_read = read_flash(flash_dev, len, (void*) buf);
+		if (rc_read != 0)
+		{
+			return;
+		}
+		if (memcmp(expected, buf, len) == 0) 
+		{
+			LOG_INF("Data read matches data written. Good!!\n");
+		} else 
+		{
+			const char* wp = expected;
+			const char* rp = buf;
+			const char* rpe = rp + len;
+
+			LOG_ERR("Data read does not match data written!!\n");
+			while (rp < rpe) {
+				LOG_ERR("%08x wrote %02x read %02x %s\n",
+					(uint32_t)(FLASH_TEST_REGION_OFFSET + (rp - buf)),
+					*wp, *rp, (*rp == *wp) ? "match" : "MISMATCH");
+				++rp;
+				++wp;
+			}
+		}
+		JSON_Value* json = json_parse_string(buf);
+		char* name = json_object_get_string(json_object(json), "name");
+		LOG_INF("Hello, %s.", log_strdup(name));
+		json_value_free(json);
+		/*** END SPI FLASH ***/
+	#endif
 
 	#if AIW_SENSORS_DATA_ENABLED == true
 		message_store = MPAI_MessageStore_Creator(AIW_TEMP_LIMIT_DETECTION, "SENSORS_DATA", sizeof(mpai_parser_t));
