@@ -1,0 +1,14 @@
+mainmenu "IOTNODE_AIF"
+
+source "Kconfig.zephyr"
+config IOTNODE_AIF_STM32
+  default y
+  bool
+  select USE_STM32_HAL_GPIO
+  select USE_STM32_HAL_GPIO_EX
+  select USE_STM32_HAL_CORTEX
+  select USE_STM32_HAL_DFSDM
+  select USE_STM32_HAL_DFSDM_EX
+  select USE_STM32_HAL_DMA
+  select USE_STM32_HAL_DMA_EX
+  select USE_STM32_HAL_DMA2D
