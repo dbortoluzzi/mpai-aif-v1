@@ -15,6 +15,7 @@
 #include <core_aim.h>
 #include <sensors_aim.h>
 #include <temp_limit_aim.h>
+#include <data_mic_aim.h>
 #include <message_store.h>
 
 #include <zephyr/types.h>
@@ -35,8 +36,6 @@
 #include "flash_store.h"
 #include <parson.h>
 
-#include "stm32l475e_iot01_audio.h"
-
 LOG_MODULE_REGISTER(MAIN, LOG_LEVEL_INF);
 
 #define WHOAMI_REG 0x0F
@@ -44,13 +43,14 @@ LOG_MODULE_REGISTER(MAIN, LOG_LEVEL_INF);
 
 // TODO: move to Kconfig
 #define PERIODIC_MODE_ENABLED false
-#define AIW_SENSORS_DATA_ENABLED true
+#define SENSORS_DATA_ENABLED true
 #define WRITE_TO_FLASH_ENABLED false
 
 static int AIW_TEMP_LIMIT_DETECTION = 1;
 
 MPAI_Component_AIM_t* aim_produce_sensors = NULL;
 MPAI_Component_AIM_t* aim_temp_limit = NULL;
+MPAI_Component_AIM_t* aim_data_mic = NULL;
 
 MPAI_AIM_MessageStore_t* message_store;
 
@@ -75,205 +75,6 @@ void aim_timer_handler(struct k_timer *dummy)
 K_TIMER_DEFINE(aim_timer, aim_timer_handler, NULL);
 /******** END PERIODIC MODE ***********/
 #endif	
-
-/*** START MIC ***/
-static size_t TARGET_AUDIO_BUFFER_NB_SAMPLES = AUDIO_SAMPLING_FREQUENCY * 2;
-static int16_t *TARGET_AUDIO_BUFFER;
-static size_t TARGET_AUDIO_BUFFER_IX = 0;
-
-static uint16_t PCM_Buffer[PCM_BUFFER_LEN / 2];
-static BSP_AUDIO_Init_t MicParams;
-
-// we skip the first 50 events (100 ms.) to not record the button click
-static size_t SKIP_FIRST_EVENTS = 50;
-static size_t half_transfer_events = 0;
-static size_t transfer_complete_events = 0;
-
-// callback that gets invoked when TARGET_AUDIO_BUFFER is full
-void target_audio_buffer_full() {
-    // pause audio stream
-    int32_t ret = BSP_AUDIO_IN_Pause(AUDIO_INSTANCE);
-    if (ret != BSP_ERROR_NONE) {
-        printk("Error Audio Pause (%d)\n", ret);
-    }
-    else {
-        printk("OK Audio Pause\n");
-    }
-}
-
-/**
-* @brief  Half Transfer user callback, called by BSP functions.
-* @param  None
-* @retval None
-*/
-void BSP_AUDIO_IN_HalfTransfer_CallBack(uint32_t Instance) {
-    half_transfer_events++;
-    if (half_transfer_events < SKIP_FIRST_EVENTS) return;
-
-    uint32_t buffer_size = PCM_BUFFER_LEN / 2; /* Half Transfer */
-    uint32_t nb_samples = buffer_size / sizeof(int16_t); /* Bytes to Length */
-
-    if ((TARGET_AUDIO_BUFFER_IX + nb_samples) > TARGET_AUDIO_BUFFER_NB_SAMPLES) {
-        return;
-    }
-    /* Copy first half of PCM_Buffer from Microphones onto Fill_Buffer */
-   memcpy(((uint8_t*)TARGET_AUDIO_BUFFER) + (TARGET_AUDIO_BUFFER_IX * 2), PCM_Buffer, buffer_size);
-   TARGET_AUDIO_BUFFER_IX += nb_samples;
-
-    if (TARGET_AUDIO_BUFFER_IX >= TARGET_AUDIO_BUFFER_NB_SAMPLES) {
-        target_audio_buffer_full();
-        return;
-    }
-}
-
-/**
-* @brief  Transfer Complete user callback, called by BSP functions.
-* @param  None
-* @retval None
-*/
-void BSP_AUDIO_IN_TransferComplete_CallBack(uint32_t Instance) {
-    transfer_complete_events++;
-    if (transfer_complete_events < SKIP_FIRST_EVENTS) return;
-
-    uint32_t buffer_size = PCM_BUFFER_LEN / 2; /* Half Transfer */
-    uint32_t nb_samples = buffer_size / sizeof(int16_t); /* Bytes to Length */
-
-    if ((TARGET_AUDIO_BUFFER_IX + nb_samples) > TARGET_AUDIO_BUFFER_NB_SAMPLES) {
-        return;
-    }
-
-    /* Copy second half of PCM_Buffer from Microphones onto Fill_Buffer */
-   memcpy((uint8_t*)TARGET_AUDIO_BUFFER + (TARGET_AUDIO_BUFFER_IX * 2),
-       ((uint8_t*)PCM_Buffer) + (nb_samples * 2), buffer_size);
-    TARGET_AUDIO_BUFFER_IX += nb_samples;
-
-    if (TARGET_AUDIO_BUFFER_IX >= TARGET_AUDIO_BUFFER_NB_SAMPLES) {
-		target_audio_buffer_full();
-        return;
-    }
-}
-
-/**
-  * @brief  Manages the BSP audio in error event.
-  * @param  Instance Audio in instance.
-  * @retval None.
-  */
-void BSP_AUDIO_IN_Error_CallBack(uint32_t Instance) {
-    printk("BSP_AUDIO_IN_Error_CallBack\n");
-}
-
-void print_stats() {
-    printk("Half %lu, Complete %lu, IX %lu\n", half_transfer_events, transfer_complete_events,
-        TARGET_AUDIO_BUFFER_IX);
-}
-
-void start_recording() {
-    int32_t ret;
-    uint32_t state;
-
-    ret = BSP_AUDIO_IN_GetState(AUDIO_INSTANCE, &state);
-    if (ret != BSP_ERROR_NONE) {
-        printk("Cannot start recording: Error getting audio state (%d)\n", ret);
-        return;
-    }
-    if (state == AUDIO_IN_STATE_RECORDING) {
-        printk("Cannot start recording: Already recording\n");
-        return;
-    }
-
-    // reset audio buffer location
-    TARGET_AUDIO_BUFFER_IX = 0;
-    transfer_complete_events = 0;
-    half_transfer_events = 0;
-
-    ret = BSP_AUDIO_IN_Record(AUDIO_INSTANCE, (uint8_t *) PCM_Buffer, PCM_BUFFER_LEN);
-    if (ret != BSP_ERROR_NONE) {
-        printk("Error Audio Record (%ld)\n", ret);
-        return;
-    }
-    else {
-        printk("OK Audio Record\n");
-    }
-}
-
-int myaudiomain() {
-
-static size_t TARGET_AUDIO_BUFFER_IX = 0;
-
-
-printk("Hello from the B-L475E-IOT01A microphone \n");
-
-
-	// static uint8_t *buf = TARGET_AUDIO_BUFFER;
-   TARGET_AUDIO_BUFFER = (int16_t*)k_calloc(TARGET_AUDIO_BUFFER_NB_SAMPLES, sizeof(int16_t));
-
-   if (!TARGET_AUDIO_BUFFER) {
-       printk("Failed to allocate TARGET_AUDIO_BUFFER buffer\n");
-       return 0;
-   }
-
-    // set up the microphone
-    MicParams.BitsPerSample = AUDIO_RESOLUTION_16b; // AUDIO_RESOLUTION_16b
-    MicParams.ChannelsNbr = AUDIO_CHANNELS;
-    MicParams.Device = AUDIO_IN_DIGITAL_MIC1; 
-    MicParams.SampleRate =  AUDIO_SAMPLING_FREQUENCY;
-    MicParams.Volume = AUDIO_VOLUME_VALUE;
-
-    int32_t ret = BSP_AUDIO_IN_Init(AUDIO_INSTANCE, &MicParams);
-
-    if (ret != BSP_ERROR_NONE) {
-        printk("Error Audio Init (%ld)\r\n", ret);
-        return 1;
-    } else {
-        printk("OK Audio Init\t(Audio Freq=%ld)\r\n", AUDIO_SAMPLING_FREQUENCY);
-    }
-
-	start_recording();
-
-}
-
-void print_wav() 
-{
-	// create WAV file
-    size_t wavFreq = AUDIO_SAMPLING_FREQUENCY;
-    size_t dataSize = (TARGET_AUDIO_BUFFER_NB_SAMPLES * 2);
-    size_t fileSize = 44 + (TARGET_AUDIO_BUFFER_NB_SAMPLES * 2);
-
-    uint8_t wav_header[44] = {
-        0x52, 0x49, 0x46, 0x46, // RIFF
-        fileSize & 0xff, (fileSize >> 8) & 0xff, (fileSize >> 16) & 0xff, (fileSize >> 24) & 0xff,
-        0x57, 0x41, 0x56, 0x45, // WAVE
-        0x66, 0x6d, 0x74, 0x20, // fmt
-        0x10, 0x00, 0x00, 0x00, // length of format data
-        0x01, 0x00, // type of format (1=PCM)
-        0x01, 0x00, // number of channels
-        wavFreq & 0xff, (wavFreq >> 8) & 0xff, (wavFreq >> 16) & 0xff, (wavFreq >> 24) & 0xff,
-        0x00, 0x7d, 0x00, 0x00, // 	(Sample Rate * BitsPerSample * Channels) / 8
-        0x02, 0x00, 0x10, 0x00,
-        0x64, 0x61, 0x74, 0x61, // data
-        dataSize & 0xff, (dataSize >> 8) & 0xff, (dataSize >> 16) & 0xff, (dataSize >> 24) & 0xff,
-    };
-
-    printk("Total complete events: %lu, index is %lu\n", transfer_complete_events, TARGET_AUDIO_BUFFER_IX);
-
-    // print both the WAV header and the audio buffer in HEX format to serial
-    // you can use the script in `hex-to-buffer.js` to make a proper WAV file again
-    printk("WAV file:\n");
-    for (size_t ix = 0; ix < 44; ix++) {
-        printk("%02x", wav_header[ix]);
-    }
-
-	for (size_t iy=0; iy<(TARGET_AUDIO_BUFFER_IX*2)/64; iy++) {
-		char logstring[64*2] = {};
-		for (size_t ix = 0; ix < 64; ix++) {
-			sprintf(logstring+2*ix, "%02x", ((uint8_t *)TARGET_AUDIO_BUFFER)[64*iy+ix]);
-		}
-		printk(logstring);
-		k_sleep(K_MSEC(50));
-	}
-    printk("\n");
-}
-/*** END MIC ***/
 
 /*** START BT ***/
 /* Button value. */
@@ -463,14 +264,6 @@ void main(void)
 
 	printk("IoT node INITIALIZING...\n");
 
-	/* Start microphone recording */
-	myaudiomain();	
-	
-	k_sleep(K_MSEC(5000));
-
-	print_wav();
-	/* End microphone recording */
-
 	int err;
 
 	err = button_init(button_callback);
@@ -537,37 +330,43 @@ void main(void)
 		/*** END SPI FLASH ***/
 	#endif
 
-	#if AIW_SENSORS_DATA_ENABLED == true
-		message_store = MPAI_MessageStore_Creator(AIW_TEMP_LIMIT_DETECTION, "SENSORS_DATA", sizeof(mpai_parser_t));
+	message_store = MPAI_MessageStore_Creator(AIW_TEMP_LIMIT_DETECTION, "AIF_USE_CASE", sizeof(mpai_parser_t));
 
+	aim_data_mic = MPAI_AIM_Creator("AIM_DATA_MIC", AIW_TEMP_LIMIT_DETECTION, data_mic_aim_subscriber, data_mic_aim_start, data_mic_aim_stop, data_mic_aim_resume, data_mic_aim_pause);
+	mpai_error_t err_data_mic = MPAI_AIM_Start(aim_data_mic);	
+
+	if (err_data_mic.code != MPAI_AIF_OK)
+	{
+		LOG_ERR("Error starting AIM %s: %s", MPAI_AIM_Get_Component(aim_data_mic)->name, log_strdup(MPAI_ERR_STR(err_data_mic.code)));
+		return;
+	} 
+	
+	#if SENSORS_DATA_ENABLED == true
+		
 		aim_produce_sensors = MPAI_AIM_Creator("AIM_PRODUCE_SENSORS_DATA", AIW_TEMP_LIMIT_DETECTION, sensors_aim_subscriber, sensors_aim_start, sensors_aim_stop, sensors_aim_resume, sensors_aim_pause);
 		mpai_error_t err_sens_aim = MPAI_AIM_Start(aim_produce_sensors);
 
-		if (err_sens_aim.code == MPAI_AIF_OK)
-		{
-			aim_temp_limit = MPAI_AIM_Creator("AIM_TEMP_LIMIT", AIW_TEMP_LIMIT_DETECTION, temp_limit_aim_subscriber, temp_limit_aim_start, temp_limit_aim_stop, temp_limit_aim_resume, temp_limit_aim_pause);
-			MPAI_MessageStore_register(message_store, MPAI_AIM_Get_Subscriber(aim_temp_limit));
-			mpai_error_t err_temp_limit = MPAI_AIM_Start(aim_temp_limit);	
-
-			if (err_temp_limit.code == MPAI_AIF_OK)
-			{
-				LOG_INF("MPAI_AIF initialized correctly");
-			} 
-			else
-			{
-				LOG_ERR("Error starting AIM %s: %s", MPAI_AIM_Get_Component(aim_temp_limit)->name, log_strdup(MPAI_ERR_STR(err_temp_limit.code)));
-				return;
-			}
-
-			#if PERIODIC_MODE_ENABLED == true
-				/* start periodic timer to switch status */
-				k_timer_start(&aim_timer, K_SECONDS(5), K_SECONDS(5));		
-			#endif
-		}
-		else
+		if (err_sens_aim.code != MPAI_AIF_OK) 
 		{
 			LOG_ERR("Error starting AIM %s: %s", MPAI_AIM_Get_Component(aim_produce_sensors)->name, log_strdup(MPAI_ERR_STR(err_sens_aim.code)));
 			return;
 		}
+
+		aim_temp_limit = MPAI_AIM_Creator("AIM_TEMP_LIMIT", AIW_TEMP_LIMIT_DETECTION, temp_limit_aim_subscriber, temp_limit_aim_start, temp_limit_aim_stop, temp_limit_aim_resume, temp_limit_aim_pause);
+		MPAI_MessageStore_register(message_store, MPAI_AIM_Get_Subscriber(aim_temp_limit));
+		mpai_error_t err_temp_limit = MPAI_AIM_Start(aim_temp_limit);	
+
+		if (err_temp_limit.code != MPAI_AIF_OK)
+		{
+			LOG_ERR("Error starting AIM %s: %s", MPAI_AIM_Get_Component(aim_temp_limit)->name, log_strdup(MPAI_ERR_STR(err_temp_limit.code)));
+			return;
+		} 
+
+		LOG_INF("MPAI_AIF initialized correctly");
+
+		#if PERIODIC_MODE_ENABLED == true
+			/* start periodic timer to switch status */
+			k_timer_start(&aim_timer, K_SECONDS(5), K_SECONDS(5));		
+		#endif
 	#endif
 }

@@ -379,10 +379,10 @@ static void iis3dhhc_config(const struct device *iis3dhhc)
 
 /**************** THREADS **********************/
 
-static k_tid_t producer_thread_id;
+static k_tid_t producer_mic_thread_id;
 
 K_THREAD_STACK_DEFINE(thread_prod_stack_area, STACKSIZE);
-static struct k_thread thread_prod_sens_data;
+static struct k_thread thread_prod_mic_data;
 
 /* PRODUCER */
 void produce_sensors_data(void *arg1, void *arg2) {
@@ -673,14 +673,14 @@ mpai_error_t* sensors_aim_subscriber()
 mpai_error_t* sensors_aim_start()
 {
 	// CREATE PRODUCER
-	producer_thread_id = k_thread_create(&thread_prod_sens_data, thread_prod_stack_area,
+	producer_mic_thread_id = k_thread_create(&thread_prod_mic_data, thread_prod_stack_area,
 			K_THREAD_STACK_SIZEOF(thread_prod_stack_area),
 			th_produce_sensors_data, (void*) &sensor_result, NULL, NULL,
 			PRIORITY, 0, K_NO_WAIT);
-	k_thread_name_set(&thread_prod_sens_data, "thread_prod");
+	k_thread_name_set(&thread_prod_mic_data, "thread_prod");
 	
 	// START THREAD
-	k_thread_start(producer_thread_id);
+	k_thread_start(producer_mic_thread_id);
 
 	MPAI_ERR_INIT(err, MPAI_AIF_OK);
 	return &err;
@@ -688,7 +688,7 @@ mpai_error_t* sensors_aim_start()
 
 mpai_error_t* sensors_aim_stop() 
 {
-	k_thread_abort(producer_thread_id);
+	k_thread_abort(producer_mic_thread_id);
 	LOG_INF("Execution stopped");
 
 	MPAI_ERR_INIT(err, MPAI_AIF_OK);
@@ -697,7 +697,7 @@ mpai_error_t* sensors_aim_stop()
 
 mpai_error_t* sensors_aim_resume() 
 {
-	k_thread_resume(producer_thread_id);
+	k_thread_resume(producer_mic_thread_id);
 	LOG_INF("Execution resumed");
 
 	MPAI_ERR_INIT(err, MPAI_AIF_OK);
@@ -706,7 +706,7 @@ mpai_error_t* sensors_aim_resume()
 
 mpai_error_t* sensors_aim_pause() 
 {
-	k_thread_suspend(producer_thread_id);
+	k_thread_suspend(producer_mic_thread_id);
 	LOG_INF("Execution paused");
 
 	MPAI_ERR_INIT(err, MPAI_AIF_OK);
