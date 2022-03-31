@@ -2,6 +2,8 @@
 
 LOG_MODULE_REGISTER(MPAI_MESSAGE_STORE, LOG_LEVEL_INF);
 
+K_SEM_DEFINE(subscriber_channel_sem, 0, 1);
+
 /************* PRIVATE *************/
 subscriber_item* _linear_search(subscriber_item *items, size_t size, module_t *key)
 {
@@ -21,7 +23,7 @@ subscriber_item* _linear_search(subscriber_item *items, size_t size, module_t *k
  * Refactor using multiple topics: now it's only one for each MessageStore
  */
 
-mpai_error_t MPAI_MessageStore_register(MPAI_AIM_MessageStore_t *me, module_t *subscriber)
+mpai_error_t MPAI_MessageStore_register(MPAI_AIM_MessageStore_t *me, module_t *subscriber, subscriber_channel_t channel)
 {
 	if (me == NULL) {
 		MPAI_ERR_INIT(err, MPAI_ERROR);
@@ -38,7 +40,7 @@ mpai_error_t MPAI_MessageStore_register(MPAI_AIM_MessageStore_t *me, module_t *s
 	struct pubsub_subscriber_s *sub = (struct pubsub_subscriber_s *)k_malloc(sizeof(struct pubsub_subscriber_s));
 	sub->topic = me->_topic;
 
-	pubsub_subscriber_register(me->_topic, sub, PUB_SUB_DEFAULT_CHANNEL);
+	pubsub_subscriber_register(me->_topic, sub, channel);
 	subscriber_item item = {.key = subscriber, .value = sub};
 	me->message_store_subscribers[subscriber_item_count++] = item;
 
@@ -47,7 +49,7 @@ mpai_error_t MPAI_MessageStore_register(MPAI_AIM_MessageStore_t *me, module_t *s
 	return err;
 }
 
-mpai_error_t MPAI_MessageStore_publish(MPAI_AIM_MessageStore_t *me, mpai_parser_t *message)
+mpai_error_t MPAI_MessageStore_publish(MPAI_AIM_MessageStore_t *me, mpai_parser_t *message, subscriber_channel_t channel)
 {
 	if (me == NULL) {
 		MPAI_ERR_INIT(err, MPAI_ERROR);
@@ -55,14 +57,14 @@ mpai_error_t MPAI_MessageStore_publish(MPAI_AIM_MessageStore_t *me, mpai_parser_
 		return err;
 	}
 
-	pubsub_publish(me->_topic, PUB_SUB_DEFAULT_CHANNEL, message);
+	pubsub_publish(me->_topic, channel, message);
 
 	// TODO: error management
 	MPAI_ERR_INIT(err, MPAI_AIF_OK);
 	return err;
 }
 
-int MPAI_MessageStore_poll(MPAI_AIM_MessageStore_t *me, module_t *subscriber, k_timeout_t timeout)
+int MPAI_MessageStore_poll(MPAI_AIM_MessageStore_t *me, module_t *subscriber, k_timeout_t timeout, subscriber_channel_t channel)
 {
 	if (me == NULL) {
 		LOG_ERR("Found a failure polling: %s.", log_strdup(MPAI_ERR_STR(MPAI_ERROR)));
@@ -102,6 +104,17 @@ mpai_error_t MPAI_MessageStore_copy(MPAI_AIM_MessageStore_t *me, module_t *subsc
 
 	MPAI_ERR_INIT(err, MPAI_AIF_OK);
 	return err;
+}
+
+subscriber_channel_t MPAI_MessageStore_new_channel()
+{
+	if (k_sem_take(&subscriber_channel_sem, K_NO_WAIT) != 0) {
+        subscriber_channel_t new_channel = subscriber_channel_current++;
+		k_sem_reset(&subscriber_channel_sem);
+		return new_channel;
+    } else {
+        return -1;
+    }
 }
 
 MPAI_AIM_MessageStore_t *MPAI_MessageStore_Creator(int aiw_id, char *topic_name, size_t topic_size)

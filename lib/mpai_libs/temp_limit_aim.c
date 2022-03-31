@@ -44,7 +44,7 @@ void th_subscribe_sensors_data(void *dummy1, void *dummy2, void *dummy3)
 		LOG_INF("Reading from pubsub......\n\n");
 
 		/* this function will return once new data has arrived, or upon timeout (1000ms in this case). */
-		int ret = MPAI_MessageStore_poll(message_store, temp_limit_aim_subscriber, K_MSEC(1000));
+		int ret = MPAI_MessageStore_poll(message_store_temp_limit_aim, temp_limit_aim_subscriber, K_MSEC(1000), SENSORS_DATA_CHANNEL);
 
 		/* ret returns:
 		 * a positive value if new data was successfully returned
@@ -53,7 +53,7 @@ void th_subscribe_sensors_data(void *dummy1, void *dummy2, void *dummy3)
 		 */
 		if (ret > 0)
 		{
-			MPAI_MessageStore_copy(message_store, temp_limit_aim_subscriber, &aim_message);
+			MPAI_MessageStore_copy(message_store_temp_limit_aim, temp_limit_aim_subscriber, &aim_message);
 			LOG_INF("Received from timestamp %lld\n", aim_message.timestamp);
 
 			/* Display sensor datsa */

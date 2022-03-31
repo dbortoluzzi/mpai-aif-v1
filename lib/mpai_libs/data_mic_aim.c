@@ -202,7 +202,7 @@ void publish_to_message_store()
 		.timestamp = k_uptime_get()
 	};
 
-	MPAI_MessageStore_publish(message_store, &msg);
+	MPAI_MessageStore_publish(message_store_data_mic_aim, &msg, MIC_CHANNEL);
 
     LOG_INF("Message published");
 }
@@ -240,7 +240,7 @@ void th_produce_data_mic_data(void *dummy1, void *dummy2, void *dummy3)
 
 	k_sleep(K_MSEC(5000));
 
-	print_wav();
+	// print_wav();
 
 }
 

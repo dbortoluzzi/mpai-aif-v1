@@ -8,6 +8,9 @@
 #include <mic_common.h>
 #include <stm32l475e_iot01_audio.h>
 
+__weak MPAI_AIM_MessageStore_t* message_store_data_mic_aim;
+__weak subscriber_channel_t MIC_CHANNEL;
+
 mpai_error_t* data_mic_aim_subscriber();
 
 mpai_error_t* data_mic_aim_start();

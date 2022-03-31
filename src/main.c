@@ -36,6 +36,8 @@
 #include "flash_store.h"
 #include <parson.h>
 
+#include <test_use_case_aiw.h>
+
 LOG_MODULE_REGISTER(MAIN, LOG_LEVEL_INF);
 
 #define WHOAMI_REG 0x0F
@@ -46,13 +48,9 @@ LOG_MODULE_REGISTER(MAIN, LOG_LEVEL_INF);
 #define SENSORS_DATA_ENABLED true
 #define WRITE_TO_FLASH_ENABLED false
 
-static int AIW_TEMP_LIMIT_DETECTION = 1;
-
 MPAI_Component_AIM_t* aim_produce_sensors = NULL;
 MPAI_Component_AIM_t* aim_temp_limit = NULL;
 MPAI_Component_AIM_t* aim_data_mic = NULL;
-
-MPAI_AIM_MessageStore_t* message_store;
 
 #if PERIODIC_MODE_ENABLED == true
 /******** START PERIODIC MODE ***********/
@@ -330,7 +328,7 @@ void main(void)
 		/*** END SPI FLASH ***/
 	#endif
 
-	message_store = MPAI_MessageStore_Creator(AIW_TEMP_LIMIT_DETECTION, "AIF_USE_CASE", sizeof(mpai_parser_t));
+	INIT_Test_Use_Case_AIW();
 
 	aim_data_mic = MPAI_AIM_Creator("AIM_DATA_MIC", AIW_TEMP_LIMIT_DETECTION, data_mic_aim_subscriber, data_mic_aim_start, data_mic_aim_stop, data_mic_aim_resume, data_mic_aim_pause);
 	mpai_error_t err_data_mic = MPAI_AIM_Start(aim_data_mic);	
@@ -353,7 +351,7 @@ void main(void)
 		}
 
 		aim_temp_limit = MPAI_AIM_Creator("AIM_TEMP_LIMIT", AIW_TEMP_LIMIT_DETECTION, temp_limit_aim_subscriber, temp_limit_aim_start, temp_limit_aim_stop, temp_limit_aim_resume, temp_limit_aim_pause);
-		MPAI_MessageStore_register(message_store, MPAI_AIM_Get_Subscriber(aim_temp_limit));
+		MPAI_MessageStore_register(message_store_test_case_aiw, MPAI_AIM_Get_Subscriber(aim_temp_limit), SENSORS_DATA_CHANNEL);
 		mpai_error_t err_temp_limit = MPAI_AIM_Start(aim_temp_limit);	
 
 		if (err_temp_limit.code != MPAI_AIF_OK)
