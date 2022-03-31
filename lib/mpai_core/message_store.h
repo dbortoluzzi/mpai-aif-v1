@@ -33,17 +33,17 @@ static int subscriber_item_count = 0;
 static subscriber_channel_t subscriber_channel_current = 1;
 
 /**
- * @brief Register to a topic from message store 
+ * @brief Register to a topic channel of message store 
  */
 mpai_error_t MPAI_MessageStore_register(MPAI_AIM_MessageStore_t* me, module_t* subscriber, subscriber_channel_t channel);
 
 /**
- * @brief Publish a message into a message store 
+ * @brief Publish a message to a specified channel of a message store 
  */
 mpai_error_t MPAI_MessageStore_publish(MPAI_AIM_MessageStore_t* me, mpai_parser_t* message, subscriber_channel_t channel);
 
 /**
- * @brief Poll a message message store
+ * @brief Poll a message message store from a specified channel
  */
 int MPAI_MessageStore_poll(MPAI_AIM_MessageStore_t* me, module_t* subscriber, k_timeout_t timeout, subscriber_channel_t channel);
 
