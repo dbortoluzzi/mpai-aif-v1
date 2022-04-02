@@ -147,7 +147,7 @@ void target_audio_buffer_full() {
         printk("OK Audio Pause\n");
     }
 
-	publish_to_message_store();
+	publish_buffer_to_message_store();
 }
 
 static int64_t last_peak_recognized = 0;
@@ -188,7 +188,7 @@ static void SendAudioLevelData(void)
             printk("PICCO RILEVATO %lld\n", now);  
             flag_peak_recognized = true;
 
-            // TODO: publish message
+            publish_peak_to_message_store(calc_peak);
         }
 
     } else {
@@ -314,7 +314,7 @@ void BSP_AUDIO_IN_Error_CallBack(uint32_t Instance) {
 }
 
 /* PRODUCER */
-void publish_to_message_store()
+void publish_buffer_to_message_store()
 {
     #if PUBLISH_BUFFER_ENABLED == true
         mic_data_t *mic_data = (mic_data_t *)k_malloc(sizeof(mic_data_t));
@@ -329,11 +329,29 @@ void publish_to_message_store()
             .timestamp = k_uptime_get()
         };
 
-        MPAI_MessageStore_publish(message_store, &msg, MIC_CHANNEL);
+        MPAI_MessageStore_publish(message_store_test_case_aiw, &msg, MIC_BUFFER_DATA_CHANNEL);
 
-        LOG_INF("Message published");
+        LOG_INF("Message mic data published");
 
     #endif
+}
+
+void publish_peak_to_message_store(int64_t peak_value)
+{
+    mic_peak_t *mic_peak = (mic_peak_t *)k_malloc(sizeof(mic_peak_t));
+    mic_peak->data = (int32_t *)k_malloc(sizeof(int32_t));
+    memcpy(mic_peak->data, &peak_value, sizeof(peak_value));
+    
+    // Publish sensor message 
+    mpai_parser_t msg = {
+        .data = mic_peak,
+        .timestamp = k_uptime_get()
+    };
+
+    MPAI_MessageStore_publish(message_store_data_mic_aim, &msg, MIC_PEAK_DATA_CHANNEL);
+
+    LOG_INF("Message peak published");
+
 }
 
 void th_produce_data_mic_data(void *dummy1, void *dummy2, void *dummy3)

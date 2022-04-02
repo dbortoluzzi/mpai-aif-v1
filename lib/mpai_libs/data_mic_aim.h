@@ -11,7 +11,8 @@
 #include <misc_utils.h>
 
 __weak MPAI_AIM_MessageStore_t* message_store_data_mic_aim;
-__weak subscriber_channel_t MIC_CHANNEL;
+__weak subscriber_channel_t MIC_BUFFER_DATA_CHANNEL;
+__weak subscriber_channel_t MIC_PEAK_DATA_CHANNEL;
 
 mpai_error_t* data_mic_aim_subscriber();
 
