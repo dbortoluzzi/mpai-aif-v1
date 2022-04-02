@@ -7,6 +7,8 @@
 #include <core_aim.h>
 #include <mic_common.h>
 #include <stm32l475e_iot01_audio.h>
+#include <drivers/gpio.h>
+#include <misc_utils.h>
 
 mpai_error_t* data_mic_aim_subscriber();
 

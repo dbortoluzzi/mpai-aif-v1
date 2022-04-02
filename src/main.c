@@ -26,6 +26,11 @@
 #include <sys/byteorder.h>
 #include <logging/log.h>
 
+// TODO: move to Kconfig
+#define PERIODIC_MODE_ENABLED false
+#define SENSORS_DATA_ENABLED false
+#define WRITE_TO_FLASH_ENABLED false
+
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/hci.h>
 #include <bluetooth/conn.h>
@@ -33,7 +38,9 @@
 #include <bluetooth/gatt.h>
 #include "button_svc.h"
 #include "led_svc.h"
-#include "flash_store.h"
+#ifdef WRITE_TO_FLASH_ENABLED == true
+	#include "flash_store.h"
+#endif
 #include <parson.h>
 
 LOG_MODULE_REGISTER(MAIN, LOG_LEVEL_INF);
@@ -41,10 +48,6 @@ LOG_MODULE_REGISTER(MAIN, LOG_LEVEL_INF);
 #define WHOAMI_REG 0x0F
 #define WHOAMI_ALT_REG 0x4F
 
-// TODO: move to Kconfig
-#define PERIODIC_MODE_ENABLED false
-#define SENSORS_DATA_ENABLED true
-#define WRITE_TO_FLASH_ENABLED false
 
 static int AIW_TEMP_LIMIT_DETECTION = 1;
 

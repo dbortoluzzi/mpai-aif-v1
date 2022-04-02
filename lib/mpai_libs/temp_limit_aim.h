@@ -6,6 +6,7 @@
 #include <core_common.h>
 #include <sensors_common.h>
 #include <core_aim.h>
+#include <math.h>
 
 mpai_error_t* temp_limit_aim_subscriber();
 

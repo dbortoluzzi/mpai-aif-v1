@@ -11,7 +11,7 @@ LOG_MODULE_REGISTER(MPAI_LIBS_SENSORS_AIM, LOG_LEVEL_INF);
 #define PRIORITY 7
 
 /* delay between sensors (in ms) */
-#define CONFIG_SENSORS_RATE_MS 1000
+#define CONFIG_SENSORS_RATE_MS 100
 
 /*************** STATIC ***************/
 // INITIALIZE STRUCT
