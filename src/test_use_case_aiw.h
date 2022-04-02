@@ -10,6 +10,7 @@ extern MPAI_AIM_MessageStore_t* message_store_data_mic_aim;
 extern MPAI_AIM_MessageStore_t* message_store_sensors_aim;
 extern MPAI_AIM_MessageStore_t* message_store_temp_limit_aim;
 extern MPAI_AIM_MessageStore_t* message_store_motion_aim;
+extern MPAI_AIM_MessageStore_t* message_store_rehabilitation_aim;
 
 extern subscriber_channel_t SENSORS_DATA_CHANNEL;
 extern subscriber_channel_t MIC_BUFFER_DATA_CHANNEL;

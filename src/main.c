@@ -17,6 +17,7 @@
 #include <temp_limit_aim.h>
 #include <data_mic_aim.h>
 #include <motion_aim.h>
+#include <rehabilitation_aim.h>
 #include <message_store.h>
 
 #include <zephyr/types.h>
@@ -33,6 +34,7 @@
 #define MIC_DATA_ENABLED false
 #define TEMP_LIMIT_ENABLED false
 #define MOTION_ENABLED true
+#define REHABILITATION_ENABLED true
 #define WRITE_TO_FLASH_ENABLED false
 
 #include <bluetooth/bluetooth.h>
@@ -59,6 +61,7 @@ MPAI_Component_AIM_t* aim_produce_sensors = NULL;
 MPAI_Component_AIM_t* aim_temp_limit = NULL;
 MPAI_Component_AIM_t* aim_data_mic = NULL;
 MPAI_Component_AIM_t* aim_data_motion = NULL;
+MPAI_Component_AIM_t* aim_rehabilitation = NULL;
 
 #if PERIODIC_MODE_ENABLED == true
 /******** START PERIODIC MODE ***********/
@@ -380,6 +383,19 @@ void main(void)
 			if (err_motion.code != MPAI_AIF_OK)
 			{
 				LOG_ERR("Error starting AIM %s: %s", MPAI_AIM_Get_Component(aim_data_motion)->name, log_strdup(MPAI_ERR_STR(err_motion.code)));
+				return;
+			} 
+		#endif
+
+		#if REHABILITATION_ENABLED == true
+			aim_rehabilitation = MPAI_AIM_Creator("AIM_REHABILITATION", AIW_USE_CASE_ID, rehabilitation_aim_subscriber, rehabilitation_aim_start, rehabilitation_aim_stop, rehabilitation_aim_resume, rehabilitation_aim_pause);
+			MPAI_MessageStore_register(message_store_test_case_aiw, MPAI_AIM_Get_Subscriber(aim_rehabilitation), MOTION_DATA_CHANNEL);
+			MPAI_MessageStore_register(message_store_test_case_aiw, MPAI_AIM_Get_Subscriber(aim_rehabilitation), MIC_PEAK_DATA_CHANNEL);
+			mpai_error_t err_rehabilitation = MPAI_AIM_Start(aim_rehabilitation);	
+
+			if (err_rehabilitation.code != MPAI_AIF_OK)
+			{
+				LOG_ERR("Error starting AIM %s: %s", MPAI_AIM_Get_Component(aim_rehabilitation)->name, log_strdup(MPAI_ERR_STR(err_rehabilitation.code)));
 				return;
 			} 
 		#endif

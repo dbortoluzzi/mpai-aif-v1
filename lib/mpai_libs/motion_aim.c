@@ -17,7 +17,6 @@ LOG_MODULE_REGISTER(MPAI_LIBS_MOTION_AIM, LOG_LEVEL_INF);
 #define MCU_MIN_STOPPED_MS 100
 
 /*************** STATIC ***************/
-static const struct device *led0;
 static float accel_tot_old = 0.0;
 static int64_t mcu_has_stopped_ts = 0.0;
 
@@ -127,12 +126,6 @@ mpai_error_t* motion_aim_subscriber()
 
 mpai_error_t *motion_aim_start()
 {
-	// LED
-	led0 = device_get_binding(DT_GPIO_LABEL(DT_ALIAS(led0), gpios));
-	gpio_pin_configure(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios),
-					   GPIO_OUTPUT_ACTIVE |
-						   DT_GPIO_FLAGS(DT_ALIAS(led0), gpios));
-
 	mcu_has_stopped_ts = k_uptime_get();
 
 	// CREATE SUBSCRIBER

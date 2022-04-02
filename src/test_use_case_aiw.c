@@ -12,6 +12,7 @@ void INIT_Test_Use_Case_AIW()
     message_store_sensors_aim = message_store_test_case_aiw;
     message_store_temp_limit_aim = message_store_test_case_aiw;
     message_store_motion_aim = message_store_test_case_aiw;
+    message_store_rehabilitation_aim = message_store_test_case_aiw;
 
     SENSORS_DATA_CHANNEL = MPAI_MessageStore_new_channel();
     MIC_BUFFER_DATA_CHANNEL = MPAI_MessageStore_new_channel();
