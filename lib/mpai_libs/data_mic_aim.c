@@ -73,7 +73,7 @@ void static start_recording() {
         printk("OK Audio Record\n");
     }
 
-	LOG_INF("Producing......\n\n");
+	LOG_DBG("Producing......\n\n");
 }
 
 #if PRINT_WAV_ENABLED == true
@@ -180,19 +180,19 @@ static void SendAudioLevelData(void)
 
         if (flag_peak_recognized == true)
         {
-            gpio_pin_set(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios), 1);    
+            // gpio_pin_set(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios), 1);    
         } else 
         {
-            gpio_pin_set(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios), 1);    
+            // gpio_pin_set(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios), 1);    
             int64_t now = k_uptime_get();
-            printk("PICCO RILEVATO %lld\n", now);  
+            // printk("PICCO RILEVATO %lld\n", now);  
             flag_peak_recognized = true;
 
             publish_peak_to_message_store(calc_peak);
         }
 
     } else {
-        gpio_pin_set(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios), 0);
+        // gpio_pin_set(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios), 0);
         flag_peak_recognized = false;
     }
 
@@ -331,7 +331,9 @@ void publish_buffer_to_message_store()
 
         MPAI_MessageStore_publish(message_store_test_case_aiw, &msg, MIC_BUFFER_DATA_CHANNEL);
 
-        LOG_INF("Message mic data published");
+        free(mic_data);
+
+        LOG_DBG("Message mic data published");
 
     #endif
 }
@@ -350,7 +352,9 @@ void publish_peak_to_message_store(int64_t peak_value)
 
     MPAI_MessageStore_publish(message_store_data_mic_aim, &msg, MIC_PEAK_DATA_CHANNEL);
 
-    LOG_INF("Message peak published");
+    free(mic_peak);
+
+    LOG_DBG("Message peak published");
 
 }
 

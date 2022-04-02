@@ -14,8 +14,11 @@ LOG_MODULE_REGISTER(MPAI_LIBS_REHABILITATION_AIM, LOG_LEVEL_INF);
 /* delay between sensors (in ms) */
 #define CONFIG_SENSORS_RATE_MS 100
 
+#define CONFIG_REHABILITATION_MOTION_TIMEOUT_MS 2000
+#define CONFIG_REHABILITATION_MIC_PEAK_TIMEOUT_MS 750
+
 /*************** STATIC ***************/
-static const struct device *led0;
+static const struct device *led0, *led1;
 
 /**************** THREADS **********************/
 
@@ -25,6 +28,19 @@ K_THREAD_STACK_DEFINE(thread_sub_rehabilitation_stack_area, STACKSIZE);
 static struct k_thread thread_sub_rehabilitation_sens_data;
 
 /* SUBSCRIBER */
+
+void show_movement_error()
+{
+	// Segnalo l'errore visivamente
+	int i, on = 1;
+	for (i = 0; i < 6; i++)
+	{
+		gpio_pin_set(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios), on);
+		gpio_pin_set(led1, DT_GPIO_PIN(DT_ALIAS(led1), gpios), !on);
+		k_sleep(K_MSEC(100));
+		on = (on == 1) ? 0 : 1;
+	}
+}
 
 void th_subscribe_rehabilitation_data(void *dummy1, void *dummy2, void *dummy3)
 {
@@ -38,38 +54,47 @@ void th_subscribe_rehabilitation_data(void *dummy1, void *dummy2, void *dummy3)
 
 	while (1)
 	{
-		/* this function will return once new data has arrived, or upon timeout (1000ms in this case). */
-		int ret = MPAI_MessageStore_poll(message_store_rehabilitation_aim, rehabilitation_aim_subscriber, K_MSEC(1000), MOTION_DATA_CHANNEL);
+		int ret_motion = MPAI_MessageStore_poll(message_store_rehabilitation_aim, rehabilitation_aim_subscriber, K_MSEC(CONFIG_REHABILITATION_MOTION_TIMEOUT_MS), MOTION_DATA_CHANNEL);
 
-		/* ret returns:
-		 * a positive value if new data was successfully returned
-		 * 0 if the poll timed out
-		 * negative if an error occured while polling
-		 */
-		if (ret > 0)
+		if (ret_motion > 0)
 		{
 			MPAI_MessageStore_copy(message_store_rehabilitation_aim, rehabilitation_aim_subscriber, &aim_message);
-			LOG_INF("Received from timestamp %lld\n", aim_message.timestamp);
+			LOG_DBG("Received from timestamp %lld\n", aim_message.timestamp);
 
 			motion_data_t *motion_data = (motion_data_t *)aim_message.data;
 
 			if (motion_data->motion_type == STOPPED)
 			{
-				LOG_INF("STOPPATO!!");
+				int ret_mic = MPAI_MessageStore_poll(message_store_rehabilitation_aim, rehabilitation_aim_subscriber, K_MSEC(CONFIG_REHABILITATION_MIC_PEAK_TIMEOUT_MS), MIC_PEAK_DATA_CHANNEL);
 
+				if (ret_mic > 0)
+				{
+					LOG_INF("MOVIMENTO CORRETTO!");
+				}
+				else if (ret_mic == 0)
+				{
+					LOG_ERR("MOVIMENTO NON CORRETTO! Picco non trovato");
+
+					show_movement_error();
+				}
+				else
+				{
+					printk("ERROR: error while polling: %d\n", ret_mic);
+					return;
+				}
 			} else if (motion_data->motion_type == STARTED)
-			{
-
+			{	
+				// TODO
 			}
 
 		}
-		else if (ret == 0)
+		else if (ret_motion == 0)
 		{
-			printk("WARNING: Did not receive new data for 1000ms. Continuing poll.\n");
+			printk("WARNING: Did not receive new motion data for %d. Continuing poll.\n", CONFIG_REHABILITATION_MOTION_TIMEOUT_MS);
 		}
 		else
 		{
-			printk("ERROR: error while polling: %d\n", ret);
+			printk("ERROR: error while polling: %d\n", ret_motion);
 			return;
 		}
 	}
@@ -88,6 +113,11 @@ mpai_error_t *rehabilitation_aim_start()
 	gpio_pin_configure(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios),
 					   GPIO_OUTPUT_ACTIVE |
 						   DT_GPIO_FLAGS(DT_ALIAS(led0), gpios));
+
+	led1 = device_get_binding(DT_GPIO_LABEL(DT_ALIAS(led1), gpios));
+	gpio_pin_configure(led1, DT_GPIO_PIN(DT_ALIAS(led1), gpios),
+					   GPIO_OUTPUT_INACTIVE |
+						   DT_GPIO_FLAGS(DT_ALIAS(led1), gpios));
 
 	// CREATE SUBSCRIBER
 	subscriber_rehabilitation_thread_id = k_thread_create(&thread_sub_rehabilitation_sens_data, thread_sub_rehabilitation_stack_area,

@@ -390,7 +390,7 @@ void produce_sensors_data(void *arg1, void *arg2) {
 	sensor_result_t *sensor_result_ptr = (sensor_result_t*) arg1;
 	sensor_devices_t *sensor_devices_ptr = (sensor_devices_t*) arg2;
 
-	LOG_INF("Producing......\n\n");
+	LOG_DBG("Producing......\n\n");
 
 	struct sensor_value lis2dw12_accel[3];
 	struct sensor_value iis3dhhc_accel[3];
