@@ -18,7 +18,6 @@ typedef uint16_t subscriber_channel_t;
 typedef struct _subscriber_item{
     module_t* key;
     struct pubsub_subscriber_s* value;
-	subscriber_channel_t channel;
 } subscriber_item;
 
 typedef struct MPAI_AIM_MessageStore_t
