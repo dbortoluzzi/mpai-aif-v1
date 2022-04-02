@@ -10,9 +10,6 @@ LOG_MODULE_REGISTER(MPAI_LIBS_DATA_MIC_AIM, LOG_LEVEL_INF);
 /* scheduling priority used by each thread */
 #define PRIORITY 7
 
-/* delay between sensors (in ms) */
-#define CONFIG_SENSORS_RATE_MS 1000
-
 /* Define The transmission interval [mSec] for Microphones dB Values */
 #define MICS_DB_UPDATE_MS 50
 
