@@ -524,7 +524,7 @@ void produce_sensors_data(void *arg1, void *arg2) {
 		.timestamp = k_uptime_get()
 	};
 
-	MPAI_MessageStore_publish(message_store, &msg);
+	MPAI_MessageStore_publish(message_store_sensors_aim, &msg, SENSORS_DATA_CHANNEL);
 }
 
 void th_produce_sensors_data(void *arg1, void *dummy2, void *dummy3)

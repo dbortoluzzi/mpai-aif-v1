@@ -8,6 +8,9 @@
 #include <core_aim.h>
 #include <math.h>
 
+__weak MPAI_AIM_MessageStore_t* message_store_temp_limit_aim;
+__weak subscriber_channel_t SENSORS_DATA_CHANNEL;
+
 mpai_error_t* temp_limit_aim_subscriber();
 
 mpai_error_t* temp_limit_aim_start();

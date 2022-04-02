@@ -329,7 +329,7 @@ void publish_to_message_store()
             .timestamp = k_uptime_get()
         };
 
-        MPAI_MessageStore_publish(message_store, &msg);
+        MPAI_MessageStore_publish(message_store, &msg, MIC_CHANNEL);
 
         LOG_INF("Message published");
 
