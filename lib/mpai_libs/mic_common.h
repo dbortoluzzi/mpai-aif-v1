@@ -10,7 +10,6 @@ typedef struct mic_data_t{
 
 typedef struct mic_peak_t{
 	int32_t* data;
-	size_t* size;
 } mic_peak_t;
 
 #endif
