@@ -30,6 +30,22 @@ static struct k_thread thread_sub_motion_sens_data;
 
 /* SUBSCRIBER */
 
+void publish_motion_to_message_store(MOTION_TYPE motion_type)
+{
+	motion_data_t *motion_data = (motion_data_t *)k_malloc(sizeof(motion_data_t));
+	motion_data->motion_type = motion_type;
+	
+	// Publish sensor message 
+	mpai_parser_t msg = {
+		.data = motion_data,
+		.timestamp = k_uptime_get()
+	};
+
+	MPAI_MessageStore_publish(message_store_motion_aim, &msg, MOTION_DATA_CHANNEL);
+
+	LOG_INF("Message motion published");
+}
+
 void th_subscribe_motion_data(void *dummy1, void *dummy2, void *dummy3)
 {
 	ARG_UNUSED(dummy1);
@@ -69,16 +85,24 @@ void th_subscribe_motion_data(void *dummy1, void *dummy2, void *dummy3)
 				{
 					if (mcu_has_stopped_ts != 0 && aim_message.timestamp - mcu_has_stopped_ts >=  MCU_MIN_STOPPED_MS)
 					{
-						printk("MCU Motion stopped: Accel (m.s-2): tot: %.5f\n", accel_tot);
-						gpio_pin_set(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios), 1);	
+						// MCU stopped but no publish event	
 					}
 					else if (mcu_has_stopped_ts == 0)
 					{
 						mcu_has_stopped_ts = aim_message.timestamp;	
+
+						printk("MCU Motion stopped: Accel (m.s-2): tot: %.5f\n", accel_tot);
+
+						publish_motion_to_message_store(STOPPED);
 					}
 				} else 
 				{	
-					gpio_pin_set(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios), 0);
+					if (mcu_has_stopped_ts > 0) 
+					{
+						printk("MCU Motion started: Accel (m.s-2): tot: %.5f\n", accel_tot);
+
+						publish_motion_to_message_store(STARTED);
+					}
 					mcu_has_stopped_ts = 0;
 				}
 			#endif

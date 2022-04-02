@@ -29,10 +29,10 @@
 
 // TODO: move to Kconfig
 #define PERIODIC_MODE_ENABLED false
-#define SENSORS_DATA_ENABLED false
+#define SENSORS_DATA_ENABLED true
 #define MIC_DATA_ENABLED false
 #define TEMP_LIMIT_ENABLED false
-#define MOTION_ENABLED false
+#define MOTION_ENABLED true
 #define WRITE_TO_FLASH_ENABLED false
 
 #include <bluetooth/bluetooth.h>

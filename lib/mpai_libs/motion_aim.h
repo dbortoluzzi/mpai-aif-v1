@@ -6,6 +6,7 @@
 #include <core_common.h>
 #include <sensors_common.h>
 #include <core_aim.h>
+#include <motion_common.h>
 #include <math.h>
 
 __weak MPAI_AIM_MessageStore_t* message_store_motion_aim;
