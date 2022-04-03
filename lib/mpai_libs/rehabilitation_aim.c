@@ -15,7 +15,7 @@ LOG_MODULE_REGISTER(MPAI_LIBS_REHABILITATION_AIM, LOG_LEVEL_INF);
 #define CONFIG_SENSORS_RATE_MS 100
 
 #define CONFIG_REHABILITATION_MOTION_TIMEOUT_MS 2000
-#define CONFIG_REHABILITATION_MIC_PEAK_TIMEOUT_MS 750
+#define CONFIG_REHABILITATION_MIC_PEAK_TIMEOUT_MS 1000
 
 /*************** STATIC ***************/
 static const struct device *led0, *led1;
@@ -31,7 +31,7 @@ static struct k_thread thread_sub_rehabilitation_sens_data;
 
 void show_movement_error()
 {
-	// Segnalo l'errore visivamente
+	// Show error blinking leds
 	int i, on = 1;
 	for (i = 0; i < 6; i++)
 	{
@@ -48,7 +48,7 @@ void th_subscribe_rehabilitation_data(void *dummy1, void *dummy2, void *dummy3)
 	ARG_UNUSED(dummy2);
 	ARG_UNUSED(dummy3);
 
-	mpai_parser_t aim_message;
+	mpai_parser_t aim_motion_message;
 
 	LOG_INF("START SUBSCRIBER");
 
@@ -58,13 +58,14 @@ void th_subscribe_rehabilitation_data(void *dummy1, void *dummy2, void *dummy3)
 
 		if (ret_motion > 0)
 		{
-			MPAI_MessageStore_copy(message_store_rehabilitation_aim, rehabilitation_aim_subscriber, &aim_message);
-			LOG_DBG("Received from timestamp %lld\n", aim_message.timestamp);
+			MPAI_MessageStore_copy(message_store_rehabilitation_aim, rehabilitation_aim_subscriber, MOTION_DATA_CHANNEL, &aim_motion_message);
+			LOG_DBG("Received from timestamp %lld\n", aim_motion_message.timestamp);
 
-			motion_data_t *motion_data = (motion_data_t *)aim_message.data;
+			motion_data_t *motion_data = (motion_data_t *)aim_motion_message.data;
 
 			if (motion_data->motion_type == STOPPED)
 			{
+				LOG_DBG("WAITING FOR PEAK!");
 				int ret_mic = MPAI_MessageStore_poll(message_store_rehabilitation_aim, rehabilitation_aim_subscriber, K_MSEC(CONFIG_REHABILITATION_MIC_PEAK_TIMEOUT_MS), MIC_PEAK_DATA_CHANNEL);
 
 				if (ret_mic > 0)

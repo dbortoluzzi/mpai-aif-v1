@@ -16,7 +16,8 @@
 
 typedef uint16_t subscriber_channel_t;
 typedef struct _subscriber_item{
-    module_t* key;
+    module_t* subscriber_key;
+	subscriber_channel_t channel;
     struct pubsub_subscriber_s* value;
 } subscriber_item;
 
@@ -49,7 +50,7 @@ int MPAI_MessageStore_poll(MPAI_AIM_MessageStore_t* me, module_t* subscriber, k_
 /**
  * @brief Copy a message message store when is available
  */
-mpai_error_t MPAI_MessageStore_copy(MPAI_AIM_MessageStore_t* me, module_t* subscriber, mpai_parser_t* message);
+mpai_error_t MPAI_MessageStore_copy(MPAI_AIM_MessageStore_t* me, module_t* subscriber, subscriber_channel_t channel, mpai_parser_t* message);
 
 /**
  * @brief Create the message store

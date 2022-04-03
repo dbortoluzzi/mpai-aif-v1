@@ -181,8 +181,8 @@ static void SendAudioLevelData(void)
         } else 
         {
             // gpio_pin_set(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios), 1);    
-            int64_t now = k_uptime_get();
-            // printk("PICCO RILEVATO %lld\n", now);  
+            // int64_t now = k_uptime_get();
+            // LOG_INF("PICCO RILEVATO %d: %lld\n", calc_peak, now);  
             flag_peak_recognized = true;
 
             publish_peak_to_message_store(calc_peak);

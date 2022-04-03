@@ -52,10 +52,10 @@ void th_subscribe_sensors_data(void *dummy1, void *dummy2, void *dummy3)
 		 */
 		if (ret > 0)
 		{
-			MPAI_MessageStore_copy(message_store_temp_limit_aim, temp_limit_aim_subscriber, &aim_message);
+			MPAI_MessageStore_copy(message_store_temp_limit_aim, temp_limit_aim_subscriber, SENSORS_DATA_CHANNEL, &aim_message);
 			LOG_DBG("Received from timestamp %lld\n", aim_message.timestamp);
 
-			/* Display sensor datsa */
+			/* Display sensor data */
 
 			sensor_result_t *sensor_data = (sensor_result_t *)aim_message.data;
 

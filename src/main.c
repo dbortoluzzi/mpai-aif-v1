@@ -31,7 +31,7 @@
 // TODO: move to Kconfig
 #define PERIODIC_MODE_ENABLED false
 #define SENSORS_DATA_ENABLED true
-#define MIC_DATA_ENABLED false
+#define MIC_DATA_ENABLED true
 #define TEMP_LIMIT_ENABLED false
 #define MOTION_ENABLED true
 #define REHABILITATION_ENABLED true
