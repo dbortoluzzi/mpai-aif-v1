@@ -11,10 +11,8 @@ LOG_MODULE_REGISTER(MPAI_LIBS_REHABILITATION_AIM, LOG_LEVEL_INF);
 /* scheduling priority used by each thread */
 #define PRIORITY 7
 
-/* delay between sensors (in ms) */
-#define CONFIG_SENSORS_RATE_MS 100
-
-#define CONFIG_REHABILITATION_MOTION_TIMEOUT_MS 2000
+#define CONFIG_REHABILITATION_MOTION_TIMEOUT_MS 3000
+// #define CONFIG_REHABILITATION_MIC_PEAK_TIMEOUT_MS 500
 #define CONFIG_REHABILITATION_MIC_PEAK_TIMEOUT_MS 1000
 
 /*************** STATIC ***************/
@@ -65,7 +63,8 @@ void th_subscribe_rehabilitation_data(void *dummy1, void *dummy2, void *dummy3)
 
 			if (motion_data->motion_type == STOPPED)
 			{
-				LOG_DBG("WAITING FOR PEAK!");
+				LOG_INF("STOPPED: WAITING FOR PEAK!");
+				k_sleep(K_MSEC(10));
 				int ret_mic = MPAI_MessageStore_poll(message_store_rehabilitation_aim, rehabilitation_aim_subscriber, K_MSEC(CONFIG_REHABILITATION_MIC_PEAK_TIMEOUT_MS), MIC_PEAK_DATA_CHANNEL);
 
 				if (ret_mic > 0)
@@ -92,6 +91,8 @@ void th_subscribe_rehabilitation_data(void *dummy1, void *dummy2, void *dummy3)
 		else if (ret_motion == 0)
 		{
 			printk("WARNING: Did not receive new motion data for %d. Continuing poll.\n", CONFIG_REHABILITATION_MOTION_TIMEOUT_MS);
+			LOG_WRN("MOVIMENTO NON TROVATO!");
+			show_movement_error();
 		}
 		else
 		{

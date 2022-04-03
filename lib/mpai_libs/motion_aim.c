@@ -27,11 +27,12 @@ static k_tid_t subscriber_motion_thread_id;
 K_THREAD_STACK_DEFINE(thread_sub_motion_stack_area, STACKSIZE);
 static struct k_thread thread_sub_motion_sens_data;
 
+motion_data_t *motion_data;
+
 /* SUBSCRIBER */
 
 void publish_motion_to_message_store(MOTION_TYPE motion_type)
 {
-	motion_data_t *motion_data = (motion_data_t *)k_malloc(sizeof(motion_data_t));
 	motion_data->motion_type = motion_type;
 	
 	// Publish sensor message 
@@ -42,9 +43,7 @@ void publish_motion_to_message_store(MOTION_TYPE motion_type)
 
 	MPAI_MessageStore_publish(message_store_motion_aim, &msg, MOTION_DATA_CHANNEL);
 
-	free(motion_data);
-
-	LOG_DBG("Message motion published");
+	LOG_INF("Message motion published");
 }
 
 void th_subscribe_motion_data(void *dummy1, void *dummy2, void *dummy3)
@@ -102,7 +101,7 @@ void th_subscribe_motion_data(void *dummy1, void *dummy2, void *dummy3)
 					{
 						printk("MCU Motion started: Accel (m.s-2): tot: %.5f\n", accel_tot);
 
-						publish_motion_to_message_store(STARTED);
+						// publish_motion_to_message_store(STARTED);
 					}
 					mcu_has_stopped_ts = 0;
 				}
@@ -129,6 +128,7 @@ mpai_error_t* motion_aim_subscriber()
 mpai_error_t *motion_aim_start()
 {
 	mcu_has_stopped_ts = k_uptime_get();
+	motion_data = (motion_data_t *)k_malloc(sizeof(motion_data_t));
 
 	// CREATE SUBSCRIBER
 	subscriber_motion_thread_id = k_thread_create(&thread_sub_motion_sens_data, thread_sub_motion_stack_area,
