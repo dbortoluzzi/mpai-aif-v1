@@ -19,6 +19,7 @@ LOG_MODULE_REGISTER(MPAI_LIBS_MOTION_AIM, LOG_LEVEL_INF);
 /*************** STATIC ***************/
 static float accel_tot_old = 0.0;
 static int64_t mcu_has_stopped_ts = 0.0;
+static motion_data_t motion_data = {.motion_type = UNKNOWN};
 
 /**************** THREADS **********************/
 
@@ -27,23 +28,21 @@ static k_tid_t subscriber_motion_thread_id;
 K_THREAD_STACK_DEFINE(thread_sub_motion_stack_area, STACKSIZE);
 static struct k_thread thread_sub_motion_sens_data;
 
-motion_data_t *motion_data;
-
 /* SUBSCRIBER */
 
 void publish_motion_to_message_store(MOTION_TYPE motion_type)
 {
-	motion_data->motion_type = motion_type;
+	motion_data.motion_type = motion_type;
 	
 	// Publish sensor message 
 	mpai_parser_t msg = {
-		.data = motion_data,
+		.data = &motion_data,
 		.timestamp = k_uptime_get()
 	};
 
 	MPAI_MessageStore_publish(message_store_motion_aim, &msg, MOTION_DATA_CHANNEL);
 
-	LOG_INF("Message motion published");
+	LOG_DBG("Message motion published");
 }
 
 void th_subscribe_motion_data(void *dummy1, void *dummy2, void *dummy3)
@@ -128,7 +127,6 @@ mpai_error_t* motion_aim_subscriber()
 mpai_error_t *motion_aim_start()
 {
 	mcu_has_stopped_ts = k_uptime_get();
-	motion_data = (motion_data_t *)k_malloc(sizeof(motion_data_t));
 
 	// CREATE SUBSCRIBER
 	subscriber_motion_thread_id = k_thread_create(&thread_sub_motion_sens_data, thread_sub_motion_stack_area,

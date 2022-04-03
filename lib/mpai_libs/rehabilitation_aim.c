@@ -13,7 +13,7 @@ LOG_MODULE_REGISTER(MPAI_LIBS_REHABILITATION_AIM, LOG_LEVEL_INF);
 
 #define CONFIG_REHABILITATION_MOTION_TIMEOUT_MS 3000
 // #define CONFIG_REHABILITATION_MIC_PEAK_TIMEOUT_MS 500
-#define CONFIG_REHABILITATION_MIC_PEAK_TIMEOUT_MS 1000
+#define CONFIG_REHABILITATION_MIC_PEAK_TIMEOUT_MS 1500
 
 /*************** STATIC ***************/
 static const struct device *led0, *led1;
@@ -63,17 +63,17 @@ void th_subscribe_rehabilitation_data(void *dummy1, void *dummy2, void *dummy3)
 
 			if (motion_data->motion_type == STOPPED)
 			{
-				LOG_INF("STOPPED: WAITING FOR PEAK!");
+				LOG_INF("MOTION STOPPED: Waiting for Audio Peak");
 				k_sleep(K_MSEC(10));
 				int ret_mic = MPAI_MessageStore_poll(message_store_rehabilitation_aim, rehabilitation_aim_subscriber, K_MSEC(CONFIG_REHABILITATION_MIC_PEAK_TIMEOUT_MS), MIC_PEAK_DATA_CHANNEL);
 
 				if (ret_mic > 0)
 				{
-					LOG_INF("MOVIMENTO CORRETTO!");
+					LOG_INF("MOVEMENT CORRECT!");
 				}
 				else if (ret_mic == 0)
 				{
-					LOG_ERR("MOVIMENTO NON CORRETTO! Picco non trovato");
+					LOG_ERR("MOVEMENT NOT CORRECT! Audio Peak NOT FOUND");
 
 					show_movement_error();
 				}
@@ -91,7 +91,7 @@ void th_subscribe_rehabilitation_data(void *dummy1, void *dummy2, void *dummy3)
 		else if (ret_motion == 0)
 		{
 			printk("WARNING: Did not receive new motion data for %d. Continuing poll.\n", CONFIG_REHABILITATION_MOTION_TIMEOUT_MS);
-			LOG_WRN("MOVIMENTO NON TROVATO!");
+			LOG_WRN("MOVEMENT NOT RECOGNIZED");
 			show_movement_error();
 		}
 		else

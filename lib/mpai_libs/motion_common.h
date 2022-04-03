@@ -5,7 +5,8 @@
 
 typedef enum
 { 
-    STOPPED,
+    UNKNOWN,
+	STOPPED,
 	STARTED
 } MOTION_TYPE;
 

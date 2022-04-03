@@ -41,6 +41,8 @@ static size_t transfer_complete_events = 0;
 
 static const struct device *led0;
 
+static mic_peak_t mic_peak = {};
+
 void static start_recording() {
 
     int32_t ret;
@@ -172,7 +174,7 @@ static void SendAudioLevelData(void)
     if (calc_peak >= 10000000 && calc_peak < 15000000 && 0.00006 >= (float)calc_median/calc_peak) {
 
         // int64_t now = k_uptime_get();
-        // printk("PICCO RILEVATO %lld\n", now);  
+        // printk("AUDIO PEAK RECOGNIZED %lld\n", now);  
         // gpio_pin_set(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios), 1);    
 
         if (flag_peak_recognized == true)
@@ -182,7 +184,7 @@ static void SendAudioLevelData(void)
         {
             // gpio_pin_set(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios), 1);    
             int64_t now = k_uptime_get();
-            LOG_INF("PICCO RILEVATO %d: %lld\n", calc_peak, now);  
+            LOG_DBG("AUDIO PEAK RECOGNIZED %d: %lld\n", calc_peak, now);  
             flag_peak_recognized = true;
 
             publish_peak_to_message_store(calc_peak);
@@ -311,6 +313,8 @@ void BSP_AUDIO_IN_Error_CallBack(uint32_t Instance) {
 }
 
 /* PRODUCER */
+
+// TODO: refactor using static memory
 void publish_buffer_to_message_store()
 {
     #if PUBLISH_BUFFER_ENABLED == true
@@ -337,19 +341,15 @@ void publish_buffer_to_message_store()
 
 void publish_peak_to_message_store(int64_t peak_value)
 {
-    mic_peak_t *mic_peak = (mic_peak_t *)k_malloc(sizeof(mic_peak_t));
-    mic_peak->data = (int32_t *)k_malloc(sizeof(int32_t));
-    memcpy(mic_peak->data, &peak_value, sizeof(peak_value));
+    memcpy(mic_peak.data, &peak_value, sizeof(peak_value));
     
     // Publish sensor message 
     mpai_parser_t msg = {
-        .data = mic_peak,
+        .data = &mic_peak,
         .timestamp = k_uptime_get()
     };
 
     MPAI_MessageStore_publish(message_store_data_mic_aim, &msg, MIC_PEAK_DATA_CHANNEL);
-
-    free(mic_peak);
 
     LOG_DBG("Message peak published");
 
