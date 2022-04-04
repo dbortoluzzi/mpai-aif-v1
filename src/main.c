@@ -292,22 +292,21 @@ static void prepare_fds(void)
 static int start_coap_client(void)
 {
 	int ret = 0;
-	struct sockaddr_in6 addr6;
+	struct sockaddr_in addr;
 
-	addr6.sin6_family = AF_INET6;
-	addr6.sin6_port = htons(PEER_PORT);
-	addr6.sin6_scope_id = 0U;
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(PEER_PORT);
 
-	inet_pton(AF_INET6, CONFIG_NET_CONFIG_PEER_IPV6_ADDR,
-		  &addr6.sin6_addr);
+	inet_pton(AF_INET, CONFIG_NET_CONFIG_PEER_IPV4_ADDR,
+		  &addr.sin_addr);
 
-	sock = socket(addr6.sin6_family, SOCK_DGRAM, IPPROTO_UDP);
+	sock = socket(addr.sin_family, SOCK_DGRAM, IPPROTO_UDP);
 	if (sock < 0) {
 		LOG_ERR("Failed to create UDP socket %d", errno);
 		return -errno;
 	}
 
-	ret = connect(sock, (struct sockaddr *)&addr6, sizeof(addr6));
+	ret = connect(sock, (struct sockaddr *)&addr, sizeof(addr));
 	if (ret < 0) {
 		LOG_ERR("Cannot connect to UDP remote : %d", errno);
 		return -errno;
