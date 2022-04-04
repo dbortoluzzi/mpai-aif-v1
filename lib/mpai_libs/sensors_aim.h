@@ -11,6 +11,9 @@
 #include <drivers/uart.h>
 #include <message_store.h>
 
+__weak MPAI_AIM_MessageStore_t* message_store_sensors_aim;
+__weak subscriber_channel_t SENSORS_DATA_CHANNEL;
+
 mpai_error_t* sensors_aim_subscriber();
 
 mpai_error_t* sensors_aim_start();

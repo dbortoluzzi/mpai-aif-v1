@@ -1,0 +1,17 @@
+&clk_msi {
+	msi-range = <10>;
+	status = "okay";
+};
+  
+  
+&pll {
+	compatible = "st,stm32l4-pll-clock";
+	div-m = <6>;
+	mul-n = <43>;
+	div-p = <7>;
+	div-q = <2>;
+	div-r = <4>;
+	clocks = <&clk_msi>;
+	status = "okay";
+ };
+  

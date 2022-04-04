@@ -15,6 +15,9 @@
 #include <core_aim.h>
 #include <sensors_aim.h>
 #include <temp_limit_aim.h>
+#include <data_mic_aim.h>
+#include <motion_aim.h>
+#include <rehabilitation_aim.h>
 #include <message_store.h>
 
 #include <zephyr/types.h>
@@ -25,6 +28,15 @@
 #include <sys/byteorder.h>
 #include <logging/log.h>
 
+// TODO: move to Kconfig
+#define PERIODIC_MODE_ENABLED false
+#define SENSORS_DATA_ENABLED true
+#define MIC_DATA_ENABLED true
+#define TEMP_LIMIT_ENABLED false
+#define MOTION_ENABLED true
+#define REHABILITATION_ENABLED true
+#define WRITE_TO_FLASH_ENABLED false
+
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/hci.h>
 #include <bluetooth/conn.h>
@@ -32,28 +44,27 @@
 #include <bluetooth/gatt.h>
 #include "button_svc.h"
 #include "led_svc.h"
-#include "flash_store.h"
+#ifdef WRITE_TO_FLASH_ENABLED == true
+	#include "flash_store.h"
+#endif
 #include <parson.h>
+
+#include <test_use_case_aiw.h>
 
 LOG_MODULE_REGISTER(MAIN, LOG_LEVEL_INF);
 
 #define WHOAMI_REG 0x0F
 #define WHOAMI_ALT_REG 0x4F
 
-#define PERIODIC_MODE_ENABLED false
-#define AIW_SENSORS_DATA_ENABLED true
-#define WRITE_TO_FLASH_ENABLED true
-
-static int AIW_TEMP_LIMIT_DETECTION = 1;
-
 
 MPAI_Component_AIM_t* aim_produce_sensors = NULL;
 MPAI_Component_AIM_t* aim_temp_limit = NULL;
-
-MPAI_AIM_MessageStore_t* message_store;
+MPAI_Component_AIM_t* aim_data_mic = NULL;
+MPAI_Component_AIM_t* aim_data_motion = NULL;
+MPAI_Component_AIM_t* aim_rehabilitation = NULL;
 
 #if PERIODIC_MODE_ENABLED == true
-/******** START INTERMETTING MODE ***********/
+/******** START PERIODIC MODE ***********/
 void aim_timer_switch_status(struct k_work *work)
 {
 	if (MPAI_AIM_Is_Alive(aim_produce_sensors) == true) {
@@ -71,7 +82,7 @@ void aim_timer_handler(struct k_timer *dummy)
 }
 
 K_TIMER_DEFINE(aim_timer, aim_timer_handler, NULL);
-/******** END INTERMETTING STATUS ***********/
+/******** END PERIODIC MODE ***********/
 #endif	
 
 /*** START BT ***/
@@ -280,7 +291,7 @@ void main(void)
 		LOG_ERR("Bluetooth init failed (err %d)", err);
 	}
 
-	#if PERIODIC_MODE_ENABLED == true
+	#if WRITE_TO_FLASH_ENABLED == true
 		/*** START SPI FLASH ***/
 		const char expected[] = "{\"name\":\"Daniele\"}";
 		const size_t len = sizeof(expected);
@@ -328,37 +339,72 @@ void main(void)
 		/*** END SPI FLASH ***/
 	#endif
 
-	#if AIW_SENSORS_DATA_ENABLED == true
-		message_store = MPAI_MessageStore_Creator(AIW_TEMP_LIMIT_DETECTION, "SENSORS_DATA", sizeof(mpai_parser_t));
+	INIT_Test_Use_Case_AIW();
 
-		aim_produce_sensors = MPAI_AIM_Creator("AIM_PRODUCE_SENSORS_DATA", AIW_TEMP_LIMIT_DETECTION, sensors_aim_subscriber, sensors_aim_start, sensors_aim_stop, sensors_aim_resume, sensors_aim_pause);
+	#if MIC_DATA_ENABLED == true
+		aim_data_mic = MPAI_AIM_Creator("AIM_DATA_MIC", AIW_USE_CASE_ID, data_mic_aim_subscriber, data_mic_aim_start, data_mic_aim_stop, data_mic_aim_resume, data_mic_aim_pause);
+		mpai_error_t err_data_mic = MPAI_AIM_Start(aim_data_mic);	
+
+		if (err_data_mic.code != MPAI_AIF_OK)
+		{
+			LOG_ERR("Error starting AIM %s: %s", MPAI_AIM_Get_Component(aim_data_mic)->name, log_strdup(MPAI_ERR_STR(err_data_mic.code)));
+			return;
+		} 
+	#endif
+	
+	#if SENSORS_DATA_ENABLED == true
+		
+		aim_produce_sensors = MPAI_AIM_Creator("AIM_PRODUCE_SENSORS_DATA", AIW_USE_CASE_ID, sensors_aim_subscriber, sensors_aim_start, sensors_aim_stop, sensors_aim_resume, sensors_aim_pause);
 		mpai_error_t err_sens_aim = MPAI_AIM_Start(aim_produce_sensors);
 
-		if (err_sens_aim.code == MPAI_AIF_OK)
-		{
-			aim_temp_limit = MPAI_AIM_Creator("AIM_TEMP_LIMIT", AIW_TEMP_LIMIT_DETECTION, temp_limit_aim_subscriber, temp_limit_aim_start, temp_limit_aim_stop, temp_limit_aim_resume, temp_limit_aim_pause);
-			MPAI_MessageStore_register(message_store, MPAI_AIM_Get_Subscriber(aim_temp_limit));
-			mpai_error_t err_temp_limit = MPAI_AIM_Start(aim_temp_limit);	
-
-			if (err_temp_limit.code == MPAI_AIF_OK)
-			{
-				LOG_INF("MPAI_AIF initialized correctly");
-			} 
-			else
-			{
-				LOG_ERR("Error starting AIM %s: %s", MPAI_AIM_Get_Component(aim_temp_limit)->name, log_strdup(MPAI_ERR_STR(err_temp_limit.code)));
-				return;
-			}
-
-			#if PERIODIC_MODE_ENABLED == true
-				/* start periodic timer to switch status */
-				k_timer_start(&aim_timer, K_SECONDS(5), K_SECONDS(5));		
-			#endif
-		}
-		else
+		if (err_sens_aim.code != MPAI_AIF_OK) 
 		{
 			LOG_ERR("Error starting AIM %s: %s", MPAI_AIM_Get_Component(aim_produce_sensors)->name, log_strdup(MPAI_ERR_STR(err_sens_aim.code)));
 			return;
 		}
+
+		#if TEMP_LIMIT_ENABLED == true
+			aim_temp_limit = MPAI_AIM_Creator("AIM_TEMP_LIMIT", AIW_USE_CASE_ID, temp_limit_aim_subscriber, temp_limit_aim_start, temp_limit_aim_stop, temp_limit_aim_resume, temp_limit_aim_pause);
+			MPAI_MessageStore_register(message_store_test_case_aiw, MPAI_AIM_Get_Subscriber(aim_temp_limit), SENSORS_DATA_CHANNEL);
+			mpai_error_t err_temp_limit = MPAI_AIM_Start(aim_temp_limit);	
+
+			if (err_temp_limit.code != MPAI_AIF_OK)
+			{
+				LOG_ERR("Error starting AIM %s: %s", MPAI_AIM_Get_Component(aim_temp_limit)->name, log_strdup(MPAI_ERR_STR(err_temp_limit.code)));
+				return;
+			} 
+		#endif
+
+		#if MOTION_ENABLED == true
+			aim_data_motion = MPAI_AIM_Creator("AIM_MOTION", AIW_USE_CASE_ID, motion_aim_subscriber, motion_aim_start, motion_aim_stop, motion_aim_resume, motion_aim_pause);
+			MPAI_MessageStore_register(message_store_test_case_aiw, MPAI_AIM_Get_Subscriber(aim_data_motion), SENSORS_DATA_CHANNEL);
+			mpai_error_t err_motion = MPAI_AIM_Start(aim_data_motion);	
+
+			if (err_motion.code != MPAI_AIF_OK)
+			{
+				LOG_ERR("Error starting AIM %s: %s", MPAI_AIM_Get_Component(aim_data_motion)->name, log_strdup(MPAI_ERR_STR(err_motion.code)));
+				return;
+			} 
+		#endif
+
+		#if REHABILITATION_ENABLED == true
+			aim_rehabilitation = MPAI_AIM_Creator("AIM_REHABILITATION", AIW_USE_CASE_ID, rehabilitation_aim_subscriber, rehabilitation_aim_start, rehabilitation_aim_stop, rehabilitation_aim_resume, rehabilitation_aim_pause);
+			MPAI_MessageStore_register(message_store_test_case_aiw, MPAI_AIM_Get_Subscriber(aim_rehabilitation), MOTION_DATA_CHANNEL);
+			MPAI_MessageStore_register(message_store_test_case_aiw, MPAI_AIM_Get_Subscriber(aim_rehabilitation), MIC_PEAK_DATA_CHANNEL);
+			mpai_error_t err_rehabilitation = MPAI_AIM_Start(aim_rehabilitation);	
+
+			if (err_rehabilitation.code != MPAI_AIF_OK)
+			{
+				LOG_ERR("Error starting AIM %s: %s", MPAI_AIM_Get_Component(aim_rehabilitation)->name, log_strdup(MPAI_ERR_STR(err_rehabilitation.code)));
+				return;
+			} 
+		#endif
+
+		LOG_INF("MPAI_AIF initialized correctly");
+
+		#if PERIODIC_MODE_ENABLED == true
+			/* start periodic timer to switch status */
+			k_timer_start(&aim_timer, K_SECONDS(5), K_SECONDS(5));		
+		#endif
 	#endif
 }

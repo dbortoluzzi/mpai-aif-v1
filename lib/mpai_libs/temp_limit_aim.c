@@ -12,10 +12,9 @@ LOG_MODULE_REGISTER(MPAI_LIBS_TEMP_LIMIT_AIM, LOG_LEVEL_INF);
 #define PRIORITY 7
 
 /* delay between sensors (in ms) */
-#define CONFIG_SENSORS_RATE_MS 1000
+#define CONFIG_SENSORS_RATE_MS 100
 
 #define TEMPERATURE_LIMIT 30.0
-
 
 /*************** STATIC ***************/
 static const struct device *led0;
@@ -41,10 +40,10 @@ void th_subscribe_sensors_data(void *dummy1, void *dummy2, void *dummy3)
 
 	while (1)
 	{
-		LOG_INF("Reading from pubsub......\n\n");
+		// LOG_INF("Reading from pubsub......\n\n");
 
 		/* this function will return once new data has arrived, or upon timeout (1000ms in this case). */
-		int ret = MPAI_MessageStore_poll(message_store, temp_limit_aim_subscriber, K_MSEC(1000));
+		int ret = MPAI_MessageStore_poll(message_store_temp_limit_aim, temp_limit_aim_subscriber, K_MSEC(1000), SENSORS_DATA_CHANNEL);
 
 		/* ret returns:
 		 * a positive value if new data was successfully returned
@@ -53,10 +52,10 @@ void th_subscribe_sensors_data(void *dummy1, void *dummy2, void *dummy3)
 		 */
 		if (ret > 0)
 		{
-			MPAI_MessageStore_copy(message_store, temp_limit_aim_subscriber, &aim_message);
-			LOG_INF("Received from timestamp %lld\n", aim_message.timestamp);
+			MPAI_MessageStore_copy(message_store_temp_limit_aim, temp_limit_aim_subscriber, SENSORS_DATA_CHANNEL, &aim_message);
+			LOG_DBG("Received from timestamp %lld\n", aim_message.timestamp);
 
-			/* Display sensor datsa */
+			/* Display sensor data */
 
 			sensor_result_t *sensor_data = (sensor_result_t *)aim_message.data;
 
