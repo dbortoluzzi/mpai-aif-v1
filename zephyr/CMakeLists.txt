@@ -7,8 +7,6 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(iotnode_test_sensors)
 
 target_include_directories(app PRIVATE $ENV{ZEPHYR_BASE}/include/portability)
-
-# it doesn't work compiling zephyr_final (multiple definitions of "arm_mult_f32")
-# target_sources(app INTERFACE $ENV{ZEPHYR_BASE}/_pio/modules/hal/cmsis/CMSIS/DSP/Source/BasicMathFunctions/arm_mult_f32.c)
+target_include_directories(app PRIVATE $ENV{ZEPHYR_BASE}/subsys/net/ip)
 
 target_sources(app PRIVATE ../src/main.c)
