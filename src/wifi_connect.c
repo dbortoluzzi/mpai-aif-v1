@@ -1,5 +1,5 @@
 /*
- * wifi_demo.c
+ * wifi_connect.c
  *
  * Base on the official sample by Intel at https://github.com/zephyrproject-rtos/zephyr/tree/master/samples/net/wifi
  *
@@ -25,18 +25,12 @@
 
 #include <string.h>
 
-#include "config.h"
+#include "wifi_config.h"
 
 #if AUTO_CONNECT
 #ifndef DT_N_NODELABEL_wifi0
 #error "Unsupported board: wifi0 is not defined in the devicetree"
 #endif
-
-#define perror(fmt, args...)						\
-do {									\
-	printf("Error: " fmt "(): %d\n" ## args, errno );	\
-	while(1); \
-} while (0)								\
 
 
 #define WIFI_MGMT_EVENTS (NET_EVENT_WIFI_SCAN_RESULT |		\
@@ -86,7 +80,7 @@ int Wifi_autoconnect() {
 	// Connect interface to network
 	struct net_if *iface = net_if_get_default();
 	if( net_mgmt( NET_REQUEST_WIFI_CONNECT, iface, &wifi_args, sizeof(wifi_args) ) ) {
-		perror("Failed to request connection to SSID "AUTO_CONNECT_SSID);
+		fprintf(stderr, "Failed to request connection to SSID %s, with error %s", AUTO_CONNECT_SSID, strerror(errno));
 	}
 
 	// Wait for connection.....
@@ -95,13 +89,13 @@ int Wifi_autoconnect() {
 	struct net_if_ipv4 *ipv4 = iface->config.ip.ipv4;
 	static char buf[NET_IPV4_ADDR_LEN];
 	net_addr_ntop( AF_INET, (const char *)&ipv4->unicast[0].address.in_addr, buf, NET_IPV4_ADDR_LEN);
-	printk("\r\nSucessfull connected to SSID:["AUTO_CONNECT_SSID"]\r\nAssigned IP address [%s] \r\n", buf );
+	printk("\r\nSuccessfull connected to SSID:[%s]\r\nAssigned IP address [%s] \r\n", AUTO_CONNECT_SSID, buf );
 
 	return 0;
 }
 #endif
 
-void Wifi_demo(void)
+void wifi_connect(void)
 {
 
 #if AUTO_CONNECT

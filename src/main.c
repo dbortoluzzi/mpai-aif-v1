@@ -42,7 +42,7 @@ LOG_MODULE_REGISTER(MAIN, LOG_LEVEL_INF);
 #include <net_private.h>
 #include <net/net_core.h>
 #include <net/net_if.h>
-#include "wifi_demo.h"
+#include "wifi_connect.h"
 
 #define PEER_PORT 5683
 #define MAX_COAP_MSG_LEN 256
@@ -877,8 +877,7 @@ void main(void)
 	printk("IoT node INITIALIZING...\n");
 
 	/*** START COAP ***/
-	// Connect to wifi
-	Wifi_demo();
+	wifi_connect();
 
 	int r;
 
