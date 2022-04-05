@@ -25,7 +25,7 @@
 
 #include <string.h>
 
-#include "wifi_config.h"
+#include <wifi_config.h>
 
 #if AUTO_CONNECT
 #ifndef DT_N_NODELABEL_wifi0

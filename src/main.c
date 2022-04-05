@@ -33,20 +33,6 @@ LOG_MODULE_REGISTER(MAIN, LOG_LEVEL_INF);
 #include <errno.h>
 #include <sys/byteorder.h>
 
-#include <net/socket.h>
-#include <net/net_mgmt.h>
-#include <net/net_ip.h>
-#include <net/udp.h>
-#include <net/coap.h>
-
-#include <net_private.h>
-#include <net/net_core.h>
-#include <net/net_if.h>
-#include "wifi_connect.h"
-
-#define PEER_PORT 5683
-#define MAX_COAP_MSG_LEN 256
-
 // TODO: move to Kconfig
 #define PERIODIC_MODE_ENABLED false
 #define SENSORS_DATA_ENABLED true
@@ -69,6 +55,10 @@ LOG_MODULE_REGISTER(MAIN, LOG_LEVEL_INF);
 #include <parson.h>
 
 #include <test_use_case_aiw.h>
+
+#include <wifi_connect.h>
+#include <coap_connect.h>
+#include <net_private.h>
 
 #define WHOAMI_REG 0x0F
 #define WHOAMI_ALT_REG 0x4F
@@ -257,114 +247,12 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
 
 /*** END BT ***/
 
-
-// /*** START COAP ***/
-
-/* CoAP socket fd */
-static int sock;
-
-struct pollfd fds[1];
-static int nfds;
-
 /* CoAP Options */
 static const char * const test_path[] = { "test", NULL };
 
 static const char * const large_path[] = { "large", NULL };
 
 static const char * const obs_path[] = { "obs", NULL };
-
-#define BLOCK_WISE_TRANSFER_SIZE_GET 2048
-#define IP_ADDRESS_COAP_SERVER "134.102.218.18"/*coap.me*/
-
-static struct coap_block_context blk_ctx;
-
-static void wait(void)
-{
-	if (poll(fds, nfds, -1) < 0) {
-		LOG_ERR("Error in poll:%d", errno);
-	}
-}
-
-static void prepare_fds(void)
-{
-	fds[nfds].fd = sock;
-	fds[nfds].events = POLLIN;
-	nfds++;
-}
-
-static int start_coap_client(void)
-{
-	int ret = 0;
-	struct sockaddr_in addr;
-
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(PEER_PORT);
-
-	inet_pton(AF_INET, IP_ADDRESS_COAP_SERVER,
-		  &addr.sin_addr);
-
-	sock = socket(addr.sin_family, SOCK_DGRAM, IPPROTO_UDP);
-	if (sock < 0) {
-		LOG_ERR("Failed to create UDP socket %d", errno);
-		return -errno;
-	}
-
-	ret = connect(sock, (struct sockaddr *)&addr, sizeof(addr));
-	if (ret < 0) {
-		LOG_ERR("Cannot connect to UDP remote : %d", errno);
-		return -errno;
-	}
-
-	prepare_fds();
-
-	return 0;
-}
-
-static int process_simple_coap_reply(void)
-{
-	struct coap_packet reply;
-	uint8_t *data;
-	int rcvd;
-	int ret;
-
-	wait();
-
-	data = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN);
-	if (!data) {
-		return -ENOMEM;
-	}
-
-	rcvd = recv(sock, data, MAX_COAP_MSG_LEN, MSG_DONTWAIT);
-	if (rcvd == 0) {
-		ret = -EIO;
-		goto end;
-	}
-
-	if (rcvd < 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
-			ret = 0;
-		} else {
-			ret = -errno;
-		}
-
-		goto end;
-	}
-
-	net_hexdump("Raw response", data, rcvd);
-
-	ret = coap_packet_parse(&reply, data, rcvd, NULL, 0);
-
-	printk("Response %s\n", (char*) reply.data);
-
-	if (ret < 0) {
-		LOG_ERR("Invalid data received");
-	}
-
-end:
-	k_free(data);
-
-	return ret;
-}
 
 static int send_simple_coap_request(uint8_t method)
 {
@@ -425,7 +313,7 @@ static int send_simple_coap_request(uint8_t method)
 
 	net_hexdump("Request", request.data, request.offset);
 
-	r = send(sock, request.data, request.offset, 0);
+	r = send(get_coap_sock(), request.data, request.offset, 0);
 
 end:
 	k_free(data);
@@ -457,25 +345,25 @@ static int send_simple_coap_msgs_and_wait_for_reply(void)
 				return r;
 			}
 
-		// 	break;
-		// case 2:
-		// 	/* Test CoAP POST method*/
-		// 	printk("\nCoAP client POST\n");
-		// 	r = send_simple_coap_request(COAP_METHOD_POST);
-		// 	if (r < 0) {
-		// 		return r;
-		// 	}
+			break;
+		case 2:
+			/* Test CoAP POST method*/
+			printk("\nCoAP client POST\n");
+			r = send_simple_coap_request(COAP_METHOD_POST);
+			if (r < 0) {
+				return r;
+			}
 
-		// 	break;
-		// case 3:
-		// 	/* Test CoAP DELETE method*/
-		// 	printk("\nCoAP client DELETE\n");
-		// 	r = send_simple_coap_request(COAP_METHOD_DELETE);
-		// 	if (r < 0) {
-		// 		return r;
-		// 	}
+			break;
+		case 3:
+			/* Test CoAP DELETE method*/
+			printk("\nCoAP client DELETE\n");
+			r = send_simple_coap_request(COAP_METHOD_DELETE);
+			if (r < 0) {
+				return r;
+			}
 
-		// 	break;
+			break;
 		default:
 			return 0;
 		}
@@ -491,64 +379,6 @@ static int send_simple_coap_msgs_and_wait_for_reply(void)
 	return 0;
 }
 
-static int process_large_coap_reply(void)
-{
-	struct coap_packet reply;
-	uint8_t *data;
-	bool last_block;
-	int rcvd;
-	int ret;
-
-	wait();
-
-	data = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN);
-	if (!data) {
-		return -ENOMEM;
-	}
-
-	rcvd = recv(sock, data, MAX_COAP_MSG_LEN, MSG_DONTWAIT);
-	if (rcvd == 0) {
-		ret = -EIO;
-		goto end;
-	}
-
-	if (rcvd < 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
-			ret = 0;
-		} else {
-			ret = -errno;
-		}
-
-		goto end;
-	}
-
-	net_hexdump("Raw response", data, rcvd);
-
-	ret = coap_packet_parse(&reply, data, rcvd, NULL, 0);
-	if (ret < 0) {
-		LOG_ERR("Invalid data received");
-		goto end;
-	}
-
-	ret = coap_update_from_block(&reply, &blk_ctx);
-	if (ret < 0) {
-		goto end;
-	}
-
-	last_block = coap_next_block(&reply, &blk_ctx);
-	if (!last_block) {
-		ret = 1;
-		goto end;
-	}
-
-	ret = 0;
-
-end:
-	k_free(data);
-
-	return ret;
-}
-
 static int send_large_coap_request(void)
 {
 	struct coap_packet request;
@@ -556,8 +386,8 @@ static int send_large_coap_request(void)
 	uint8_t *data;
 	int r;
 
-	if (blk_ctx.total_size == 0) {
-		coap_block_transfer_init(&blk_ctx, COAP_BLOCK_64,
+	if (get_block_context().total_size == 0) {
+		coap_block_transfer_init(get_block_context_ptr(), COAP_BLOCK_64,
 					 BLOCK_WISE_TRANSFER_SIZE_GET);
 	}
 
@@ -584,7 +414,7 @@ static int send_large_coap_request(void)
 		}
 	}
 
-	r = coap_append_block2_option(&request, &blk_ctx);
+	r = coap_append_block2_option(&request, get_block_context_ptr());
 	if (r < 0) {
 		LOG_ERR("Unable to add block2 option.");
 		goto end;
@@ -592,7 +422,7 @@ static int send_large_coap_request(void)
 
 	net_hexdump("Request", request.data, request.offset);
 
-	r = send(sock, request.data, request.offset, 0);
+	r = send(get_coap_sock(), request.data, request.offset, 0);
 
 end:
 	k_free(data);
@@ -607,7 +437,7 @@ static int get_large_coap_msgs(void)
 	while (1) {
 		/* Test CoAP Large GET method */
 		printk("\nCoAP client Large GET (block %zd)\n",
-		       blk_ctx.current / 64 /*COAP_BLOCK_64*/);
+		       get_block_context().current / 64 /*COAP_BLOCK_64*/);
 		r = send_large_coap_request();
 		if (r < 0) {
 			return r;
@@ -620,7 +450,7 @@ static int get_large_coap_msgs(void)
 
 		/* Received last block */
 		if (r == 1) {
-			memset(&blk_ctx, 0, sizeof(blk_ctx));
+			memset(get_block_context_ptr(), 0, sizeof(get_block_context()));
 			return 0;
 		}
 	}
@@ -648,68 +478,11 @@ static int send_obs_reply_ack(uint16_t id, uint8_t *token, uint8_t tkl)
 
 	net_hexdump("Request", request.data, request.offset);
 
-	r = send(sock, request.data, request.offset, 0);
+	r = send(get_coap_sock(), request.data, request.offset, 0);
 end:
 	k_free(data);
 
 	return r;
-}
-
-static int process_obs_coap_reply(void)
-{
-	struct coap_packet reply;
-	uint16_t id;
-	uint8_t token[COAP_TOKEN_MAX_LEN];
-	uint8_t *data;
-	uint8_t type;
-	uint8_t tkl;
-	int rcvd;
-	int ret;
-
-	wait();
-
-	data = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN);
-	if (!data) {
-		return -ENOMEM;
-	}
-
-	rcvd = recv(sock, data, MAX_COAP_MSG_LEN, MSG_DONTWAIT);
-	if (rcvd == 0) {
-		ret = -EIO;
-		goto end;
-	}
-
-	if (rcvd < 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
-			ret = 0;
-		} else {
-			ret = -errno;
-		}
-
-		goto end;
-	}
-
-	net_hexdump("Response", data, rcvd);
-
-	ret = coap_packet_parse(&reply, data, rcvd, NULL, 0);
-	if (ret < 0) {
-		LOG_ERR("Invalid data received");
-		goto end;
-	}
-
-	tkl = coap_header_get_token(&reply, token);
-	id = coap_header_get_id(&reply);
-
-	type = coap_header_get_type(&reply);
-	if (type == COAP_TYPE_ACK) {
-		ret = 0;
-	} else if (type == COAP_TYPE_CON) {
-		ret = send_obs_reply_ack(id, token, tkl);
-	}
-end:
-	k_free(data);
-
-	return ret;
 }
 
 static int send_obs_coap_request(void)
@@ -750,7 +523,7 @@ static int send_obs_coap_request(void)
 
 	net_hexdump("Request", request.data, request.offset);
 
-	r = send(sock, request.data, request.offset, 0);
+	r = send(get_coap_sock(), request.data, request.offset, 0);
 
 end:
 	k_free(data);
@@ -796,7 +569,7 @@ static int send_obs_reset_coap_request(void)
 
 	net_hexdump("Request", request.data, request.offset);
 
-	r = send(sock, request.data, request.offset, 0);
+	r = send(get_coap_sock(), request.data, request.offset, 0);
 
 end:
 	k_free(data);
@@ -884,29 +657,29 @@ void main(void)
 	LOG_DBG("Start CoAP-client sample");
 	r = start_coap_client();
 	if (r < 0) {
-		(void)close(sock);
+		(void)close(get_coap_sock());
 	}
 
 	/* GET, PUT, POST, DELETE */
 	r = send_simple_coap_msgs_and_wait_for_reply();
 	if (r < 0) {
-		(void)close(sock);
+		(void)close(get_coap_sock());
 	}
 
-	// /* Block-wise transfer */
-	// r = get_large_coap_msgs();
-	// if (r < 0) {
-	// 	(void)close(sock);
-	// }
+	/* Block-wise transfer */
+	r = get_large_coap_msgs();
+	if (r < 0) {
+		(void)close(get_coap_sock());
+	}
 
 	/* Register observer, get notifications and unregister */
 	// r = register_observer();
 	// if (r < 0) {
-	// 	(void)close(sock);
+	// 	(void)close(get_coap_sock());
 	// }
 
 	/* Close the socket */
-	(void)close(sock);
+	(void)close(get_coap_sock());
 
 	LOG_DBG("Done");
 
