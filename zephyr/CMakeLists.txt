@@ -8,5 +8,6 @@ project(iotnode_test_sensors)
 
 target_include_directories(app PRIVATE $ENV{ZEPHYR_BASE}/include/portability)
 target_include_directories(app PRIVATE $ENV{ZEPHYR_BASE}/subsys/net/ip)
+target_include_directories(app PRIVATE $ENV{ZEPHYR_BASE}/subsys/net/l2/wifi)
 
 target_sources(app PRIVATE ../src/main.c)

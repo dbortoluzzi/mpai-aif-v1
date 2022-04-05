@@ -40,6 +40,9 @@ LOG_MODULE_REGISTER(MAIN, LOG_LEVEL_INF);
 #include <net/coap.h>
 
 #include <net_private.h>
+#include <net/net_core.h>
+#include <net/net_if.h>
+#include "wifi_demo.h"
 
 #define PEER_PORT 5683
 #define MAX_COAP_MSG_LEN 256
@@ -257,7 +260,6 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
 
 // /*** START COAP ***/
 
-
 /* CoAP socket fd */
 static int sock;
 
@@ -272,6 +274,7 @@ static const char * const large_path[] = { "large", NULL };
 static const char * const obs_path[] = { "obs", NULL };
 
 #define BLOCK_WISE_TRANSFER_SIZE_GET 2048
+#define IP_ADDRESS_COAP_SERVER "134.102.218.18"/*coap.me*/
 
 static struct coap_block_context blk_ctx;
 
@@ -297,7 +300,7 @@ static int start_coap_client(void)
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(PEER_PORT);
 
-	inet_pton(AF_INET, CONFIG_NET_CONFIG_PEER_IPV4_ADDR,
+	inet_pton(AF_INET, IP_ADDRESS_COAP_SERVER,
 		  &addr.sin_addr);
 
 	sock = socket(addr.sin_family, SOCK_DGRAM, IPPROTO_UDP);
@@ -347,9 +350,12 @@ static int process_simple_coap_reply(void)
 		goto end;
 	}
 
-	net_hexdump("Response", data, rcvd);
+	net_hexdump("Raw response", data, rcvd);
 
 	ret = coap_packet_parse(&reply, data, rcvd, NULL, 0);
+
+	printk("Response %s\n", (char*) reply.data);
+
 	if (ret < 0) {
 		LOG_ERR("Invalid data received");
 	}
@@ -451,25 +457,25 @@ static int send_simple_coap_msgs_and_wait_for_reply(void)
 				return r;
 			}
 
-			break;
-		case 2:
-			/* Test CoAP POST method*/
-			printk("\nCoAP client POST\n");
-			r = send_simple_coap_request(COAP_METHOD_POST);
-			if (r < 0) {
-				return r;
-			}
+		// 	break;
+		// case 2:
+		// 	/* Test CoAP POST method*/
+		// 	printk("\nCoAP client POST\n");
+		// 	r = send_simple_coap_request(COAP_METHOD_POST);
+		// 	if (r < 0) {
+		// 		return r;
+		// 	}
 
-			break;
-		case 3:
-			/* Test CoAP DELETE method*/
-			printk("\nCoAP client DELETE\n");
-			r = send_simple_coap_request(COAP_METHOD_DELETE);
-			if (r < 0) {
-				return r;
-			}
+		// 	break;
+		// case 3:
+		// 	/* Test CoAP DELETE method*/
+		// 	printk("\nCoAP client DELETE\n");
+		// 	r = send_simple_coap_request(COAP_METHOD_DELETE);
+		// 	if (r < 0) {
+		// 		return r;
+		// 	}
 
-			break;
+		// 	break;
 		default:
 			return 0;
 		}
@@ -516,7 +522,7 @@ static int process_large_coap_reply(void)
 		goto end;
 	}
 
-	net_hexdump("Response", data, rcvd);
+	net_hexdump("Raw response", data, rcvd);
 
 	ret = coap_packet_parse(&reply, data, rcvd, NULL, 0);
 	if (ret < 0) {
@@ -871,6 +877,9 @@ void main(void)
 	printk("IoT node INITIALIZING...\n");
 
 	/*** START COAP ***/
+	// Connect to wifi
+	Wifi_demo();
+
 	int r;
 
 	LOG_DBG("Start CoAP-client sample");
@@ -885,17 +894,17 @@ void main(void)
 		(void)close(sock);
 	}
 
-	/* Block-wise transfer */
-	r = get_large_coap_msgs();
-	if (r < 0) {
-		(void)close(sock);
-	}
+	// /* Block-wise transfer */
+	// r = get_large_coap_msgs();
+	// if (r < 0) {
+	// 	(void)close(sock);
+	// }
 
 	/* Register observer, get notifications and unregister */
-	r = register_observer();
-	if (r < 0) {
-		(void)close(sock);
-	}
+	// r = register_observer();
+	// if (r < 0) {
+	// 	(void)close(sock);
+	// }
 
 	/* Close the socket */
 	(void)close(sock);
