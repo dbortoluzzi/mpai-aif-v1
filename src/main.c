@@ -708,7 +708,6 @@ void main(void)
 	if (r < 0) {
 		(void)close(get_coap_sock());
 	}
-	printk("Simple Result: %s", data_result);
 
 	/* Block-wise transfer */
 	char * data_large_result = (char *)k_malloc(MAX_COAP_MSG_LEN * sizeof(char));
@@ -716,11 +715,6 @@ void main(void)
 	if (r < 0) {
 		(void)close(get_coap_sock());
 	}
-	// for ( size_t i = 0; i < strlen(data_large_result); i++ )
-	// {
-	// 	printk("%c", data_large_result[i]);
-	// 	k_sleep(K_MSEC(5));
-	// }
 
 	/* Register observer, get notifications and unregister */
 	// r = register_observer();
