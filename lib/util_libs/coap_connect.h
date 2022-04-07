@@ -26,9 +26,9 @@ void wait(void);
 
 int start_coap_client(void);
 
-int process_simple_coap_reply(void);
+int process_simple_coap_reply(char * data_result);
 
-int process_large_coap_reply(void);
+int process_large_coap_reply(char * data_result);
 
 int process_obs_coap_reply(void);
 

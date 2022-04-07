@@ -321,7 +321,7 @@ end:
 	return 0;
 }
 
-static int send_simple_coap_msgs_and_wait_for_reply(void)
+static int send_simple_coap_msgs_and_wait_for_reply(char * data_result)
 {
 	uint8_t test_type = 0U;
 	int r;
@@ -368,11 +368,11 @@ static int send_simple_coap_msgs_and_wait_for_reply(void)
 			return 0;
 		}
 
-		r = process_simple_coap_reply();
+		memset(data_result, 0, MAX_COAP_MSG_LEN);
+		r = process_simple_coap_reply(data_result);
 		if (r < 0) {
 			return r;
 		}
-
 		test_type++;
 	}
 
@@ -430,31 +430,73 @@ end:
 	return r;
 }
 
-static int get_large_coap_msgs(void)
+// TODO: move to string util 
+char * append_strings(const char * old, const char * new)
+{
+    // find the size of the string to allocate
+    const size_t old_len = strlen(old), new_len = strlen(new);
+    const size_t out_len = old_len + new_len + 1;
+
+    // allocate a pointer to the new string
+    char *out = k_malloc(out_len);
+
+    // concat both strings and return
+    memcpy(out, old, old_len);
+    memcpy(out + old_len, new, new_len + 1);
+
+    return out;
+}
+
+int get_large_coap_msgs()
 {
 	int r;
-
+	char * data_single_result = (char *)k_malloc(MAX_COAP_MSG_LEN * sizeof(char));
+	char * data_large_result = NULL; 
 	while (1) {
 		/* Test CoAP Large GET method */
 		printk("\nCoAP client Large GET (block %zd)\n",
 		       get_block_context().current / 64 /*COAP_BLOCK_64*/);
 		r = send_large_coap_request();
 		if (r < 0) {
+			free(data_single_result);
+			free(data_large_result);
 			return r;
 		}
-
-		r = process_large_coap_reply();
+		
+		memset(data_single_result, 0, MAX_COAP_MSG_LEN);
+		r = process_large_coap_reply(data_single_result);
 		if (r < 0) {
+			free(data_single_result);
+			free(data_large_result);
 			return r;
 		}
 
+		if (data_large_result != NULL) 
+		{
+			data_large_result = append_strings(data_large_result, data_single_result);
+		} else {
+			data_large_result = append_strings("", data_single_result);
+		}
+		
 		/* Received last block */
 		if (r == 1) {
 			memset(get_block_context_ptr(), 0, sizeof(get_block_context()));
+
+			// add terminating char			
+			data_large_result = append_strings(data_large_result, "");
+			for ( size_t i = 0; i < strlen( data_large_result ); i++ )
+			{
+				printk("%c", data_large_result[i]);
+				k_sleep(K_MSEC(5));
+			}
+			free(data_single_result);
+			free(data_large_result);
 			return 0;
 		}
 	}
-
+	
+	free(data_single_result);
+	free(data_large_result);
 	return 0;
 }
 
@@ -660,17 +702,25 @@ void main(void)
 		(void)close(get_coap_sock());
 	}
 
-	/* GET, PUT, POST, DELETE */
-	r = send_simple_coap_msgs_and_wait_for_reply();
+	// /* GET, PUT, POST, DELETE */
+	char * data_result = (char *)k_malloc(MAX_COAP_MSG_LEN * sizeof(char));
+	r = send_simple_coap_msgs_and_wait_for_reply(data_result);
 	if (r < 0) {
 		(void)close(get_coap_sock());
 	}
+	printk("Simple Result: %s", data_result);
 
 	/* Block-wise transfer */
+	char * data_large_result = (char *)k_malloc(MAX_COAP_MSG_LEN * sizeof(char));
 	r = get_large_coap_msgs();
 	if (r < 0) {
 		(void)close(get_coap_sock());
 	}
+	// for ( size_t i = 0; i < strlen(data_large_result); i++ )
+	// {
+	// 	printk("%c", data_large_result[i]);
+	// 	k_sleep(K_MSEC(5));
+	// }
 
 	/* Register observer, get notifications and unregister */
 	// r = register_observer();
@@ -760,7 +810,7 @@ void main(void)
 
 		if (err_data_mic.code != MPAI_AIF_OK)
 		{
-			LOG_ERR("Error starting AIM %s: %s", MPAI_AIM_Get_Component(aim_data_mic)->name, log_strdup(MPAI_ERR_STR(err_data_mic.code)));
+			LOG_ERR("Error starting AIM %s: %s", log_strdup(MPAI_AIM_Get_Component(aim_data_mic)->name), log_strdup(MPAI_ERR_STR(err_data_mic.code)));
 			return;
 		} 
 	#endif
@@ -772,7 +822,7 @@ void main(void)
 
 		if (err_sens_aim.code != MPAI_AIF_OK) 
 		{
-			LOG_ERR("Error starting AIM %s: %s", MPAI_AIM_Get_Component(aim_produce_sensors)->name, log_strdup(MPAI_ERR_STR(err_sens_aim.code)));
+			LOG_ERR("Error starting AIM %s: %s", log_strdup(MPAI_AIM_Get_Component(aim_produce_sensors)->name), log_strdup(MPAI_ERR_STR(err_sens_aim.code)));
 			return;
 		}
 
@@ -783,7 +833,7 @@ void main(void)
 
 			if (err_temp_limit.code != MPAI_AIF_OK)
 			{
-				LOG_ERR("Error starting AIM %s: %s", MPAI_AIM_Get_Component(aim_temp_limit)->name, log_strdup(MPAI_ERR_STR(err_temp_limit.code)));
+				LOG_ERR("Error starting AIM %s: %s", log_strdup(MPAI_AIM_Get_Component(aim_temp_limit)->name), log_strdup(MPAI_ERR_STR(err_temp_limit.code)));
 				return;
 			} 
 		#endif
@@ -795,7 +845,7 @@ void main(void)
 
 			if (err_motion.code != MPAI_AIF_OK)
 			{
-				LOG_ERR("Error starting AIM %s: %s", MPAI_AIM_Get_Component(aim_data_motion)->name, log_strdup(MPAI_ERR_STR(err_motion.code)));
+				LOG_ERR("Error starting AIM %s: %s", log_strdup(MPAI_AIM_Get_Component(aim_data_motion)->name), log_strdup(MPAI_ERR_STR(err_motion.code)));
 				return;
 			} 
 		#endif
@@ -808,7 +858,7 @@ void main(void)
 
 			if (err_rehabilitation.code != MPAI_AIF_OK)
 			{
-				LOG_ERR("Error starting AIM %s: %s", MPAI_AIM_Get_Component(aim_rehabilitation)->name, log_strdup(MPAI_ERR_STR(err_rehabilitation.code)));
+				LOG_ERR("Error starting AIM %s: %s", log_strdup(MPAI_AIM_Get_Component(aim_rehabilitation)->name), log_strdup(MPAI_ERR_STR(err_rehabilitation.code)));
 				return;
 			} 
 		#endif

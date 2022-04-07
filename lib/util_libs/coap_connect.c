@@ -16,6 +16,10 @@ int coap_sock;
 
 struct coap_block_context blk_ctx;
 
+/*** PRIVATE ***/
+void extract_data_result(struct coap_packet packet, char* data_result, bool add_termination);
+
+/*** PUBLIC ***/
 int get_coap_sock(void)
 {
 	return coap_sock;
@@ -73,9 +77,9 @@ int start_coap_client(void)
 	return 0;
 }
 
-int process_simple_coap_reply(void)
+int process_simple_coap_reply(char * data_result)
 {
-	struct coap_packet reply;
+	struct coap_packet reply = {};
 	uint8_t *data;
 	int rcvd;
 	int ret;
@@ -106,8 +110,8 @@ int process_simple_coap_reply(void)
 	net_hexdump("Raw response", data, rcvd);
 
 	ret = coap_packet_parse(&reply, data, rcvd, NULL, 0);
-
-	printk("Response %s\n", (char*) reply.data);
+	extract_data_result(reply, data_result, true);
+	printk("Response %s\n", data_result);
 
 	if (ret < 0) {
 		LOG_ERR("Invalid data received");
@@ -119,9 +123,9 @@ end:
 	return ret;
 }
 
-int process_large_coap_reply(void)
+int process_large_coap_reply(char * data_result)
 {
-	struct coap_packet reply;
+	struct coap_packet reply = {};
 	uint8_t *data;
 	bool last_block;
 	int rcvd;
@@ -150,7 +154,7 @@ int process_large_coap_reply(void)
 		goto end;
 	}
 
-	net_hexdump("Raw response", data, rcvd);
+	// net_hexdump("Raw response", data, rcvd);
 
 	ret = coap_packet_parse(&reply, data, rcvd, NULL, 0);
 	if (ret < 0) {
@@ -163,7 +167,8 @@ int process_large_coap_reply(void)
 		goto end;
 	}
 
-	printk("Response block %zd: %s\n", get_block_context().current / 64, (char*) reply.data);
+	extract_data_result(reply, data_result, false);
+	printk("Response block %zd: %s\n", get_block_context().current / 64, data_result);
 
 	last_block = coap_next_block(&reply, &blk_ctx);
 	if (!last_block) {
@@ -213,7 +218,7 @@ int process_obs_coap_reply(void)
 		goto end;
 	}
 
-	net_hexdump("Response", data, rcvd);
+	// net_hexdump("Response", data, rcvd);
 
 	ret = coap_packet_parse(&reply, data, rcvd, NULL, 0);
 	if (ret < 0) {
@@ -234,4 +239,21 @@ end:
 	k_free(data);
 
 	return ret;
+}
+
+void extract_data_result(struct coap_packet packet, char* data_result, bool add_termination)
+{
+	if (packet.offset>=21) 
+	{
+		// Start from 21 byte according with specs, but there is again garbage at the start
+		memcpy(data_result, packet.data+21, packet.offset-21); 
+		if (add_termination) 
+		{
+			char tmp[2] = ""; 
+			strcat(data_result, tmp);
+		}
+	}
+	else {
+		memset(data_result, 0, MAX_COAP_MSG_LEN);
+	} 
 }
