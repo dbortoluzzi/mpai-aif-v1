@@ -12,10 +12,6 @@
 #include <stdio.h>
 #include <logging/log.h>
 #include <pubsub/pubsub.h>
-#include <core_aim.h>
-#include <sensors_aim.h>
-#include <temp_limit_aim.h>
-#include <message_store.h>
 
 #include <zephyr/types.h>
 #include <stddef.h>
@@ -32,7 +28,6 @@
 #include <bluetooth/gatt.h>
 #include "button_svc.h"
 #include "led_svc.h"
-#include "flash_store.h"
 #include <parson.h>
 
 #include "stm32l475e_iot01_audio.h"
@@ -41,40 +36,6 @@ LOG_MODULE_REGISTER(MAIN, LOG_LEVEL_INF);
 
 #define WHOAMI_REG 0x0F
 #define WHOAMI_ALT_REG 0x4F
-
-// TODO: move to Kconfig
-#define PERIODIC_MODE_ENABLED false
-#define AIW_SENSORS_DATA_ENABLED true
-#define WRITE_TO_FLASH_ENABLED false
-
-static int AIW_TEMP_LIMIT_DETECTION = 1;
-
-MPAI_Component_AIM_t* aim_produce_sensors = NULL;
-MPAI_Component_AIM_t* aim_temp_limit = NULL;
-
-MPAI_AIM_MessageStore_t* message_store;
-
-#if PERIODIC_MODE_ENABLED == true
-/******** START PERIODIC MODE ***********/
-void aim_timer_switch_status(struct k_work *work)
-{
-	if (MPAI_AIM_Is_Alive(aim_produce_sensors) == true) {
-		MPAI_AIM_Pause(aim_produce_sensors);
-	} else {
-		MPAI_AIM_Resume(aim_produce_sensors);
-	}
-}
-
-K_WORK_DEFINE(my_work, aim_timer_switch_status);
-
-void aim_timer_handler(struct k_timer *dummy)
-{
-    k_work_submit(&my_work);
-}
-
-K_TIMER_DEFINE(aim_timer, aim_timer_handler, NULL);
-/******** END PERIODIC MODE ***********/
-#endif	
 
 /*** START MIC ***/
 static size_t TARGET_AUDIO_BUFFER_NB_SAMPLES = AUDIO_SAMPLING_FREQUENCY * 2;
@@ -488,86 +449,4 @@ void main(void)
 	if (err) {
 		LOG_ERR("Bluetooth init failed (err %d)", err);
 	}
-
-	#if WRITE_TO_FLASH_ENABLED == true
-		/*** START SPI FLASH ***/
-		const char expected[] = "{\"name\":\"Daniele\"}";
-		const size_t len = sizeof(expected);
-		char buf[sizeof(expected)];
-
-		const struct device* flash_dev = init_flash();
-
-		LOG_INF("Test 1: Flash erase\n");
-		erase_flash(flash_dev);
-
-		LOG_INF("Test 2: Flash write\n");
-		int rc_write = write_flash(flash_dev, len, (void*) expected);
-		if (rc_write != 0) 
-		{
-			return;
-		}
-
-		int rc_read = read_flash(flash_dev, len, (void*) buf);
-		if (rc_read != 0)
-		{
-			return;
-		}
-		if (memcmp(expected, buf, len) == 0) 
-		{
-			LOG_INF("Data read matches data written. Good!!\n");
-		} else 
-		{
-			const char* wp = expected;
-			const char* rp = buf;
-			const char* rpe = rp + len;
-
-			LOG_ERR("Data read does not match data written!!\n");
-			while (rp < rpe) {
-				LOG_ERR("%08x wrote %02x read %02x %s\n",
-					(uint32_t)(FLASH_TEST_REGION_OFFSET + (rp - buf)),
-					*wp, *rp, (*rp == *wp) ? "match" : "MISMATCH");
-				++rp;
-				++wp;
-			}
-		}
-		JSON_Value* json = json_parse_string(buf);
-		char* name = json_object_get_string(json_object(json), "name");
-		LOG_INF("Hello, %s.", log_strdup(name));
-		json_value_free(json);
-		/*** END SPI FLASH ***/
-	#endif
-
-	#if AIW_SENSORS_DATA_ENABLED == true
-		message_store = MPAI_MessageStore_Creator(AIW_TEMP_LIMIT_DETECTION, "SENSORS_DATA", sizeof(mpai_parser_t));
-
-		aim_produce_sensors = MPAI_AIM_Creator("AIM_PRODUCE_SENSORS_DATA", AIW_TEMP_LIMIT_DETECTION, sensors_aim_subscriber, sensors_aim_start, sensors_aim_stop, sensors_aim_resume, sensors_aim_pause);
-		mpai_error_t err_sens_aim = MPAI_AIM_Start(aim_produce_sensors);
-
-		if (err_sens_aim.code == MPAI_AIF_OK)
-		{
-			aim_temp_limit = MPAI_AIM_Creator("AIM_TEMP_LIMIT", AIW_TEMP_LIMIT_DETECTION, temp_limit_aim_subscriber, temp_limit_aim_start, temp_limit_aim_stop, temp_limit_aim_resume, temp_limit_aim_pause);
-			MPAI_MessageStore_register(message_store, MPAI_AIM_Get_Subscriber(aim_temp_limit));
-			mpai_error_t err_temp_limit = MPAI_AIM_Start(aim_temp_limit);	
-
-			if (err_temp_limit.code == MPAI_AIF_OK)
-			{
-				LOG_INF("MPAI_AIF initialized correctly");
-			} 
-			else
-			{
-				LOG_ERR("Error starting AIM %s: %s", MPAI_AIM_Get_Component(aim_temp_limit)->name, log_strdup(MPAI_ERR_STR(err_temp_limit.code)));
-				return;
-			}
-
-			#if PERIODIC_MODE_ENABLED == true
-				/* start periodic timer to switch status */
-				k_timer_start(&aim_timer, K_SECONDS(5), K_SECONDS(5));		
-			#endif
-		}
-		else
-		{
-			LOG_ERR("Error starting AIM %s: %s", MPAI_AIM_Get_Component(aim_produce_sensors)->name, log_strdup(MPAI_ERR_STR(err_sens_aim.code)));
-			return;
-		}
-	#endif
 }
