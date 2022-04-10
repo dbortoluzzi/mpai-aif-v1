@@ -321,7 +321,7 @@ end:
 	return 0;
 }
 
-static int send_simple_coap_msgs_and_wait_for_reply(char * data_result)
+static int send_simple_coap_msgs_and_wait_for_reply(uint8_t * data_result, uint16_t* len)
 {
 	uint8_t test_type = 0U;
 	int r;
@@ -369,8 +369,14 @@ static int send_simple_coap_msgs_and_wait_for_reply(char * data_result)
 		}
 
 		memset(data_result, 0, MAX_COAP_MSG_LEN);
-		r = process_simple_coap_reply(data_result);
+
+		// uint8_t* data_result_2 = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN * sizeof(uint8_t));
+		// uint16_t* data_len_2 = (uint16_t *)k_malloc(sizeof(uint16_t));
+
+		r = process_simple_coap_reply(data_result, len);
 		if (r < 0) {
+			// free(data_result_2);
+			// free(data_len_2);
 			return r;
 		}
 		test_type++;
@@ -452,6 +458,7 @@ int get_large_coap_msgs()
 	int r;
 	char * data_single_result = (char *)k_malloc(MAX_COAP_MSG_LEN * sizeof(char));
 	char * data_large_result = NULL; 
+	uint16_t tot_data_large_len = 0;
 	while (1) {
 		/* Test CoAP Large GET method */
 		printk("\nCoAP client Large GET (block %zd)\n",
@@ -464,7 +471,9 @@ int get_large_coap_msgs()
 		}
 		
 		memset(data_single_result, 0, MAX_COAP_MSG_LEN);
-		r = process_large_coap_reply(data_single_result);
+		uint16_t data_large_len = 0;
+		r = process_large_coap_reply(data_single_result, &data_large_len);
+		tot_data_large_len += data_large_len;
 		if (r < 0) {
 			free(data_single_result);
 			free(data_large_result);
@@ -484,9 +493,9 @@ int get_large_coap_msgs()
 
 			// add terminating char			
 			data_large_result = append_strings(data_large_result, "");
-			for ( size_t i = 0; i < strlen( data_large_result ); i++ )
+			for ( size_t i = 0; i < tot_data_large_len; i++ )
 			{
-				printk("%c", data_large_result[i]);
+				printk("%c", (char)data_large_result[i]);
 				k_sleep(K_MSEC(5));
 			}
 			free(data_single_result);
@@ -703,18 +712,22 @@ void main(void)
 	}
 
 	// /* GET, PUT, POST, DELETE */
-	char * data_result = (char *)k_malloc(MAX_COAP_MSG_LEN * sizeof(char));
-	r = send_simple_coap_msgs_and_wait_for_reply(data_result);
+	uint8_t* data_result = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN * sizeof(uint8_t));
+	uint16_t* data_len = (uint16_t *)k_malloc(sizeof(uint16_t));
+	r = send_simple_coap_msgs_and_wait_for_reply(data_result, data_len);
 	if (r < 0) {
 		(void)close(get_coap_sock());
 	}
+	free(data_result);
+	free(data_len);
 
 	/* Block-wise transfer */
-	char * data_large_result = (char *)k_malloc(MAX_COAP_MSG_LEN * sizeof(char));
+	uint8_t * data_large_result = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN * sizeof(uint8_t));
 	r = get_large_coap_msgs();
 	if (r < 0) {
 		(void)close(get_coap_sock());
 	}
+	free(data_large_result);
 
 	/* Register observer, get notifications and unregister */
 	// r = register_observer();

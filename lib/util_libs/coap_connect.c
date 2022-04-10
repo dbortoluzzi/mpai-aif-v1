@@ -17,7 +17,7 @@ int coap_sock;
 struct coap_block_context blk_ctx;
 
 /*** PRIVATE ***/
-void extract_data_result(struct coap_packet packet, char* data_result, bool add_termination);
+void extract_data_result(struct coap_packet packet, uint8_t* data_result, uint16_t* len, bool add_termination);
 
 /*** PUBLIC ***/
 int get_coap_sock(void)
@@ -77,7 +77,7 @@ int start_coap_client(void)
 	return 0;
 }
 
-int process_simple_coap_reply(char * data_result)
+int process_simple_coap_reply(uint8_t * data_result, uint16_t* len)
 {
 	struct coap_packet reply = {};
 	uint8_t *data;
@@ -110,7 +110,7 @@ int process_simple_coap_reply(char * data_result)
 	net_hexdump("Raw response", data, rcvd);
 
 	ret = coap_packet_parse(&reply, data, rcvd, NULL, 0);
-	extract_data_result(reply, data_result, true);
+	extract_data_result(reply, data_result, len, true);
 	printk("Response %s\n", data_result);
 
 	if (ret < 0) {
@@ -123,7 +123,7 @@ end:
 	return ret;
 }
 
-int process_large_coap_reply(char * data_result)
+int process_large_coap_reply(uint8_t * data_result, uint16_t* len)
 {
 	struct coap_packet reply = {};
 	uint8_t *data;
@@ -167,7 +167,7 @@ int process_large_coap_reply(char * data_result)
 		goto end;
 	}
 
-	extract_data_result(reply, data_result, false);
+	extract_data_result(reply, data_result, len, false);
 	printk("Response block %zd: %s\n", get_block_context().current / 64, data_result);
 
 	last_block = coap_next_block(&reply, &blk_ctx);
@@ -241,12 +241,14 @@ end:
 	return ret;
 }
 
-void extract_data_result(struct coap_packet packet, char* data_result, bool add_termination)
+void extract_data_result(struct coap_packet packet, uint8_t* data_result, uint16_t* data_len, bool add_termination)
 {
-	if (packet.offset>=21) 
+	uint16_t len = 0;
+	uint8_t* payload = coap_packet_get_payload(&packet, &len);
+	if (payload != NULL) 
 	{
-		// Start from 21 byte according with specs, but there is again garbage at the start
-		memcpy(data_result, packet.data+21, packet.offset-21); 
+		memcpy(data_result, payload, len * sizeof(uint8_t)); 
+		*data_len = len;
 		if (add_termination) 
 		{
 			char tmp[2] = ""; 
