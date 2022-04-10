@@ -369,14 +369,8 @@ static int send_simple_coap_msgs_and_wait_for_reply(uint8_t * data_result, uint1
 		}
 
 		memset(data_result, 0, MAX_COAP_MSG_LEN);
-
-		// uint8_t* data_result_2 = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN * sizeof(uint8_t));
-		// uint16_t* data_len_2 = (uint16_t *)k_malloc(sizeof(uint16_t));
-
 		r = process_simple_coap_reply(data_result, len);
 		if (r < 0) {
-			// free(data_result_2);
-			// free(data_len_2);
 			return r;
 		}
 		test_type++;
