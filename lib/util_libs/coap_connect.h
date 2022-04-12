@@ -14,7 +14,8 @@
 #define MAX_COAP_MSG_LEN 256
 
 #define BLOCK_WISE_TRANSFER_SIZE_GET 2048
-#define IP_ADDRESS_COAP_SERVER "134.102.218.18"/*coap.me*/
+// #define IP_ADDRESS_COAP_SERVER "134.102.218.18"/*coap.me*/
+#define IP_ADDRESS_COAP_SERVER "192.168.178.47"
 
 int get_coap_sock(void);
 
@@ -25,6 +26,8 @@ struct coap_block_context* get_block_context_ptr(void);
 void wait(void);
 
 int start_coap_client(void);
+
+int send_simple_coap_request(uint8_t method, char ** simple_path);
 
 int process_simple_coap_reply(uint8_t * data_result, uint16_t* len);
 

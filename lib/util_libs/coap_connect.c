@@ -241,6 +241,171 @@ end:
 	return ret;
 }
 
+int send_simple_coap_request(uint8_t method, char ** simple_path)
+{
+	uint8_t payload[] = "payload";
+	struct coap_packet request;
+	const char * const *p;
+	uint8_t *data;
+	int r;
+
+	data = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN);
+	if (!data) {
+		return -ENOMEM;
+	}
+
+	r = coap_packet_init(&request, data, MAX_COAP_MSG_LEN,
+			     COAP_VERSION_1, COAP_TYPE_CON,
+			     COAP_TOKEN_MAX_LEN, coap_next_token(),
+			     method, coap_next_id());
+	if (r < 0) {
+		LOG_ERR("Failed to init CoAP message");
+		goto end;
+	}
+
+	for (p = simple_path; p && *p; p++) {
+		r = coap_packet_append_option(&request, COAP_OPTION_URI_PATH,
+					      *p, strlen(*p));
+		if (r < 0) {
+			LOG_ERR("Unable add option to request");
+			goto end;
+		}
+	}
+
+	switch (method) {
+	case COAP_METHOD_GET:
+	case COAP_METHOD_DELETE:
+		break;
+
+	case COAP_METHOD_PUT:
+	case COAP_METHOD_POST:
+		r = coap_packet_append_payload_marker(&request);
+		if (r < 0) {
+			LOG_ERR("Unable to append payload marker");
+			goto end;
+		}
+
+		r = coap_packet_append_payload(&request, (uint8_t *)payload,
+					       sizeof(payload) - 1);
+		if (r < 0) {
+			LOG_ERR("Not able to append payload");
+			goto end;
+		}
+
+		break;
+	default:
+		r = -EINVAL;
+		goto end;
+	}
+
+	net_hexdump("Request", request.data, request.offset);
+
+	r = send(get_coap_sock(), request.data, request.offset, 0);
+
+end:
+	k_free(data);
+
+	return 0;
+}
+
+static int send_large_coap_request(char ** large_path)
+{
+	struct coap_packet request;
+	const char * const *p;
+	uint8_t *data;
+	int r;
+
+	if (get_block_context().total_size == 0) {
+		coap_block_transfer_init(get_block_context_ptr(), COAP_BLOCK_64,
+					 BLOCK_WISE_TRANSFER_SIZE_GET);
+	}
+
+	data = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN);
+	if (!data) {
+		return -ENOMEM;
+	}
+
+	r = coap_packet_init(&request, data, MAX_COAP_MSG_LEN,
+			     COAP_VERSION_1, COAP_TYPE_CON,
+			     COAP_TOKEN_MAX_LEN, coap_next_token(),
+			     COAP_METHOD_GET, coap_next_id());
+	if (r < 0) {
+		LOG_ERR("Failed to init CoAP message");
+		goto end;
+	}
+
+	for (p = large_path; p && *p; p++) {
+		r = coap_packet_append_option(&request, COAP_OPTION_URI_PATH,
+					      *p, strlen(*p));
+		if (r < 0) {
+			LOG_ERR("Unable add option to request");
+			goto end;
+		}
+	}
+
+	r = coap_append_block2_option(&request, get_block_context_ptr());
+	if (r < 0) {
+		LOG_ERR("Unable to add block2 option.");
+		goto end;
+	}
+
+	net_hexdump("Request", request.data, request.offset);
+
+	r = send(get_coap_sock(), request.data, request.offset, 0);
+
+end:
+	k_free(data);
+
+	return r;
+}
+
+int get_large_coap_msgs(char ** large_path, char * data_large_result, uint16_t* tot_data_large_len)
+{
+	int r;
+	char data_single_result[MAX_COAP_MSG_LEN] = "";
+	char * data_large_result_tmp = NULL;
+	*tot_data_large_len = NULL;
+	while (1) {
+		/* Test CoAP Large GET method */
+		printk("\nCoAP client Large GET (block %zd)\n",
+		       get_block_context().current / 64 /*COAP_BLOCK_64*/);
+		r = send_large_coap_request(large_path);
+		if (r < 0) {
+			return r;
+		}
+		
+		memset(data_single_result, 0, MAX_COAP_MSG_LEN);
+		uint16_t data_large_len = 0;
+		r = process_large_coap_reply(data_single_result, &data_large_len);
+		if (r < 0) {
+			return r;
+		}
+		if (data_large_len != 0) 
+		{
+			*tot_data_large_len = *tot_data_large_len + data_large_len;
+		}
+
+		if (data_large_result_tmp != NULL) 
+		{
+			data_large_result_tmp = append_strings(data_large_result_tmp, data_single_result);
+		} else {
+			data_large_result_tmp = append_strings("", data_single_result);
+		}
+		
+		/* Received last block */
+		if (r == 1) {
+			memset(get_block_context_ptr(), 0, sizeof(get_block_context()));
+
+			// add terminating char	
+			// TODO: fix pointer		
+			data_large_result_tmp = append_strings(data_large_result_tmp, "");
+			memcpy(data_large_result, data_large_result_tmp, (*tot_data_large_len+1) * sizeof(uint8_t)); 
+			return 0;
+		}
+	}
+	return 0;
+}
+
 void extract_data_result(struct coap_packet packet, uint8_t* data_result, uint16_t* data_len, bool add_termination)
 {
 	uint16_t len = 0;

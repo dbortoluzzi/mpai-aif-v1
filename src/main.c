@@ -59,6 +59,7 @@ LOG_MODULE_REGISTER(MAIN, LOG_LEVEL_INF);
 #include <wifi_connect.h>
 #include <coap_connect.h>
 #include <net_private.h>
+#include <config_store.h>
 
 #define WHOAMI_REG 0x0F
 #define WHOAMI_ALT_REG 0x4F
@@ -254,74 +255,7 @@ static const char * const large_path[] = { "large", NULL };
 
 static const char * const obs_path[] = { "obs", NULL };
 
-static int send_simple_coap_request(uint8_t method)
-{
-	uint8_t payload[] = "payload";
-	struct coap_packet request;
-	const char * const *p;
-	uint8_t *data;
-	int r;
-
-	data = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN);
-	if (!data) {
-		return -ENOMEM;
-	}
-
-	r = coap_packet_init(&request, data, MAX_COAP_MSG_LEN,
-			     COAP_VERSION_1, COAP_TYPE_CON,
-			     COAP_TOKEN_MAX_LEN, coap_next_token(),
-			     method, coap_next_id());
-	if (r < 0) {
-		LOG_ERR("Failed to init CoAP message");
-		goto end;
-	}
-
-	for (p = test_path; p && *p; p++) {
-		r = coap_packet_append_option(&request, COAP_OPTION_URI_PATH,
-					      *p, strlen(*p));
-		if (r < 0) {
-			LOG_ERR("Unable add option to request");
-			goto end;
-		}
-	}
-
-	switch (method) {
-	case COAP_METHOD_GET:
-	case COAP_METHOD_DELETE:
-		break;
-
-	case COAP_METHOD_PUT:
-	case COAP_METHOD_POST:
-		r = coap_packet_append_payload_marker(&request);
-		if (r < 0) {
-			LOG_ERR("Unable to append payload marker");
-			goto end;
-		}
-
-		r = coap_packet_append_payload(&request, (uint8_t *)payload,
-					       sizeof(payload) - 1);
-		if (r < 0) {
-			LOG_ERR("Not able to append payload");
-			goto end;
-		}
-
-		break;
-	default:
-		r = -EINVAL;
-		goto end;
-	}
-
-	net_hexdump("Request", request.data, request.offset);
-
-	r = send(get_coap_sock(), request.data, request.offset, 0);
-
-end:
-	k_free(data);
-
-	return 0;
-}
-
-static int send_simple_coap_msgs_and_wait_for_reply(uint8_t * data_result, uint16_t* len)
+static int send_simple_coap_msgs_and_wait_for_reply(uint8_t * data_result, uint16_t* len, char ** simple_path)
 {
 	uint8_t test_type = 0U;
 	int r;
@@ -331,7 +265,7 @@ static int send_simple_coap_msgs_and_wait_for_reply(uint8_t * data_result, uint1
 		case 0:
 			/* Test CoAP GET method */
 			printk("\nCoAP client GET\n");
-			r = send_simple_coap_request(COAP_METHOD_GET);
+			r = send_simple_coap_request(COAP_METHOD_GET, simple_path);
 			if (r < 0) {
 				return r;
 			}
@@ -340,7 +274,7 @@ static int send_simple_coap_msgs_and_wait_for_reply(uint8_t * data_result, uint1
 		case 1:
 			/* Test CoAP PUT method */
 			printk("\nCoAP client PUT\n");
-			r = send_simple_coap_request(COAP_METHOD_PUT);
+			r = send_simple_coap_request(COAP_METHOD_PUT, simple_path);
 			if (r < 0) {
 				return r;
 			}
@@ -349,7 +283,7 @@ static int send_simple_coap_msgs_and_wait_for_reply(uint8_t * data_result, uint1
 		case 2:
 			/* Test CoAP POST method*/
 			printk("\nCoAP client POST\n");
-			r = send_simple_coap_request(COAP_METHOD_POST);
+			r = send_simple_coap_request(COAP_METHOD_POST, simple_path);
 			if (r < 0) {
 				return r;
 			}
@@ -358,7 +292,7 @@ static int send_simple_coap_msgs_and_wait_for_reply(uint8_t * data_result, uint1
 		case 3:
 			/* Test CoAP DELETE method*/
 			printk("\nCoAP client DELETE\n");
-			r = send_simple_coap_request(COAP_METHOD_DELETE);
+			r = send_simple_coap_request(COAP_METHOD_DELETE, simple_path);
 			if (r < 0) {
 				return r;
 			}
@@ -376,130 +310,6 @@ static int send_simple_coap_msgs_and_wait_for_reply(uint8_t * data_result, uint1
 		test_type++;
 	}
 
-	return 0;
-}
-
-static int send_large_coap_request(void)
-{
-	struct coap_packet request;
-	const char * const *p;
-	uint8_t *data;
-	int r;
-
-	if (get_block_context().total_size == 0) {
-		coap_block_transfer_init(get_block_context_ptr(), COAP_BLOCK_64,
-					 BLOCK_WISE_TRANSFER_SIZE_GET);
-	}
-
-	data = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN);
-	if (!data) {
-		return -ENOMEM;
-	}
-
-	r = coap_packet_init(&request, data, MAX_COAP_MSG_LEN,
-			     COAP_VERSION_1, COAP_TYPE_CON,
-			     COAP_TOKEN_MAX_LEN, coap_next_token(),
-			     COAP_METHOD_GET, coap_next_id());
-	if (r < 0) {
-		LOG_ERR("Failed to init CoAP message");
-		goto end;
-	}
-
-	for (p = large_path; p && *p; p++) {
-		r = coap_packet_append_option(&request, COAP_OPTION_URI_PATH,
-					      *p, strlen(*p));
-		if (r < 0) {
-			LOG_ERR("Unable add option to request");
-			goto end;
-		}
-	}
-
-	r = coap_append_block2_option(&request, get_block_context_ptr());
-	if (r < 0) {
-		LOG_ERR("Unable to add block2 option.");
-		goto end;
-	}
-
-	net_hexdump("Request", request.data, request.offset);
-
-	r = send(get_coap_sock(), request.data, request.offset, 0);
-
-end:
-	k_free(data);
-
-	return r;
-}
-
-// TODO: move to string util 
-char * append_strings(const char * old, const char * new)
-{
-    // find the size of the string to allocate
-    const size_t old_len = strlen(old), new_len = strlen(new);
-    const size_t out_len = old_len + new_len + 1;
-
-    // allocate a pointer to the new string
-    char *out = k_malloc(out_len);
-
-    // concat both strings and return
-    memcpy(out, old, old_len);
-    memcpy(out + old_len, new, new_len + 1);
-
-    return out;
-}
-
-int get_large_coap_msgs()
-{
-	int r;
-	char * data_single_result = (char *)k_malloc(MAX_COAP_MSG_LEN * sizeof(char));
-	char * data_large_result = NULL; 
-	uint16_t tot_data_large_len = 0;
-	while (1) {
-		/* Test CoAP Large GET method */
-		printk("\nCoAP client Large GET (block %zd)\n",
-		       get_block_context().current / 64 /*COAP_BLOCK_64*/);
-		r = send_large_coap_request();
-		if (r < 0) {
-			free(data_single_result);
-			free(data_large_result);
-			return r;
-		}
-		
-		memset(data_single_result, 0, MAX_COAP_MSG_LEN);
-		uint16_t data_large_len = 0;
-		r = process_large_coap_reply(data_single_result, &data_large_len);
-		tot_data_large_len += data_large_len;
-		if (r < 0) {
-			free(data_single_result);
-			free(data_large_result);
-			return r;
-		}
-
-		if (data_large_result != NULL) 
-		{
-			data_large_result = append_strings(data_large_result, data_single_result);
-		} else {
-			data_large_result = append_strings("", data_single_result);
-		}
-		
-		/* Received last block */
-		if (r == 1) {
-			memset(get_block_context_ptr(), 0, sizeof(get_block_context()));
-
-			// add terminating char			
-			data_large_result = append_strings(data_large_result, "");
-			for ( size_t i = 0; i < tot_data_large_len; i++ )
-			{
-				printk("%c", (char)data_large_result[i]);
-				k_sleep(K_MSEC(5));
-			}
-			free(data_single_result);
-			free(data_large_result);
-			return 0;
-		}
-	}
-	
-	free(data_single_result);
-	free(data_large_result);
 	return 0;
 }
 
@@ -708,31 +518,29 @@ void main(void)
 	// /* GET, PUT, POST, DELETE */
 	uint8_t* data_result = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN * sizeof(uint8_t));
 	uint16_t* data_len = (uint16_t *)k_malloc(sizeof(uint16_t));
-	r = send_simple_coap_msgs_and_wait_for_reply(data_result, data_len);
+	r = send_simple_coap_msgs_and_wait_for_reply(data_result, data_len, test_path);
 	if (r < 0) {
 		(void)close(get_coap_sock());
 	}
-	free(data_result);
-	free(data_len);
+	// k_free(data_result);
+	// k_free(data_len);
 
 	/* Block-wise transfer */
-	uint8_t * data_large_result = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN * sizeof(uint8_t));
-	r = get_large_coap_msgs();
+	// uint8_t* data_large_result = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN * sizeof(uint8_t));
+	uint8_t* data_large_result = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN * sizeof(uint8_t));
+	uint16_t* data_large_len = (uint16_t *)k_malloc(sizeof(uint16_t));
+	r = get_large_coap_msgs(large_path, data_large_result, data_large_len);
 	if (r < 0) {
 		(void)close(get_coap_sock());
 	}
-	free(data_large_result);
+	// k_free(data_large_result);
+	// k_free(data_large_len);
 
 	/* Register observer, get notifications and unregister */
 	// r = register_observer();
 	// if (r < 0) {
 	// 	(void)close(get_coap_sock());
 	// }
-
-	/* Close the socket */
-	(void)close(get_coap_sock());
-
-	LOG_DBG("Done");
 
 	/*** END COAP ***/
 
@@ -802,6 +610,28 @@ void main(void)
 		json_value_free(json);
 		/*** END SPI FLASH ***/
 	#endif
+
+	// // START INIT FROM MPAI CONFIG STORE
+	uint8_t* aif_result = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN * sizeof(uint8_t));
+	// TODO: remove aif_result_len
+	uint16_t* aif_result_len = (uint16_t *)k_malloc(sizeof(uint16_t));
+	MPAI_Config_Store_get_AIF(aif_result, aif_result_len, "demo");
+
+	// if (aif_result_len != NULL)
+	// {
+	// 	for ( size_t i = 0; i < strlen(aif_result); i++ )
+	// 	{
+	// 		printk("%c", (char)aif_result[i]);
+	// 		k_sleep(K_MSEC(5));
+	// 	}
+	// }
+
+	JSON_Value* json2 = json_parse_string(aif_result);
+	char* name2 = json_object_get_string(json_object(json2), "title");
+	LOG_INF("Initializing AIF \"%s\"...", log_strdup(name2));
+
+	/* Close the socket */
+	(void)close(get_coap_sock());
 
 	INIT_Test_Use_Case_AIW();
 
