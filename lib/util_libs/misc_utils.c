@@ -94,3 +94,19 @@ void median_filter(int32_t datum, int32_t *calc_median, int32_t *calc_peak)
     *calc_median = median->value;
     *calc_peak = big.point->value;
 }
+
+char * append_strings(const char * old, const char * new)
+{
+    // find the size of the string to allocate
+    const size_t old_len = strlen(old), new_len = strlen(new);
+    const size_t out_len = old_len + new_len + 1;
+
+    // allocate a pointer to the new string
+    char *out = k_malloc(out_len);
+
+    // concat both strings and return
+    memcpy(out, old, old_len);
+    memcpy(out + old_len, new, new_len + 1);
+
+    return out;
+}
