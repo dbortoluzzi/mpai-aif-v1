@@ -14,8 +14,7 @@
 #define MAX_COAP_MSG_LEN 256
 
 #define BLOCK_WISE_TRANSFER_SIZE_GET 2048
-// #define IP_ADDRESS_COAP_SERVER "134.102.218.18"/*coap.me*/
-#define IP_ADDRESS_COAP_SERVER "192.168.178.47"
+#define IP_ADDRESS_COAP_SERVER "192.168.1.60" /*TO CHANGE*/
 
 int get_coap_sock(void);
 
