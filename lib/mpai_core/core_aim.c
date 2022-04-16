@@ -1,5 +1,8 @@
 /*
- * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com>
+ * @file
+ * @brief Implementation of a MPAI AIM, according to the specs V1
+ * 
+ * Copyright (c) 2022 Daniele Bortoluzzi <danieleb88@gmail.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */

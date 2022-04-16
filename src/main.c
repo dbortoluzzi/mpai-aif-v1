@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com> 
+ * Copyright (c) 2022 Daniele Bortoluzzi <danieleb88@gmail.com> 
  *
  * Base on the official sample by Zephyr at https://github.com/zephyrproject-rtos/zephyr/
  *

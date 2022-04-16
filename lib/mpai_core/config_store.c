@@ -1,8 +1,12 @@
 /*
- * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com>
+ * @file
+ * @brief Implementation of MPAI Config Store, according to the specs V1
+ *
+ * Copyright (c) 2022 Daniele Bortoluzzi <danieleb88@gmail.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+
 #include "config_store.h"
 
 LOG_MODULE_REGISTER(MPAI_CONFIG_STORE, LOG_LEVEL_INF);
