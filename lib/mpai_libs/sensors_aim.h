@@ -11,11 +11,14 @@
 #include <drivers/uart.h>
 #include <message_store.h>
 
+// The implementation will be added in AIW configuration
 __weak MPAI_AIM_MessageStore_t* message_store_sensors_aim;
 __weak subscriber_channel_t SENSORS_DATA_CHANNEL;
 
+// AIM subscriber
 mpai_error_t* sensors_aim_subscriber();
 
+// AIM high priorities commands
 mpai_error_t* sensors_aim_start();
 
 mpai_error_t* sensors_aim_stop();

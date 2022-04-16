@@ -11,25 +11,19 @@ LOG_MODULE_REGISTER(MPAI_LIBS_MOTION_AIM, LOG_LEVEL_INF);
 /* scheduling priority used by each thread */
 #define PRIORITY 7
 
-/* delay between sensors (in ms) */
-#define CONFIG_SENSORS_RATE_MS 100
+/* min delay used to detect when mcu is stopped */
+#define MCU_MIN_DETECTED_STOP_DELAY_MS 100
 
-#define MCU_MIN_STOPPED_MS 100
+#define SENSORS_DATA_POLLING_MS 1000
+
+#define ACCEL_TOT_THRESHOLD_MIN 9.5
+#define ACCEL_TOT_THRESHOLD_MAX 10.5
 
 /*************** STATIC ***************/
 static int64_t mcu_has_stopped_ts = 0.0;
 static motion_data_t motion_data = {.motion_type = UNKNOWN};
 
-/**************** THREADS **********************/
-
-static k_tid_t subscriber_motion_thread_id;
-
-K_THREAD_STACK_DEFINE(thread_sub_motion_stack_area, STACKSIZE);
-static struct k_thread thread_sub_motion_sens_data;
-
-/* SUBSCRIBER */
-
-void publish_motion_to_message_store(MOTION_TYPE motion_type)
+static void publish_motion_to_message_store(MOTION_TYPE motion_type)
 {
 	motion_data.motion_type = motion_type;
 	
@@ -43,6 +37,13 @@ void publish_motion_to_message_store(MOTION_TYPE motion_type)
 
 	LOG_DBG("Message motion published");
 }
+
+/**************** THREADS **********************/
+
+static k_tid_t subscriber_motion_thread_id;
+
+K_THREAD_STACK_DEFINE(thread_sub_motion_stack_area, STACKSIZE);
+static struct k_thread thread_sub_motion_sens_data;
 
 void th_subscribe_motion_data(void *dummy1, void *dummy2, void *dummy3)
 {
@@ -59,7 +60,7 @@ void th_subscribe_motion_data(void *dummy1, void *dummy2, void *dummy3)
 		// LOG_INF("Reading from pubsub......\n\n");
 
 		/* this function will return once new data has arrived, or upon timeout (1000ms in this case). */
-		int ret = MPAI_MessageStore_poll(message_store_motion_aim, motion_aim_subscriber, K_MSEC(1000), SENSORS_DATA_CHANNEL);
+		int ret = MPAI_MessageStore_poll(message_store_motion_aim, motion_aim_subscriber, K_MSEC(SENSORS_DATA_POLLING_MS), SENSORS_DATA_CHANNEL);
 
 		/* ret returns:
 		 * a positive value if new data was successfully returned
@@ -77,14 +78,18 @@ void th_subscribe_motion_data(void *dummy1, void *dummy2, void *dummy3)
 				float accel_x = sensor_value_to_double(&(sensor_data->lsm6dsl_accel[0]));
 				float accel_y = sensor_value_to_double(&(sensor_data->lsm6dsl_accel[1]));
 				float accel_z = sensor_value_to_double(&(sensor_data->lsm6dsl_accel[2]));
+				// compute vectorial product to get the total acceleration
 				float accel_tot = sqrt(accel_x*accel_x + accel_y*accel_y + accel_z*accel_z);
 
-				if (accel_tot >= 9.5 && accel_tot <= 10.5)
+				// algorithm to check if mcu is stopped or not
+				// 1. check if the total acceleration is between the MIN and the MAX threshold
+				if (accel_tot >= ACCEL_TOT_THRESHOLD_MIN && accel_tot <= ACCEL_TOT_THRESHOLD_MAX)
 				{
-					if (mcu_has_stopped_ts != 0 && aim_message.timestamp - mcu_has_stopped_ts >=  MCU_MIN_STOPPED_MS)
+					if (mcu_has_stopped_ts != 0 && aim_message.timestamp - mcu_has_stopped_ts >=  MCU_MIN_DETECTED_STOP_DELAY_MS)
 					{
-						// MCU stopped but no publish event	
+						// MCU is stopped but no publish event	
 					}
+					// 2. check if mcu was moving
 					else if (mcu_has_stopped_ts == 0)
 					{
 						mcu_has_stopped_ts = aim_message.timestamp;	
@@ -107,7 +112,7 @@ void th_subscribe_motion_data(void *dummy1, void *dummy2, void *dummy3)
 		}
 		else if (ret == 0)
 		{
-			printk("WARNING: Did not receive new data for 1000ms. Continuing poll.\n");
+			printk("WARNING: Did not receive new data for %dms. Continuing poll.\n", SENSORS_DATA_POLLING_MS);
 		}
 		else
 		{

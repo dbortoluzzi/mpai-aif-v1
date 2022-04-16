@@ -10,12 +10,15 @@
 #include <drivers/gpio.h>
 #include <misc_utils.h>
 
+// The implementation will be added in AIW configuration
 __weak MPAI_AIM_MessageStore_t* message_store_data_mic_aim;
 __weak subscriber_channel_t MIC_BUFFER_DATA_CHANNEL;
 __weak subscriber_channel_t MIC_PEAK_DATA_CHANNEL;
 
+// AIM subscriber
 mpai_error_t* data_mic_aim_subscriber();
 
+// AIM high priorities commands
 mpai_error_t* data_mic_aim_start();
 
 mpai_error_t* data_mic_aim_stop();

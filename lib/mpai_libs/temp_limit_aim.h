@@ -8,11 +8,14 @@
 #include <core_aim.h>
 #include <math.h>
 
+// The implementation will be added in AIW configuration
 __weak MPAI_AIM_MessageStore_t* message_store_temp_limit_aim;
 __weak subscriber_channel_t SENSORS_DATA_CHANNEL;
 
+// AIM subscriber
 mpai_error_t* temp_limit_aim_subscriber();
 
+// AIM high priorities commands
 mpai_error_t* temp_limit_aim_start();
 
 mpai_error_t* temp_limit_aim_stop();

@@ -11,9 +11,10 @@ LOG_MODULE_REGISTER(MPAI_LIBS_REHABILITATION_AIM, LOG_LEVEL_INF);
 /* scheduling priority used by each thread */
 #define PRIORITY 7
 
+/* polling every XXX(ms) to check new motion messages */
 #define CONFIG_REHABILITATION_MOTION_TIMEOUT_MS 3000
-// #define CONFIG_REHABILITATION_MIC_PEAK_TIMEOUT_MS 500
-#define CONFIG_REHABILITATION_MIC_PEAK_TIMEOUT_MS 1500
+/* polling every XXX(ms) to check new volume peak messages */
+#define CONFIG_REHABILITATION_MIC_PEAK_TIMEOUT_MS 1000
 
 /*************** STATIC ***************/
 static const struct device *led0, *led1;

@@ -9,12 +9,15 @@
 #include <motion_common.h>
 #include <math.h>
 
+// The implementation will be added in AIW configuration
 __weak MPAI_AIM_MessageStore_t* message_store_rehabilitation_aim;
 __weak subscriber_channel_t MOTION_DATA_CHANNEL;
 __weak subscriber_channel_t MIC_PEAK_DATA_CHANNEL;
 
+// AIM subscriber
 mpai_error_t* rehabilitation_aim_subscriber();
 
+// AIM high priorities commands
 mpai_error_t* rehabilitation_aim_start();
 
 mpai_error_t* rehabilitation_aim_stop();

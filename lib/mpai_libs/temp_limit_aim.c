@@ -14,7 +14,8 @@ LOG_MODULE_REGISTER(MPAI_LIBS_TEMP_LIMIT_AIM, LOG_LEVEL_INF);
 /* delay between sensors (in ms) */
 #define CONFIG_SENSORS_RATE_MS 100
 
-#define TEMPERATURE_LIMIT 30.0
+/* temperature threshold */
+#define TEMPERATURE_LIMIT_MAX 30.0
 
 /*************** STATIC ***************/
 static const struct device *led0;
@@ -43,7 +44,7 @@ void th_subscribe_sensors_data(void *dummy1, void *dummy2, void *dummy3)
 		// LOG_INF("Reading from pubsub......\n\n");
 
 		/* this function will return once new data has arrived, or upon timeout (1000ms in this case). */
-		int ret = MPAI_MessageStore_poll(message_store_temp_limit_aim, temp_limit_aim_subscriber, K_MSEC(1000), SENSORS_DATA_CHANNEL);
+		int ret = MPAI_MessageStore_poll(message_store_temp_limit_aim, temp_limit_aim_subscriber, K_MSEC(CONFIG_SENSORS_RATE_MS), SENSORS_DATA_CHANNEL);
 
 		/* ret returns:
 		 * a positive value if new data was successfully returned
@@ -155,9 +156,9 @@ void th_subscribe_sensors_data(void *dummy1, void *dummy2, void *dummy3)
 
 			#ifdef CONFIG_HTS221
 				double actual_temperature = sensor_value_to_double(sensor_data->hts221_temp);
-				if (actual_temperature > TEMPERATURE_LIMIT)
+				if (actual_temperature > TEMPERATURE_LIMIT_MAX)
 				{
-					printk("Temperature exceeds limit: %.3f > %.3f\n", actual_temperature, TEMPERATURE_LIMIT);
+					printk("Temperature exceeds limit: %.3f > %.3f\n", actual_temperature, TEMPERATURE_LIMIT_MAX);
 					gpio_pin_set(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios), 1);
 				}
 				else
@@ -198,7 +199,7 @@ mpai_error_t *temp_limit_aim_start()
 										 K_THREAD_STACK_SIZEOF(thread_sub_stack_area),
 										 th_subscribe_sensors_data, NULL, NULL, NULL,
 										 PRIORITY, 0, K_NO_WAIT);
-	k_thread_name_set(&thread_sub_sens_data, "thread_sub");
+	k_thread_name_set(&thread_sub_sens_data, "thread_sub_temperature");
 
 	// START THREAD
 	k_thread_start(subscriber_thread_id);

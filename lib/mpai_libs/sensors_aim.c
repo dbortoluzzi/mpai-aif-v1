@@ -10,7 +10,7 @@ LOG_MODULE_REGISTER(MPAI_LIBS_SENSORS_AIM, LOG_LEVEL_INF);
 /* scheduling priority used by each thread */
 #define PRIORITY 7
 
-/* delay between sensors (in ms) */
+/* delay between reads from sensors (in ms) */
 #define CONFIG_SENSORS_RATE_MS 100
 
 /*************** STATIC ***************/
