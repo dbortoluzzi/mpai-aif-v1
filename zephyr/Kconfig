@@ -13,6 +13,38 @@ config APP_MPAI_AIF_STM32
   select USE_STM32_HAL_DMA_EX
   select USE_STM32_HAL_DMA2D
 
+config COAP_SERVER
+	bool "Enable COAP Server"
+	default n
+	help
+	  Enable COAP Server
+
+config COAP_SERVER_IPV4_ADDR
+	string "Destination of the COAP Server"
+	depends on COAP_SERVER
+	help
+	  IPV4 Address used to connect to COAP Server
+
+config COAP_SERVER_PORT
+	int "Port of the COAP Server"
+	depends on COAP_SERVER
+	default 5683
+	help
+	  Port used to connect to COAP Server
+
+config MPAI_CONFIG_STORE
+	bool "Enable reading configuration from MPAI Config Store"
+	default y
+	help
+	  MPAI Config Store protocol used
+
+config MPAI_CONFIG_STORE_USES_COAP
+	bool "Enable reading configuration from MPAI Config Store using COAP"
+	depends on MPAI_CONFIG_STORE
+	select COAP_SERVER
+	help
+	  MPAI Config Store uses COAP protocol
+
 config MPAI_AIM_CONTROL_UNIT_SENSORS
 	bool "Enable reading data from MPAI AIM CONTROL UNIT SENSORS"
 	default y
@@ -28,7 +60,7 @@ config MPAI_AIM_CONTROL_UNIT_SENSORS_PERIODIC
 
 config MPAI_AIM_MOTION_RECOGNITION_ANALYSIS
 	bool "Enable motion recognition analysis, reading data from inertial unit of mcu"
-  depends on MPAI_AIM_CONTROL_UNIT_SENSORS
+    depends on MPAI_AIM_CONTROL_UNIT_SENSORS
 	default y
 	help
 	  This will store messages like "MCU HAS STOPPED" or "MCU HAS STARTED TO MOVE".    

@@ -10,11 +10,11 @@
 #include <net/net_core.h>
 #include <net/net_if.h>
 
-#define PEER_PORT 5683
+#define PEER_PORT CONFIG_COAP_SERVER_PORT
 #define MAX_COAP_MSG_LEN 256
 
 #define BLOCK_WISE_TRANSFER_SIZE_GET 2048
-#define IP_ADDRESS_COAP_SERVER "192.168.1.60" /*TO CHANGE*/
+#define IP_ADDRESS_COAP_SERVER CONFIG_COAP_SERVER_IPV4_ADDR
 
 int get_coap_sock(void);
 

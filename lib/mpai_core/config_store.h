@@ -6,13 +6,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <logging/log.h>
-#include <coap_connect.h>
 #include <misc_utils.h>
+#ifdef CONFIG_MPAI_CONFIG_STORE && CONFIG_MPAI_CONFIG_STORE_USES_COAP
+    #include <coap_connect.h>
 
-static const char * const AIF_CONFIG[] = { "config/aif/", NULL }; /*demo*/
-static const char * const AIW_CAE_REV_CONFIG[] = { "config/aiw/", NULL }; /*cae_rev*/
-static const char * const AIM_VOLUMEPEAKANALYSIS_CONFIG[] = { "config/aim/", NULL }; /*volume_peak_analysis*/
+    static const char * const AIF_CONFIG[] = { "config/aif/", NULL }; /*demo*/
+    static const char * const AIW_CAE_REV_CONFIG[] = { "config/aiw/", NULL }; /*cae_rev*/
+    static const char * const AIM_VOLUMEPEAKANALYSIS_CONFIG[] = { "config/aim/", NULL }; /*volume_peak_analysis*/
 
-char* MPAI_Config_Store_Get_AIF(char* aif_name);
+    char* MPAI_Config_Store_Get_AIF(char* aif_name);
+#endif
 
 #endif

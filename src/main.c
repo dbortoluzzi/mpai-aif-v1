@@ -48,9 +48,13 @@ LOG_MODULE_REGISTER(MAIN, LOG_LEVEL_INF);
 #include <test_use_case_aiw.h>
 
 #include <wifi_connect.h>
-#include <coap_connect.h>
 #include <net_private.h>
-#include <config_store.h>
+#ifdef CONFIG_COAP_SERVER
+	#include <coap_connect.h>
+#endif
+#ifdef CONFIG_MPAI_CONFIG_STORE	
+	#include <config_store.h>
+#endif
 
 #define WHOAMI_REG 0x0F
 #define WHOAMI_ALT_REG 0x4F
@@ -240,228 +244,229 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
 /*** END BT ***/
 
 /* CoAP Options */
-static const char * const test_path[] = { "test", NULL };
+#ifdef CONFIG_COAP_SERVER
+	static const char * const test_path[] = { "test", NULL };
 
-static const char * const large_path[] = { "large", NULL };
+	static const char * const large_path[] = { "large", NULL };
 
-static const char * const obs_path[] = { "obs", NULL };
+	static const char * const obs_path[] = { "obs", NULL };
 
-static int send_simple_coap_msgs_and_wait_for_reply(uint8_t * data_result, char ** simple_path)
-{
-	uint8_t test_type = 0U;
-	int r;
+	static int send_simple_coap_msgs_and_wait_for_reply(uint8_t * data_result, char ** simple_path)
+	{
+		uint8_t test_type = 0U;
+		int r;
 
-	while (1) {
-		switch (test_type) {
-		case 0:
-			/* Test CoAP GET method */
-			printk("\nCoAP client GET\n");
-			r = send_simple_coap_request(COAP_METHOD_GET, simple_path);
+		while (1) {
+			switch (test_type) {
+			case 0:
+				/* Test CoAP GET method */
+				printk("\nCoAP client GET\n");
+				r = send_simple_coap_request(COAP_METHOD_GET, simple_path);
+				if (r < 0) {
+					return r;
+				}
+
+				break;
+			case 1:
+				/* Test CoAP PUT method */
+				printk("\nCoAP client PUT\n");
+				r = send_simple_coap_request(COAP_METHOD_PUT, simple_path);
+				if (r < 0) {
+					return r;
+				}
+
+				break;
+			case 2:
+				/* Test CoAP POST method*/
+				printk("\nCoAP client POST\n");
+				r = send_simple_coap_request(COAP_METHOD_POST, simple_path);
+				if (r < 0) {
+					return r;
+				}
+
+				break;
+			case 3:
+				/* Test CoAP DELETE method*/
+				printk("\nCoAP client DELETE\n");
+				r = send_simple_coap_request(COAP_METHOD_DELETE, simple_path);
+				if (r < 0) {
+					return r;
+				}
+
+				break;
+			default:
+				return 0;
+			}
+
+			memset(data_result, 0, MAX_COAP_MSG_LEN);
+			r = process_simple_coap_reply(data_result);
 			if (r < 0) {
 				return r;
 			}
-
-			break;
-		case 1:
-			/* Test CoAP PUT method */
-			printk("\nCoAP client PUT\n");
-			r = send_simple_coap_request(COAP_METHOD_PUT, simple_path);
-			if (r < 0) {
-				return r;
-			}
-
-			break;
-		case 2:
-			/* Test CoAP POST method*/
-			printk("\nCoAP client POST\n");
-			r = send_simple_coap_request(COAP_METHOD_POST, simple_path);
-			if (r < 0) {
-				return r;
-			}
-
-			break;
-		case 3:
-			/* Test CoAP DELETE method*/
-			printk("\nCoAP client DELETE\n");
-			r = send_simple_coap_request(COAP_METHOD_DELETE, simple_path);
-			if (r < 0) {
-				return r;
-			}
-
-			break;
-		default:
-			return 0;
+			test_type++;
 		}
 
-		memset(data_result, 0, MAX_COAP_MSG_LEN);
-		r = process_simple_coap_reply(data_result);
-		if (r < 0) {
-			return r;
+		return 0;
+	}
+
+	static int send_obs_reply_ack(uint16_t id, uint8_t *token, uint8_t tkl)
+	{
+		struct coap_packet request;
+		uint8_t *data;
+		int r;
+
+		data = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN);
+		if (!data) {
+			return -ENOMEM;
 		}
-		test_type++;
-	}
 
-	return 0;
-}
-
-static int send_obs_reply_ack(uint16_t id, uint8_t *token, uint8_t tkl)
-{
-	struct coap_packet request;
-	uint8_t *data;
-	int r;
-
-	data = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN);
-	if (!data) {
-		return -ENOMEM;
-	}
-
-	r = coap_packet_init(&request, data, MAX_COAP_MSG_LEN,
-			     COAP_VERSION_1, COAP_TYPE_ACK, tkl, token, 0, id);
-	if (r < 0) {
-		LOG_ERR("Failed to init CoAP message");
-		goto end;
-	}
-
-	net_hexdump("Request", request.data, request.offset);
-
-	r = send(get_coap_sock(), request.data, request.offset, 0);
-end:
-	k_free(data);
-
-	return r;
-}
-
-static int send_obs_coap_request(void)
-{
-	struct coap_packet request;
-	const char * const *p;
-	uint8_t *data;
-	int r;
-
-	data = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN);
-	if (!data) {
-		return -ENOMEM;
-	}
-
-	r = coap_packet_init(&request, data, MAX_COAP_MSG_LEN,
-			     COAP_VERSION_1, COAP_TYPE_CON,
-			     COAP_TOKEN_MAX_LEN, coap_next_token(),
-			     COAP_METHOD_GET, coap_next_id());
-	if (r < 0) {
-		LOG_ERR("Failed to init CoAP message");
-		goto end;
-	}
-
-	r = coap_append_option_int(&request, COAP_OPTION_OBSERVE, 0);
-	if (r < 0) {
-		LOG_ERR("Failed to append Observe option");
-		goto end;
-	}
-
-	for (p = obs_path; p && *p; p++) {
-		r = coap_packet_append_option(&request, COAP_OPTION_URI_PATH,
-					      *p, strlen(*p));
+		r = coap_packet_init(&request, data, MAX_COAP_MSG_LEN,
+					COAP_VERSION_1, COAP_TYPE_ACK, tkl, token, 0, id);
 		if (r < 0) {
-			LOG_ERR("Unable add option to request");
+			LOG_ERR("Failed to init CoAP message");
 			goto end;
 		}
+
+		net_hexdump("Request", request.data, request.offset);
+
+		r = send(get_coap_sock(), request.data, request.offset, 0);
+	end:
+		k_free(data);
+
+		return r;
 	}
 
-	net_hexdump("Request", request.data, request.offset);
+	static int send_obs_coap_request(void)
+	{
+		struct coap_packet request;
+		const char * const *p;
+		uint8_t *data;
+		int r;
 
-	r = send(get_coap_sock(), request.data, request.offset, 0);
+		data = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN);
+		if (!data) {
+			return -ENOMEM;
+		}
 
-end:
-	k_free(data);
-
-	return r;
-}
-
-static int send_obs_reset_coap_request(void)
-{
-	struct coap_packet request;
-	const char * const *p;
-	uint8_t *data;
-	int r;
-
-	data = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN);
-	if (!data) {
-		return -ENOMEM;
-	}
-
-	r = coap_packet_init(&request, data, MAX_COAP_MSG_LEN,
-			     COAP_VERSION_1, COAP_TYPE_RESET,
-			     COAP_TOKEN_MAX_LEN, coap_next_token(),
-			     0, coap_next_id());
-	if (r < 0) {
-		LOG_ERR("Failed to init CoAP message");
-		goto end;
-	}
-
-	r = coap_append_option_int(&request, COAP_OPTION_OBSERVE, 0);
-	if (r < 0) {
-		LOG_ERR("Failed to append Observe option");
-		goto end;
-	}
-
-	for (p = obs_path; p && *p; p++) {
-		r = coap_packet_append_option(&request, COAP_OPTION_URI_PATH,
-					      *p, strlen(*p));
+		r = coap_packet_init(&request, data, MAX_COAP_MSG_LEN,
+					COAP_VERSION_1, COAP_TYPE_CON,
+					COAP_TOKEN_MAX_LEN, coap_next_token(),
+					COAP_METHOD_GET, coap_next_id());
 		if (r < 0) {
-			LOG_ERR("Unable add option to request");
+			LOG_ERR("Failed to init CoAP message");
 			goto end;
 		}
+
+		r = coap_append_option_int(&request, COAP_OPTION_OBSERVE, 0);
+		if (r < 0) {
+			LOG_ERR("Failed to append Observe option");
+			goto end;
+		}
+
+		for (p = obs_path; p && *p; p++) {
+			r = coap_packet_append_option(&request, COAP_OPTION_URI_PATH,
+							*p, strlen(*p));
+			if (r < 0) {
+				LOG_ERR("Unable add option to request");
+				goto end;
+			}
+		}
+
+		net_hexdump("Request", request.data, request.offset);
+
+		r = send(get_coap_sock(), request.data, request.offset, 0);
+
+	end:
+		k_free(data);
+
+		return r;
 	}
 
-	net_hexdump("Request", request.data, request.offset);
+	static int send_obs_reset_coap_request(void)
+	{
+		struct coap_packet request;
+		const char * const *p;
+		uint8_t *data;
+		int r;
 
-	r = send(get_coap_sock(), request.data, request.offset, 0);
+		data = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN);
+		if (!data) {
+			return -ENOMEM;
+		}
 
-end:
-	k_free(data);
+		r = coap_packet_init(&request, data, MAX_COAP_MSG_LEN,
+					COAP_VERSION_1, COAP_TYPE_RESET,
+					COAP_TOKEN_MAX_LEN, coap_next_token(),
+					0, coap_next_id());
+		if (r < 0) {
+			LOG_ERR("Failed to init CoAP message");
+			goto end;
+		}
 
-	return r;
-}
+		r = coap_append_option_int(&request, COAP_OPTION_OBSERVE, 0);
+		if (r < 0) {
+			LOG_ERR("Failed to append Observe option");
+			goto end;
+		}
 
-static int register_observer(void)
-{
-	uint8_t counter = 0U;
-	int r;
+		for (p = obs_path; p && *p; p++) {
+			r = coap_packet_append_option(&request, COAP_OPTION_URI_PATH,
+							*p, strlen(*p));
+			if (r < 0) {
+				LOG_ERR("Unable add option to request");
+				goto end;
+			}
+		}
 
-	while (1) {
-		/* Test CoAP OBS GET method */
-		if (!counter) {
-			printk("\nCoAP client OBS GET\n");
-			r = send_obs_coap_request();
+		net_hexdump("Request", request.data, request.offset);
+
+		r = send(get_coap_sock(), request.data, request.offset, 0);
+
+	end:
+		k_free(data);
+
+		return r;
+	}
+
+	static int register_observer(void)
+	{
+		uint8_t counter = 0U;
+		int r;
+
+		while (1) {
+			/* Test CoAP OBS GET method */
+			if (!counter) {
+				printk("\nCoAP client OBS GET\n");
+				r = send_obs_coap_request();
+				if (r < 0) {
+					return r;
+				}
+			} else {
+				printk("\nCoAP OBS Notification\n");
+			}
+
+			r = process_obs_coap_reply();
 			if (r < 0) {
 				return r;
 			}
-		} else {
-			printk("\nCoAP OBS Notification\n");
+
+			counter++;
+
+			/* Unregister */
+			if (counter == 5U) {
+				/* TODO: Functionality can be verified byt waiting for
+				* some time and make sure client shouldn't receive
+				* any notifications. If client still receives
+				* notifications means, Observer is not removed.
+				*/
+				return send_obs_reset_coap_request();
+			}
 		}
 
-		r = process_obs_coap_reply();
-		if (r < 0) {
-			return r;
-		}
-
-		counter++;
-
-		/* Unregister */
-		if (counter == 5U) {
-			/* TODO: Functionality can be verified byt waiting for
-			 * some time and make sure client shouldn't receive
-			 * any notifications. If client still receives
-			 * notifications means, Observer is not removed.
-			 */
-			return send_obs_reset_coap_request();
-		}
+		return 0;
 	}
-
-	return 0;
-}
-
-// /*** END COAP ***/
+	// /*** END COAP ***/
+#endif
 
 void main(void)
 {
@@ -494,53 +499,6 @@ void main(void)
 	gpio_pin_set(led1, DT_GPIO_PIN(DT_ALIAS(led1), gpios), 1);
 
 	printk("IoT node INITIALIZING...\n");
-
-	/*** START COAP ***/
-	wifi_connect();
-
-	int r;
-
-	LOG_DBG("Start CoAP-client sample");
-	r = start_coap_client();
-	if (r < 0) {
-		(void)close(get_coap_sock());
-	}
-
-	// /* GET, PUT, POST, DELETE */
-	uint8_t* data_result = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN * sizeof(uint8_t));
-	r = send_simple_coap_msgs_and_wait_for_reply(data_result, test_path);
-	k_free(data_result);
-
-	/* Block-wise transfer */
-	char* data_large_result = get_large_coap_msgs(large_path);
-	k_free(data_large_result);
-
-	/* Register observer, get notifications and unregister */
-	// r = register_observer();
-	// if (r < 0) {
-	// 	(void)close(get_coap_sock());
-	// }
-
-	/*** END COAP ***/
-
-
-	int err;
-
-	err = button_init(button_callback);
-	if (err) {
-		return;
-	}
-
-	err = led_init();
-	if (err) {
-		return;
-	}
-
-	/* Initialize the Bluetooth Subsystem */
-	err = bt_enable(bt_ready);
-	if (err) {
-		LOG_ERR("Bluetooth init failed (err %d)", err);
-	}
 
 	#ifdef CONFIG_APP_TEST_WRITE_TO_FLASH
 		/*** START SPI FLASH ***/
@@ -590,28 +548,78 @@ void main(void)
 		/*** END SPI FLASH ***/
 	#endif
 
-	// START INIT FROM MPAI CONFIG STORE
-	char* aif_result = MPAI_Config_Store_Get_AIF("demo");
-	if (aif_result != NULL) {
-		printk("AIF RESULT: \n");
-		for ( size_t i = 0; i < strlen(aif_result); i++ )
-		{
-			printk("%c", (char)aif_result[i]);
-			k_sleep(K_MSEC(5));
-		}
-		printk("\n");
+	/** START BLUETOOTH **/
+	int err;
 
-		JSON_Value* json2 = json_parse_string(aif_result);
-		char* name2 = json_object_get_string(json_object(json2), "title");
-		LOG_INF("Initializing AIF with title \"%s\"...", log_strdup(name2));
-
-		// TODO: AIF initialization
-
-		k_free(aif_result);
+	err = button_init(button_callback);
+	if (err) {
+		return;
 	}
 
-	/* Close the socket */
-	(void)close(get_coap_sock());
+	err = led_init();
+	if (err) {
+		return;
+	}
+
+	/* Initialize the Bluetooth Subsystem */
+	err = bt_enable(bt_ready);
+	if (err) {
+		LOG_ERR("Bluetooth init failed (err %d)", err);
+	}
+
+	/** END BLUETOOTH **/
+
+	wifi_connect();
+
+	#ifdef CONFIG_COAP_SERVER
+		/*** START COAP ***/
+		int r;
+
+		LOG_DBG("Start CoAP-client sample");
+		r = start_coap_client();
+		if (r < 0) {
+			(void)close(get_coap_sock());
+		}
+
+		// /* GET, PUT, POST, DELETE */
+		uint8_t* data_result = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN * sizeof(uint8_t));
+		r = send_simple_coap_msgs_and_wait_for_reply(data_result, test_path);
+		k_free(data_result);
+
+		/* Block-wise transfer */
+		char* data_large_result = get_large_coap_msgs(large_path);
+		k_free(data_large_result);
+
+		/* Register observer, get notifications and unregister */
+		// r = register_observer();
+		// if (r < 0) {
+		// 	(void)close(get_coap_sock());
+		// }
+	#endif
+
+	#ifdef CONFIG_MPAI_CONFIG_STORE && CONFIG_MPAI_CONFIG_STORE_USES_COAP
+		char* aif_result = MPAI_Config_Store_Get_AIF("demo");
+		if (aif_result != NULL) {
+			printk("AIF RESULT: \n");
+			for ( size_t i = 0; i < strlen(aif_result); i++ )
+			{
+				printk("%c", (char)aif_result[i]);
+				k_sleep(K_MSEC(5));
+			}
+			printk("\n");
+
+			JSON_Value* json2 = json_parse_string(aif_result);
+			char* name2 = json_object_get_string(json_object(json2), "title");
+			LOG_INF("Initializing AIF with title \"%s\"...", log_strdup(name2));
+
+			// TODO: AIF initialization
+
+			k_free(aif_result);
+		}
+
+		/* Close the socket */
+		(void)close(get_coap_sock());
+	#endif
 
 	INIT_Test_Use_Case_AIW();
 
