@@ -28,9 +28,9 @@ int start_coap_client(void);
 
 int send_simple_coap_request(uint8_t method, char ** simple_path);
 
-int process_simple_coap_reply(uint8_t * data_result, uint16_t* len);
+int process_simple_coap_reply(uint8_t * data_result);
 
-int process_large_coap_reply(uint8_t * data_result, uint16_t* len);
+int process_large_coap_reply(uint8_t * data_result);
 
 int process_obs_coap_reply(void);
 

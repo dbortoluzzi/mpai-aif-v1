@@ -246,7 +246,7 @@ static const char * const large_path[] = { "large", NULL };
 
 static const char * const obs_path[] = { "obs", NULL };
 
-static int send_simple_coap_msgs_and_wait_for_reply(uint8_t * data_result, uint16_t* len, char ** simple_path)
+static int send_simple_coap_msgs_and_wait_for_reply(uint8_t * data_result, char ** simple_path)
 {
 	uint8_t test_type = 0U;
 	int r;
@@ -294,7 +294,7 @@ static int send_simple_coap_msgs_and_wait_for_reply(uint8_t * data_result, uint1
 		}
 
 		memset(data_result, 0, MAX_COAP_MSG_LEN);
-		r = process_simple_coap_reply(data_result, len);
+		r = process_simple_coap_reply(data_result);
 		if (r < 0) {
 			return r;
 		}
@@ -508,24 +508,12 @@ void main(void)
 
 	// /* GET, PUT, POST, DELETE */
 	uint8_t* data_result = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN * sizeof(uint8_t));
-	uint16_t* data_len = (uint16_t *)k_malloc(sizeof(uint16_t));
-	r = send_simple_coap_msgs_and_wait_for_reply(data_result, data_len, test_path);
-	if (r < 0) {
-		(void)close(get_coap_sock());
-	}
-	// k_free(data_result);
-	// k_free(data_len);
+	r = send_simple_coap_msgs_and_wait_for_reply(data_result, test_path);
+	k_free(data_result);
 
 	/* Block-wise transfer */
-	// uint8_t* data_large_result = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN * sizeof(uint8_t));
-	uint8_t* data_large_result = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN * sizeof(uint8_t));
-	uint16_t* data_large_len = (uint16_t *)k_malloc(sizeof(uint16_t));
-	r = get_large_coap_msgs(large_path, data_large_result, data_large_len);
-	if (r < 0) {
-		(void)close(get_coap_sock());
-	}
-	// k_free(data_large_result);
-	// k_free(data_large_len);
+	char* data_large_result = get_large_coap_msgs(large_path);
+	k_free(data_large_result);
 
 	/* Register observer, get notifications and unregister */
 	// r = register_observer();
@@ -602,24 +590,25 @@ void main(void)
 		/*** END SPI FLASH ***/
 	#endif
 
-	// // START INIT FROM MPAI CONFIG STORE
-	uint8_t* aif_result = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN * sizeof(uint8_t));
-	// TODO: remove aif_result_len
-	uint16_t* aif_result_len = (uint16_t *)k_malloc(sizeof(uint16_t));
-	MPAI_Config_Store_get_AIF(aif_result, aif_result_len, "demo");
+	// START INIT FROM MPAI CONFIG STORE
+	char* aif_result = MPAI_Config_Store_Get_AIF("demo");
+	if (aif_result != NULL) {
+		printk("AIF RESULT: \n");
+		for ( size_t i = 0; i < strlen(aif_result); i++ )
+		{
+			printk("%c", (char)aif_result[i]);
+			k_sleep(K_MSEC(5));
+		}
+		printk("\n");
 
-	// if (aif_result_len != NULL)
-	// {
-	// 	for ( size_t i = 0; i < strlen(aif_result); i++ )
-	// 	{
-	// 		printk("%c", (char)aif_result[i]);
-	// 		k_sleep(K_MSEC(5));
-	// 	}
-	// }
+		JSON_Value* json2 = json_parse_string(aif_result);
+		char* name2 = json_object_get_string(json_object(json2), "title");
+		LOG_INF("Initializing AIF with title \"%s\"...", log_strdup(name2));
 
-	JSON_Value* json2 = json_parse_string(aif_result);
-	char* name2 = json_object_get_string(json_object(json2), "title");
-	LOG_INF("Initializing AIF \"%s\"...", log_strdup(name2));
+		// TODO: AIF initialization
+
+		k_free(aif_result);
+	}
 
 	/* Close the socket */
 	(void)close(get_coap_sock());

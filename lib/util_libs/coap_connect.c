@@ -17,7 +17,7 @@ int coap_sock;
 struct coap_block_context blk_ctx;
 
 /*** PRIVATE ***/
-void extract_data_result(struct coap_packet packet, uint8_t* data_result, uint16_t* len, bool add_termination);
+void extract_data_result(struct coap_packet packet, uint8_t* data_result, bool add_termination);
 
 /*** PUBLIC ***/
 int get_coap_sock(void)
@@ -77,7 +77,7 @@ int start_coap_client(void)
 	return 0;
 }
 
-int process_simple_coap_reply(uint8_t * data_result, uint16_t* len)
+int process_simple_coap_reply(uint8_t * data_result)
 {
 	struct coap_packet reply = {};
 	uint8_t *data;
@@ -110,7 +110,7 @@ int process_simple_coap_reply(uint8_t * data_result, uint16_t* len)
 	net_hexdump("Raw response", data, rcvd);
 
 	ret = coap_packet_parse(&reply, data, rcvd, NULL, 0);
-	extract_data_result(reply, data_result, len, true);
+	extract_data_result(reply, data_result, true);
 	printk("Response %s\n", data_result);
 
 	if (ret < 0) {
@@ -123,7 +123,7 @@ end:
 	return ret;
 }
 
-int process_large_coap_reply(uint8_t * data_result, uint16_t* len)
+int process_large_coap_reply(uint8_t * data_result)
 {
 	struct coap_packet reply = {};
 	uint8_t *data;
@@ -167,7 +167,7 @@ int process_large_coap_reply(uint8_t * data_result, uint16_t* len)
 		goto end;
 	}
 
-	extract_data_result(reply, data_result, len, false);
+	extract_data_result(reply, data_result, false);
 	printk("Response block %zd: %s\n", get_block_context().current / 64, data_result);
 
 	last_block = coap_next_block(&reply, &blk_ctx);
@@ -359,61 +359,54 @@ end:
 	return r;
 }
 
-int get_large_coap_msgs(char ** large_path, char * data_large_result, uint16_t* tot_data_large_len)
+char* get_large_coap_msgs(char ** large_path)
 {
 	int r;
-	char data_single_result[MAX_COAP_MSG_LEN] = "";
+	uint8_t data_single_result[MAX_COAP_MSG_LEN];
 	char * data_large_result_tmp = NULL;
-	*tot_data_large_len = NULL;
 	while (1) {
 		/* Test CoAP Large GET method */
 		printk("\nCoAP client Large GET (block %zd)\n",
 		       get_block_context().current / 64 /*COAP_BLOCK_64*/);
 		r = send_large_coap_request(large_path);
 		if (r < 0) {
-			return r;
+			return NULL;
 		}
 		
 		memset(data_single_result, 0, MAX_COAP_MSG_LEN);
-		uint16_t data_large_len = 0;
-		r = process_large_coap_reply(data_single_result, &data_large_len);
+		r = process_large_coap_reply(data_single_result);
 		if (r < 0) {
-			return r;
-		}
-		if (data_large_len != 0) 
-		{
-			*tot_data_large_len = *tot_data_large_len + data_large_len;
+			return NULL;
 		}
 
 		if (data_large_result_tmp != NULL) 
 		{
-			data_large_result_tmp = append_strings(data_large_result_tmp, data_single_result);
+			char * data_large_result_concat = append_strings(data_large_result_tmp, (char*)data_single_result);
+			k_free(data_large_result_tmp);
+			data_large_result_tmp = k_malloc(strlen(data_large_result_concat-1));
+			strcpy(data_large_result_tmp, data_large_result_concat);
+			k_free(data_large_result_concat);
 		} else {
-			data_large_result_tmp = append_strings("", data_single_result);
+			data_large_result_tmp = append_strings("", (char*)data_single_result);
 		}
 		
 		/* Received last block */
 		if (r == 1) {
 			memset(get_block_context_ptr(), 0, sizeof(get_block_context()));
-
-			// add terminating char	
-			// TODO: fix pointer		
-			data_large_result_tmp = append_strings(data_large_result_tmp, "");
-			memcpy(data_large_result, data_large_result_tmp, (*tot_data_large_len+1) * sizeof(uint8_t)); 
-			return 0;
+			char * data_large_result_concat = append_strings(data_large_result_tmp, "");
+			return data_large_result_concat;
 		}
 	}
-	return 0;
+	return NULL;
 }
 
-void extract_data_result(struct coap_packet packet, uint8_t* data_result, uint16_t* data_len, bool add_termination)
+void extract_data_result(struct coap_packet packet, uint8_t* data_result, bool add_termination)
 {
 	uint16_t len = 0;
 	uint8_t* payload = coap_packet_get_payload(&packet, &len);
 	if (payload != NULL) 
 	{
 		memcpy(data_result, payload, len * sizeof(uint8_t)); 
-		*data_len = len;
 		if (add_termination) 
 		{
 			char tmp[2] = ""; 
