@@ -36,7 +36,7 @@ extern "C" {
 #define AUDIO_CHANNELS                      1
 #define AUDIO_VOLUME_VALUE                  32
 #define AUDIO_SAMPLING_FREQUENCY            16000
-// DB
+// ATTENTION: to overwrite the handler, we have to disable IRQ and renable with the new IRQ Handler in the code
 // #define AUDIO_DFSDM_DMAx_MIC1_IRQHandler    DMA1_Channel4_IRQHandler
 #define PCM_BUFFER_LEN                      64U
 #define PCM_AUDIO_IN_SAMPLES                (AUDIO_SAMPLING_FREQUENCY / 1000)

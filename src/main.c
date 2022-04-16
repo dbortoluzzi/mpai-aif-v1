@@ -59,7 +59,7 @@ LOG_MODULE_REGISTER(MAIN, LOG_LEVEL_INF);
 #define WHOAMI_REG 0x0F
 #define WHOAMI_ALT_REG 0x4F
 
-
+/* AIMs to configured */
 MPAI_Component_AIM_t* aim_produce_sensors = NULL;
 MPAI_Component_AIM_t* aim_temp_limit = NULL;
 MPAI_Component_AIM_t* aim_data_mic = NULL;
@@ -243,7 +243,7 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
 
 /*** END BT ***/
 
-/* CoAP Options */
+/*** START COAP ***/
 #ifdef CONFIG_COAP_SERVER
 	static char * const test_path[] = { "test", NULL };
 
@@ -465,7 +465,7 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
 
 		return 0;
 	}
-	// /*** END COAP ***/
+	//*** END COAP ***/
 #endif
 
 void main(void)
@@ -476,7 +476,7 @@ void main(void)
 	int cnt = 1;
 	uint32_t dtr = 0;
 
-	// LED
+	// LEDs
 	led0 = device_get_binding(DT_GPIO_LABEL(DT_ALIAS(led0), gpios));
 	gpio_pin_configure(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios),
 					   GPIO_OUTPUT_ACTIVE |
@@ -487,6 +487,7 @@ void main(void)
 					   GPIO_OUTPUT_INACTIVE |
 						   DT_GPIO_FLAGS(DT_ALIAS(led1), gpios));
 
+	// Test leds
 	for (i = 0; i < 6; i++)
 	{
 		gpio_pin_set(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios), on);
@@ -613,12 +614,12 @@ void main(void)
 			char* name2 = json_object_get_string(json_object(json2), "title");
 			LOG_INF("Initializing AIF with title \"%s\"...", log_strdup(name2));
 
-			// TODO: AIF initialization
+			// TODO: AIF initialization........
 
 			k_free(aif_result);
 		}
 
-		/* Close the socket */
+		/* Close the socket when it's no longer usefull*/
 		(void)close(get_coap_sock());
 	#endif
 

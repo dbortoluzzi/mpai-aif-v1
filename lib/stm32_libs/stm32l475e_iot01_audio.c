@@ -1649,7 +1649,7 @@ static void DFSDM_FilterMspInit(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
     HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, BSP_AUDIO_IN_IT_PRIORITY, 0);
     HAL_NVIC_EnableIRQ(DMA1_Channel4_IRQn);
 
-    //DB
+    // ATTENTION: to overwrite the handler, we have to disable IRQ and renable with the new IRQ Handler
     irq_disable(DMA1_Channel4_IRQn);
     irq_connect_dynamic(DMA1_Channel4_IRQn, 5, AUDIO_DFSDM_DMAx_MIC1_IRQHandler, NULL, 0);
    	irq_enable(DMA1_Channel4_IRQn);
@@ -1693,7 +1693,7 @@ static void DFSDM_FilterMspInit(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
     HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, BSP_AUDIO_IN_IT_PRIORITY, 0);
     HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
 
-    //DB
+    // ATTENTION: to overwrite the handler, we have to disable IRQ and renable with the new IRQ Handler
     irq_disable(DMA1_Channel5_IRQn);
   	irq_connect_dynamic(DMA1_Channel5_IRQn, 5, AUDIO_DFSDM_DMAx_MIC1_IRQHandler, NULL, 0);
   	irq_enable(DMA1_Channel5_IRQn);
@@ -1712,7 +1712,7 @@ static void DFSDM_FilterMspDeInit(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
     /* Disable DMA  Channel IRQ */
     HAL_NVIC_DisableIRQ(DMA1_Channel4_IRQn);
 
-    // DB
+    // ATTENTION: disable the handler
     irq_disable(DMA1_Channel4_IRQn);
 
     /* De-initialize the DMA Channel */
@@ -1726,7 +1726,7 @@ static void DFSDM_FilterMspDeInit(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
     /* Disable DMA  Channel IRQ */
     HAL_NVIC_DisableIRQ(DMA1_Channel5_IRQn);
 
-    // DB
+    // ATTENTION: disable the handler
     irq_disable(DMA1_Channel5_IRQn);
 
     /* De-initialize the DMA Channel */
