@@ -245,11 +245,11 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
 
 /* CoAP Options */
 #ifdef CONFIG_COAP_SERVER
-	static const char * const test_path[] = { "test", NULL };
+	static char * const test_path[] = { "test", NULL };
 
-	static const char * const large_path[] = { "large", NULL };
+	static char * const large_path[] = { "large", NULL };
 
-	static const char * const obs_path[] = { "obs", NULL };
+	static char * const obs_path[] = { "obs", NULL };
 
 	static int send_simple_coap_msgs_and_wait_for_reply(uint8_t * data_result, char ** simple_path)
 	{
@@ -542,7 +542,8 @@ void main(void)
 			}
 		}
 		JSON_Value* json = json_parse_string(buf);
-		char* name = json_object_get_string(json_object(json), "name");
+		const JSON_Object* root_json = json_object(json);
+		const char* name = json_object_get_string(root_json, "name");
 		LOG_INF("Hello, %s.", log_strdup(name));
 		json_value_free(json);
 		/*** END SPI FLASH ***/

@@ -392,13 +392,6 @@ void produce_sensors_data(void *arg1, void *arg2) {
 
 	LOG_DBG("Producing......\n\n");
 
-	struct sensor_value lis2dw12_accel[3];
-	struct sensor_value iis3dhhc_accel[3];
-	struct sensor_value lsm6dso_accel[3], lsm6dso_gyro[3];
-	struct sensor_value lsm6dsl_accel[3], lsm6dsl_gyro[3];
-	struct sensor_value lis2mdl_magn[3];
-	struct sensor_value lis3mdl_magn[3];
-
 	/* handle HTS221 sensor */
 	#ifdef CONFIG_HTS221
 		if (sensor_sample_fetch(sensor_devices_ptr->hts221) < 0) {
@@ -485,10 +478,12 @@ void produce_sensors_data(void *arg1, void *arg2) {
 		sensor_channel_get(sensor_devices_ptr->lps22hb, SENSOR_CHAN_AMBIENT_TEMP, sensor_result_ptr->lps22hb_temp);
 	#endif		
 	#ifdef CONFIG_LIS2DW12
+		struct sensor_value lis2dw12_accel[3];
 		sensor_channel_get(sensor_devices_ptr->lis2dw12, SENSOR_CHAN_ACCEL_XYZ, lis2dw12_accel);
 		memcpy(sensor_result_ptr->lis2dw12_accel, lis2dw12_accel, sizeof(lis2dw12_accel));
 	#endif
 	#ifdef CONFIG_LSM6DSO
+		struct sensor_value lsm6dso_accel[3], lsm6dso_gyro[3];
 		sensor_channel_get(sensor_devices_ptr->lsm6dso, SENSOR_CHAN_ACCEL_XYZ, lsm6dso_accel);
 		sensor_channel_get(sensor_devices_ptr->lsm6dso, SENSOR_CHAN_GYRO_XYZ, lsm6dso_gyro);
 
@@ -496,6 +491,7 @@ void produce_sensors_data(void *arg1, void *arg2) {
 		memcpy(sensor_result_ptr->lsm6dso_gyro, lsm6dso_gyro, sizeof(lsm6dso_gyro));
 	#endif
 	#ifdef CONFIG_LSM6DSL
+		struct sensor_value lsm6dsl_accel[3], lsm6dsl_gyro[3];
 		sensor_channel_get(sensor_devices_ptr->lsm6dsl, SENSOR_CHAN_ACCEL_XYZ, lsm6dsl_accel);
 		sensor_channel_get(sensor_devices_ptr->lsm6dsl, SENSOR_CHAN_GYRO_XYZ, lsm6dsl_gyro);
 
@@ -506,14 +502,17 @@ void produce_sensors_data(void *arg1, void *arg2) {
 		sensor_channel_get(sensor_devices_ptr->stts751, SENSOR_CHAN_AMBIENT_TEMP, sensor_result_ptr->stts751_temp);
 	#endif
 	#ifdef CONFIG_IIS3DHHC
+		struct sensor_value iis3dhhc_accel[3];
 		sensor_channel_get(sensor_devices_ptr->iis3dhhc, SENSOR_CHAN_ACCEL_XYZ, iis3dhhc_accel);
 		memcpy(sensor_result_ptr->iis3dhhc_accel, iis3dhhc_accel, sizeof(iis3dhhc_accel));
 	#endif
 	#ifdef CONFIG_LIS2MDL
+		struct sensor_value lis2mdl_magn[3];
 		sensor_channel_get(sensor_devices_ptr->lis2mdl, SENSOR_CHAN_MAGN_XYZ, lis2mdl_magn);
 		memcpy(sensor_result_ptr->lis2mdl_magn, lis2mdl_magn, sizeof(lis2mdl_magn));
 	#endif
 	#ifdef CONFIG_LIS3MDL
+		struct sensor_value lis3mdl_magn[3];
 		sensor_channel_get(sensor_devices_ptr->lis3mdl, SENSOR_CHAN_MAGN_XYZ, lis3mdl_magn);
 		memcpy(sensor_result_ptr->lis3mdl_magn, lis3mdl_magn, sizeof(lis3mdl_magn));
 	#endif
@@ -667,7 +666,8 @@ void th_produce_sensors_data(void *arg1, void *dummy2, void *dummy3)
 /************** EXECUTIONS ***************/
 mpai_error_t* sensors_aim_subscriber()
 {
-	// NO-OP
+	MPAI_ERR_INIT(err, MPAI_AIF_OK);
+	return &err;
 }
 
 mpai_error_t* sensors_aim_start()

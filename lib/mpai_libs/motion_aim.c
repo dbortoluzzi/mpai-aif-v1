@@ -17,7 +17,6 @@ LOG_MODULE_REGISTER(MPAI_LIBS_MOTION_AIM, LOG_LEVEL_INF);
 #define MCU_MIN_STOPPED_MS 100
 
 /*************** STATIC ***************/
-static float accel_tot_old = 0.0;
 static int64_t mcu_has_stopped_ts = 0.0;
 static motion_data_t motion_data = {.motion_type = UNKNOWN};
 
@@ -80,7 +79,7 @@ void th_subscribe_motion_data(void *dummy1, void *dummy2, void *dummy3)
 				float accel_z = sensor_value_to_double(&(sensor_data->lsm6dsl_accel[2]));
 				float accel_tot = sqrt(accel_x*accel_x + accel_y*accel_y + accel_z*accel_z);
 
-				if (accel_tot >= 9.5 & accel_tot <= 10.5)
+				if (accel_tot >= 9.5 && accel_tot <= 10.5)
 				{
 					if (mcu_has_stopped_ts != 0 && aim_message.timestamp - mcu_has_stopped_ts >=  MCU_MIN_STOPPED_MS)
 					{
@@ -121,7 +120,8 @@ void th_subscribe_motion_data(void *dummy1, void *dummy2, void *dummy3)
 /************** EXECUTIONS ***************/
 mpai_error_t* motion_aim_subscriber()
 {
-	// NO-OP
+	MPAI_ERR_INIT(err, MPAI_AIF_OK);
+	return &err;
 }
 
 mpai_error_t *motion_aim_start()

@@ -40,7 +40,7 @@ component_t* MPAI_AIM_Get_Component(MPAI_Component_AIM_t* me);
  * @brief Get the subscriber of the AIM
  * 
  */
-struct module_t* MPAI_AIM_Get_Subscriber(MPAI_Component_AIM_t* me);
+module_t* MPAI_AIM_Get_Subscriber(MPAI_Component_AIM_t* me);
 
 /**
  * @brief Get the status of the AIM

@@ -18,9 +18,13 @@ LOG_MODULE_REGISTER(MPAI_LIBS_DATA_MIC_AIM, LOG_LEVEL_INF);
 #define PRINT_WAV_ENABLED false
 #define PUBLISH_BUFFER_ENABLED false
 
+/*************** PRIVATE ***************/
+void publish_buffer_to_message_store();
+void publish_peak_to_message_store(int64_t peak_value);
+
 /*************** STATIC ***************/
-static size_t TARGET_AUDIO_BUFFER_NB_SAMPLES = AUDIO_SAMPLING_FREQUENCY * 2;
 #if PUBLISH_BUFFER_ENABLED == true || PRINT_WAV_ENABLED == true
+    static size_t TARGET_AUDIO_BUFFER_NB_SAMPLES = AUDIO_SAMPLING_FREQUENCY * 2;
     static int16_t *TARGET_AUDIO_BUFFER;
 #endif
 static size_t TARGET_AUDIO_BUFFER_IX = 0;
@@ -117,12 +121,12 @@ void static print_wav()
 	}
     printk("\n");
 }
-#endif
 
 void static print_stats() {
     printk("Half %lu, Complete %lu, IX %lu\n", half_transfer_events, transfer_complete_events,
         TARGET_AUDIO_BUFFER_IX);
 }
+#endif
 
 /**************** THREADS **********************/
 
@@ -149,7 +153,6 @@ void target_audio_buffer_full() {
 	publish_buffer_to_message_store();
 }
 
-static int64_t last_peak_recognized = 0;
 static bool flag_peak_recognized = false;
 
 /**
@@ -381,7 +384,6 @@ void th_produce_data_mic_data(void *dummy1, void *dummy2, void *dummy3)
 
     if (ret != BSP_ERROR_NONE) {
         printk("Error Audio Init (%ld)\r\n", ret);
-        return 1;
     } else {
         printk("OK Audio Init\t(Audio Freq=%ld)\r\n", AUDIO_SAMPLING_FREQUENCY);
     }
@@ -400,7 +402,8 @@ void th_produce_data_mic_data(void *dummy1, void *dummy2, void *dummy3)
 /************** EXECUTIONS ***************/
 mpai_error_t* data_mic_aim_subscriber()
 {
-	// NO-OP
+    MPAI_ERR_INIT(err, MPAI_AIF_OK);
+	return &err;
 }
 
 mpai_error_t* data_mic_aim_start()

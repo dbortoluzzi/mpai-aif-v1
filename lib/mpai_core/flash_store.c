@@ -22,7 +22,7 @@ struct device* init_flash()
 	return flash_dev;
 }
 
-int erase_flash(struct device* flash_dev)
+int erase_flash(const struct device* flash_dev)
 {
 	int rc = flash_erase(flash_dev, FLASH_TEST_REGION_OFFSET,
 			 FLASH_SECTOR_SIZE);
@@ -34,7 +34,7 @@ int erase_flash(struct device* flash_dev)
 	return rc;
 }
 
-int write_flash(struct device* flash_dev, size_t len, void* data)
+int write_flash(const struct device* flash_dev, size_t len, void* data)
 {
 	LOG_INF("Attempting to write %zu bytes\n", len);
 	int rc = flash_write(flash_dev, FLASH_TEST_REGION_OFFSET, data, len);
@@ -45,7 +45,7 @@ int write_flash(struct device* flash_dev, size_t len, void* data)
 	return rc;
 }
 
-int read_flash(struct device* flash_dev, size_t len, void* buf)
+int read_flash(const struct device* flash_dev, size_t len, void* buf)
 {
 	memset(buf, 0, len);
 	int rc = flash_read(flash_dev, FLASH_TEST_REGION_OFFSET, buf, len);

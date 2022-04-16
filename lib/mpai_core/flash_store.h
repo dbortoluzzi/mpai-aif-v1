@@ -37,10 +37,10 @@
 
 struct device* init_flash();
 
-int erase_flash(struct device* dev);
+int erase_flash(const struct device* dev);
 
-int write_flash(struct device* dev, size_t len, void* data);
+int write_flash(const struct device* dev, size_t len, void* data);
 
-int read_flash(struct device* dev, size_t len, void* buf);
+int read_flash(const struct device* dev, size_t len, void* buf);
 
 #endif

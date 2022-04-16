@@ -181,7 +181,8 @@ void th_subscribe_sensors_data(void *dummy1, void *dummy2, void *dummy3)
 /************** EXECUTIONS ***************/
 mpai_error_t* temp_limit_aim_subscriber()
 {
-	// NO-OP
+	MPAI_ERR_INIT(err, MPAI_AIF_OK);
+	return &err;
 }
 
 mpai_error_t *temp_limit_aim_start()

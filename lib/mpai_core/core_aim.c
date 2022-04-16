@@ -83,7 +83,7 @@ component_t* MPAI_AIM_Get_Component(MPAI_Component_AIM_t* me)
 	return me->_component;
 }
 
-struct module_t* MPAI_AIM_Get_Subscriber(MPAI_Component_AIM_t* me)
+module_t* MPAI_AIM_Get_Subscriber(MPAI_Component_AIM_t* me)
 {
 	return me->_subscriber;
 }
