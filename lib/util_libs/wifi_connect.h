@@ -1,7 +1,7 @@
 /*
  * wifi_connect.c
  *
- * Base on the official sample by Intel at https://github.com/zephyrproject-rtos/zephyr/tree/master/samples/net/wifi
+ * Based on the official sample by Intel at https://github.com/zephyrproject-rtos/zephyr/tree/master/samples/net/wifi
  *
  * Created on: Dec 27, 2020
  * Author: Joao Carreira

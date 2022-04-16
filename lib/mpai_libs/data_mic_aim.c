@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com>
  *
+ * Based on the official sample by ST from SENSING1
+ *
  * SPDX-License-Identifier: Apache-2.0
  */
 

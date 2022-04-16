@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com> 
  *
- * Base on the official sample by Zephyr at https://github.com/zephyrproject-rtos/zephyr/
+ * Based on the official sample by Zephyr at https://github.com/zephyrproject-rtos/zephyr/
  *
  SPDX-License-Identifier: Apache-2.0
  */
