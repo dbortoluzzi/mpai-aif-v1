@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef COAP_CONNECT_H_
 #define COAP_CONNECT_H_
 

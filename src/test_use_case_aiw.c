@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+
 #include "test_use_case_aiw.h"
 
 MPAI_AIM_MessageStore_t* message_store_test_case_aiw;

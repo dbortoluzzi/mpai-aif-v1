@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include "temp_limit_aim.h"
 #include <logging/log.h>
 

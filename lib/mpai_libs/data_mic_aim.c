@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include "data_mic_aim.h"
 
 LOG_MODULE_REGISTER(MPAI_LIBS_DATA_MIC_AIM, LOG_LEVEL_INF);

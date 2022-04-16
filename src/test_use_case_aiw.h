@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+
 #ifndef TEST_USE_CASE_AIW_H
 #define TEST_USE_CASE_AIW_H
 

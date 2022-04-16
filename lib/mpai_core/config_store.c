@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #include "config_store.h"
 
 LOG_MODULE_REGISTER(MPAI_CONFIG_STORE, LOG_LEVEL_INF);
