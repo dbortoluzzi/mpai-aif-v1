@@ -1,4 +1,7 @@
 /*
+ * @file
+ * @brief Implementation of a connection util to COAP Server
+ * 
  * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com>
  *
  * Based on the official sample by Intel at https://github.com/zephyrproject-rtos/zephyr/tree/main/samples/net/sockets/coap_client
@@ -249,7 +252,7 @@ end:
 	return ret;
 }
 
-int send_simple_coap_request(uint8_t method, char ** simple_path)
+int send_simple_coap_request(uint8_t method, const char * const *  simple_path)
 {
 	uint8_t payload[] = "payload";
 	struct coap_packet request;
@@ -316,7 +319,7 @@ end:
 	return 0;
 }
 
-static int send_large_coap_request(char ** large_path)
+int send_large_coap_request(const char * const * large_path)
 {
 	struct coap_packet request;
 	const char * const *p;
@@ -367,13 +370,14 @@ end:
 	return r;
 }
 
-char* get_large_coap_msgs(char ** large_path)
+char* get_large_coap_msgs(const char * const * large_path)
 {
 	int r;
 	uint8_t data_single_result[MAX_COAP_MSG_LEN];
 	char * data_large_result_tmp = NULL;
+
+	// loop until there are blocks
 	while (1) {
-		/* Test CoAP Large GET method */
 		printk("\nCoAP client Large GET (block %zd)\n",
 		       get_block_context().current / 64 /*COAP_BLOCK_64*/);
 		r = send_large_coap_request(large_path);
@@ -381,6 +385,7 @@ char* get_large_coap_msgs(char ** large_path)
 			return NULL;
 		}
 		
+		// reset old single result
 		memset(data_single_result, 0, MAX_COAP_MSG_LEN);
 		r = process_large_coap_reply(data_single_result);
 		if (r < 0) {
@@ -389,18 +394,22 @@ char* get_large_coap_msgs(char ** large_path)
 
 		if (data_large_result_tmp != NULL) 
 		{
+			// concat results
 			char * data_large_result_concat = append_strings(data_large_result_tmp, (char*)data_single_result);
 			k_free(data_large_result_tmp);
 			data_large_result_tmp = k_malloc(strlen(data_large_result_concat-1));
 			strcpy(data_large_result_tmp, data_large_result_concat);
 			k_free(data_large_result_concat);
 		} else {
+			// first execution, so concat to empty string
 			data_large_result_tmp = append_strings("", (char*)data_single_result);
 		}
 		
 		/* Received last block */
 		if (r == 1) {
 			memset(get_block_context_ptr(), 0, sizeof(get_block_context()));
+
+			// concat full result and return
 			char * data_large_result_concat = append_strings(data_large_result_tmp, "");
 			return data_large_result_concat;
 		}

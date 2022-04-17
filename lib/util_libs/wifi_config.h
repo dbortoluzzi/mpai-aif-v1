@@ -1,7 +1,13 @@
 /*
- * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com>
+ * wifi_config.h
+ *
+ * Based on the official sample by Intel at https://github.com/zephyrproject-rtos/zephyr/tree/master/samples/net/wifi
+ *
+ * Created on: Dec 27, 2020
+ * Author: Joao Carreira
  *
  * SPDX-License-Identifier: Apache-2.0
+ *
  */
 
 #ifndef SRC_WIFI_CONFIG_H_

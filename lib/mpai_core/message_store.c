@@ -18,6 +18,18 @@ subscriber_item* _linear_search(subscriber_item *items, size_t size, module_t *s
 
 /************* PUBLIC **************/
 
+subscriber_channel_t MPAI_MessageStore_new_channel()
+{
+	// mutual exclusion sync to permit the creation of a new channel identifier
+	if (k_sem_take(&subscriber_channel_sem, K_NO_WAIT) != 0) {
+        subscriber_channel_t new_channel = subscriber_channel_current++;
+		k_sem_reset(&subscriber_channel_sem);
+		return new_channel;
+    } else {
+        return -1;
+    }
+}
+
 mpai_error_t MPAI_MessageStore_register(MPAI_AIM_MessageStore_t *me, module_t *subscriber, subscriber_channel_t channel)
 {
 	// check errors
@@ -120,18 +132,6 @@ mpai_error_t MPAI_MessageStore_copy(MPAI_AIM_MessageStore_t *me, module_t *subsc
 	// TODO: error management
 	MPAI_ERR_INIT(err, MPAI_AIF_OK);
 	return err;
-}
-
-subscriber_channel_t MPAI_MessageStore_new_channel()
-{
-	// mutual exclusion lock to permit the creation of a new channel identifier
-	if (k_sem_take(&subscriber_channel_sem, K_NO_WAIT) != 0) {
-        subscriber_channel_t new_channel = subscriber_channel_current++;
-		k_sem_reset(&subscriber_channel_sem);
-		return new_channel;
-    } else {
-        return -1;
-    }
 }
 
 MPAI_AIM_MessageStore_t *MPAI_MessageStore_Creator(int aiw_id, char *topic_name, size_t topic_size)

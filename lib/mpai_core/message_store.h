@@ -42,6 +42,13 @@ static int subscriber_item_count = 0;
 static subscriber_channel_t subscriber_channel_current = 1;
 
 /**
+ * @brief Create a new channel for message stores
+ * 
+ * @return subscriber_channel_t 
+ */
+subscriber_channel_t MPAI_MessageStore_new_channel();
+
+/**
  * @brief Register to a topic channel of message store 
  */
 mpai_error_t MPAI_MessageStore_register(MPAI_AIM_MessageStore_t* me, module_t* subscriber, subscriber_channel_t channel);

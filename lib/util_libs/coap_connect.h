@@ -1,4 +1,7 @@
 /*
+ * @file
+ * @brief Headers of a connection util to COAP Server
+ * 
  * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com>
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -60,7 +63,15 @@ int start_coap_client(void);
  * @param simple_path COAP URL
  * @return int 
  */
-int send_simple_coap_request(uint8_t method, char ** simple_path);
+int send_simple_coap_request(uint8_t method, const char * const * simple_path);
+
+/**
+ * @brief Send a COAP request using block logic of protocol
+ * 
+ * @param large_path 
+ * @return int 
+ */
+int send_large_coap_request(const char * const * large_path);
 
 /**
  * @brief Process simple result returning from coap server
@@ -79,5 +90,12 @@ int process_simple_coap_reply(uint8_t * data_result);
 int process_large_coap_reply(uint8_t * data_result);
 
 int process_obs_coap_reply(void);
+
+/**
+ * @brief Rebuild entire large coap msgs
+ * 
+ * @return char* 
+ */
+char* get_large_coap_msgs(const char * const * large_path);
 
 #endif /* COAP_CONNECT_H_ */

@@ -1,3 +1,4 @@
+# Overwritten flags to build a firmware for MCU devices
 Import("env")
 env.Append(
   LINKFLAGS=[

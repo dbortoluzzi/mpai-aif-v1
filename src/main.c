@@ -253,13 +253,13 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
 
 /*** START COAP ***/
 #ifdef CONFIG_COAP_SERVER
-	static char * const test_path[] = { "test", NULL };
+	const char * const test_path[] = { "test", NULL };
 
-	static char * const large_path[] = { "large", NULL };
+	const char * const large_path[] = { "large", NULL };
 
-	static char * const obs_path[] = { "obs", NULL };
+	const char * const obs_path[] = { "obs", NULL };
 
-	static int send_simple_coap_msgs_and_wait_for_reply(uint8_t * data_result, char ** simple_path)
+	static int send_simple_coap_msgs_and_wait_for_reply(uint8_t * data_result, const char * const * simple_path)
 	{
 		uint8_t test_type = 0U;
 		int r;
@@ -478,7 +478,7 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
 
 void main(void)
 {
-	const struct device *dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
+	// const struct device *dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
 	static const struct device *led0, *led1;
 	int i, on = 1;
 	int cnt = 1;
@@ -607,7 +607,7 @@ void main(void)
 		// }
 	#endif
 
-	#ifdef CONFIG_MPAI_CONFIG_STORE && CONFIG_MPAI_CONFIG_STORE_USES_COAP
+	#if defined(CONFIG_MPAI_CONFIG_STORE) && defined (CONFIG_MPAI_CONFIG_STORE_USES_COAP)
 		char* aif_result = MPAI_Config_Store_Get_AIF("demo");
 		if (aif_result != NULL) {
 			printk("AIF RESULT: \n");

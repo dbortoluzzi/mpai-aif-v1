@@ -1,9 +1,10 @@
+/* Value of msi-range overwritten to permit to run microphone and sensors at the same time */ 
 &clk_msi {
 	msi-range = <10>;
 	status = "okay";
 };
   
-  
+/* Values of div-m, mul-n, div-p, div-q, div-r and clocks overwritten to permit to run microphone */ 
 &pll {
 	compatible = "st,stm32l4-pll-clock";
 	div-m = <6>;
