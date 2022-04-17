@@ -460,6 +460,40 @@ mpai_error_t MPAI_AIFU_AIW_Stop(int AIW_ID)
 		return err;
 	}
 
+	MPAI_ERR_INIT(err, MPAI_AIF_OK);
+	return err;
+}
+
+// TODO: generalize the implementation. At the moment, we handle only AIW CAE-REV 
+mpai_error_t MPAI_AIFU_AIM_GetStatus(int AIW_ID, const char* name, int* status)
+{
+	MPAI_Component_AIM_t* aim_to_check;
+	if (AIW_ID == AIW_CAE_REV)
+	{	
+		if (strcmp(name, MPAI_LIBS_CAE_REV_AIM_DATA_MIC_NAME) == 0)
+		{
+			aim_to_check = aim_data_mic;
+		} else if (strcmp(name, MPAI_LIBS_CAE_REV_AIM_SENSORS_NAME) == 0)
+		{
+			aim_to_check = aim_produce_sensors;
+		} else if (strcmp(name, MPAI_LIBS_CAE_REV_AIM_TEMP_LIMIT_NAME) == 0)
+		{
+			aim_to_check = aim_temp_limit;
+		} else if (strcmp(name, MPAI_LIBS_CAE_REV_AIM_MOTION_NAME) == 0)
+		{
+			aim_to_check = aim_data_motion;
+		} else if (strcmp(name, MPAI_LIBS_CAE_REV_AIM_REHABILITATION_NAME) == 0)
+		{
+			aim_to_check = aim_rehabilitation;
+		}
+	}
+	if (MPAI_AIM_Is_Alive(aim_to_check))
+	{
+		*status = MPAI_AIM_ALIVE;
+	} else 
+	{
+		*status = MPAI_AIM_DEAD;
+	}
 	MPAI_ERR_INIT(err, MPAI_ERROR);
 	return err;
 }

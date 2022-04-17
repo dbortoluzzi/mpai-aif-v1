@@ -95,4 +95,14 @@ mpai_error_t MPAI_AIFU_AIW_Resume(int AIW_ID);
  */
 mpai_error_t MPAI_AIFU_AIW_Stop(int AIW_ID);
 
+/**
+ * @brief Get AIM Status of an AIW
+ * 
+ * @param AIW_ID 
+ * @param name 
+ * @param status 
+ * @return error_t 
+ */
+mpai_error_t MPAI_AIFU_AIM_GetStatus(int AIW_ID, const char* name, int* status);
+
 #endif
