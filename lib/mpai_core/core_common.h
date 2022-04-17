@@ -19,7 +19,6 @@
 #include <sys/printk.h>
 #include <kernel.h>
 #include <logging/log.h>
-#include <pubsub/pubsub.h>
 
 #define OK EXIT_SUCCESS
 #define KO EXIT_FAILURE

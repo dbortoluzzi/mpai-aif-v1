@@ -33,3 +33,9 @@ void INIT_Test_Use_Case_AIW()
     MIC_BUFFER_DATA_CHANNEL = MPAI_MessageStore_new_channel();
     MIC_PEAK_DATA_CHANNEL = MPAI_MessageStore_new_channel();
 }
+
+
+void DESTROY_Test_Use_Case_AIW() 
+{
+    MPAI_MessageStore_Destructor(message_store_test_case_aiw);
+}

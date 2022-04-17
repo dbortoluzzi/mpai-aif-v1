@@ -89,7 +89,7 @@ config MPAI_AIM_TEMP_LIMIT
 
 
 config APP_TEST_WRITE_TO_FLASH
-	bool "Enable test write to flash"
+	bool "Enable test write to flash memory"
 	default n
 	help
-	  This will write to flash a test json string
+	  This will write a test json string to the flash memory 

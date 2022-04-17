@@ -32,4 +32,9 @@ extern subscriber_channel_t MIC_PEAK_DATA_CHANNEL;
  */
 void INIT_Test_Use_Case_AIW();
 
+/**
+ * @brief Destroy AI Test Case (CAE-REV)
+ * 
+ */
+void DESTROY_Test_Use_Case_AIW();
 #endif
