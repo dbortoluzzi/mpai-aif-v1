@@ -14,7 +14,9 @@ LOG_MODULE_REGISTER(MPAI_LIBS_AIW_CAE_REV, LOG_LEVEL_INF);
 
 /* AIW global message store */
 MPAI_AIM_MessageStore_t* message_store_test_case_aiw;
+
 /* AIW global channels used by message store */
+// TODO: create a map of channel
 subscriber_channel_t SENSORS_DATA_CHANNEL;
 subscriber_channel_t MIC_BUFFER_DATA_CHANNEL;
 subscriber_channel_t MIC_PEAK_DATA_CHANNEL;
@@ -73,12 +75,11 @@ int INIT_Test_Use_Case_AIW()
 void START_Test_Use_Case_AIW()
 {
 	// Start all initialization callbacks
+	// TODO: initialize AIMs according with the JSONs retrieved from MPAI Config Store
 	for (size_t i = 0; i < MPAI_LIBS_CAE_REV_AIM_COUNT; i++)
 	{
 		MPAI_AIM_List[i]._init_cb();
 	}
-	return;
-
 
 	#ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS_PERIODIC
 		/* start periodic timer to switch status */
