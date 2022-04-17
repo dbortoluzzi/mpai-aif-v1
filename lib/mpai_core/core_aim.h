@@ -69,4 +69,11 @@ bool MPAI_AIM_Is_Alive(MPAI_Component_AIM_t* me);
  */
 MPAI_Component_AIM_t* MPAI_AIM_Creator(char* name, int aiw_id, 	module_t* subscriber, module_t* start, module_t* stop, module_t* resume, module_t* pause);
 
+/**
+ * @brief Destructor of MPAI AIM
+ * 
+ * @return mpai_error_t 
+ */
+mpai_error_t MPAI_AIM_Destructor(MPAI_Component_AIM_t* me);
+
 #endif

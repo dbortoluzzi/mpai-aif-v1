@@ -66,4 +66,11 @@ mpai_error_t MPAI_MessageStore_copy(MPAI_AIM_MessageStore_t* me, module_t* subsc
  */
 MPAI_AIM_MessageStore_t* MPAI_MessageStore_Creator(int aiw_id, char* topic_name, size_t topic_size);
 
+/**
+ * @brief Destroy data of MPAI MessageStore
+ * 
+ * @return mpai_error_t 
+ */
+mpai_error_t MPAI_MessageStore_Destructor(MPAI_AIM_MessageStore_t* me);
+
 #endif

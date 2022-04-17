@@ -24,6 +24,12 @@
     static const char * const AIM_VOLUMEPEAKANALYSIS_CONFIG[] = { "config/aim/", NULL }; /*volume_peak_analysis*/
 #endif
 
+/**
+ * @brief Retrieve AIF configuration in a JSON format
+ * 
+ * @param aif_name 
+ * @return char* 
+ */
 char* MPAI_Config_Store_Get_AIF(char* aif_name);
 
 #endif

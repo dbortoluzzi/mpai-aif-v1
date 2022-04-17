@@ -23,8 +23,6 @@
 
 #define OK EXIT_SUCCESS
 #define KO EXIT_FAILURE
-/* size of stack area used by each thread */
-#define STACKSIZE 1024
 
 /********** GLOBAL STRUCT **********/
 typedef enum
@@ -61,6 +59,7 @@ typedef mpai_error_t *(module_t)();
 
 /********** MACRO ***********/
 #define MPAI_ERR_INIT(sname, ...) mpai_error_t sname __VA_OPT__(= { __VA_ARGS__ })
+// TODO: remember to add error codes...
 #define MPAI_ERR_STR(err)                            \
     (MPAI_AIF_OK       == err ? "MPAI_AIF_OK"    :                \
      (MPAI_AIM_ALIVE     == err ? "MPAI_AIM_ALIVE"   :                \
