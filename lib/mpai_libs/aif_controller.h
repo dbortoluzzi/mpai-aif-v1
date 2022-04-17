@@ -19,14 +19,6 @@
 #include <drivers/uart.h>
 #include <stdio.h>
 
-#include <core_aim.h>
-#include <sensors_aim.h>
-#include <temp_limit_aim.h>
-#include <data_mic_aim.h>
-#include <motion_aim.h>
-#include <rehabilitation_aim.h>
-#include <message_store.h>
-
 #include <zephyr/types.h>
 #include <stddef.h>
 #include <string.h>
@@ -43,7 +35,7 @@
 #endif
 #include <parson.h>
 
-#include <test_use_case_aiw.h>
+#include <aiw_cae_rev.h>
 
 #ifdef CONFIG_COAP_SERVER
 	#include <coap_connect.h>
@@ -54,13 +46,6 @@
 
 #define WHOAMI_REG 0x0F
 #define WHOAMI_ALT_REG 0x4F
-
-/* AIMs to configured */
-extern MPAI_Component_AIM_t* aim_produce_sensors;
-extern MPAI_Component_AIM_t* aim_temp_limit;
-extern MPAI_Component_AIM_t* aim_data_mic;
-extern MPAI_Component_AIM_t* aim_data_motion;
-extern MPAI_Component_AIM_t* aim_rehabilitation;
 
 /**
  * @brief Initialize the MPAI Libs AIF Controller
