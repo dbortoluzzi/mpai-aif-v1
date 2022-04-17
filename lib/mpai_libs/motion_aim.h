@@ -1,4 +1,7 @@
 /*
+* @file
+ * @brief Headers of an AIM that recognizes the motion of device (Start, Stop, ecc...)
+ * 
  * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com>
  *
  * SPDX-License-Identifier: Apache-2.0

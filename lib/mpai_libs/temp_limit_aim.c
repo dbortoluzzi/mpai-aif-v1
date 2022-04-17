@@ -1,4 +1,7 @@
 /*
+ * @file
+ * @brief Implementation of an AIM that warn if the temperature exceeds a configurable limit
+ * 
  * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com>
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -47,8 +50,6 @@ void th_subscribe_sensors_data(void *dummy1, void *dummy2, void *dummy3)
 
 	while (1)
 	{
-		// LOG_INF("Reading from pubsub......\n\n");
-
 		/* this function will return once new data has arrived, or upon timeout (1000ms in this case). */
 		int ret = MPAI_MessageStore_poll(message_store_temp_limit_aim, temp_limit_aim_subscriber, K_MSEC(CONFIG_SENSORS_RATE_MS), SENSORS_DATA_CHANNEL);
 

@@ -1,4 +1,7 @@
 /*
+ * @file
+ * @brief Implementation of an AIM that recognizes the motion of device (Start, Stop, ecc...)
+ * 
  * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com>
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -20,13 +23,19 @@ LOG_MODULE_REGISTER(MPAI_LIBS_MOTION_AIM, LOG_LEVEL_INF);
 /* min delay used to detect when mcu is stopped */
 #define MCU_MIN_DETECTED_STOP_DELAY_MS 100
 
+/* delay in polling from sensors*/
 #define SENSORS_DATA_POLLING_MS 1000
 
+/* parameters to identify correct motion events, like start and stop: at the moment, we have find them doing some tests 
+ * because the total acceleration is not "9.81" perfectly in our test device
+ */
 #define ACCEL_TOT_THRESHOLD_MIN 9.5
 #define ACCEL_TOT_THRESHOLD_MAX 10.5
 
 /*************** STATIC ***************/
+/* last time (in ms) that mcu has stopped */
 static int64_t mcu_has_stopped_ts = 0.0;
+/* motion data to send to message store */
 static motion_data_t motion_data = {.motion_type = UNKNOWN};
 
 static void publish_motion_to_message_store(MOTION_TYPE motion_type)
@@ -63,8 +72,6 @@ void th_subscribe_motion_data(void *dummy1, void *dummy2, void *dummy3)
 
 	while (1)
 	{
-		// LOG_INF("Reading from pubsub......\n\n");
-
 		/* this function will return once new data has arrived, or upon timeout (1000ms in this case). */
 		int ret = MPAI_MessageStore_poll(message_store_motion_aim, motion_aim_subscriber, K_MSEC(SENSORS_DATA_POLLING_MS), SENSORS_DATA_CHANNEL);
 
@@ -95,7 +102,7 @@ void th_subscribe_motion_data(void *dummy1, void *dummy2, void *dummy3)
 					{
 						// MCU is stopped but no publish event	
 					}
-					// 2. check if mcu was moving
+					// 2. check if mcu was moving previously
 					else if (mcu_has_stopped_ts == 0)
 					{
 						mcu_has_stopped_ts = aim_message.timestamp;	
@@ -110,8 +117,10 @@ void th_subscribe_motion_data(void *dummy1, void *dummy2, void *dummy3)
 					{
 						printk("MCU Motion started: Accel (m.s-2): tot: %.5f\n", accel_tot);
 
+						// at the moment is commented
 						// publish_motion_to_message_store(STARTED);
 					}
+					// reset last time that mcu is stopped
 					mcu_has_stopped_ts = 0;
 				}
 			#endif

@@ -1,4 +1,7 @@
 /*
+ * @file
+ * @brief Implementation of an AIM that reads data from mic and recognized volume peaks
+ * 
  * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com>
  *
  * Based on the official sample by ST from SENSING1
@@ -21,13 +24,17 @@ LOG_MODULE_REGISTER(MPAI_LIBS_DATA_MIC_AIM, LOG_LEVEL_INF);
 /* Define The transmission interval [mSec] for Microphones dB Values */
 #define MICS_DB_UPDATE_MS 50
 
+/* Parameters to identify correct volume peaks: at the moment, we have find them doing some tests */
 #define VOLUME_PEAK_THRESHOLD_MIN 10000000
 #define VOLUME_PEAK_THRESHOLD_MAX 15000000
 #define VOLUME_MEDIAN_PEAK_RATIO_MAX 0.00006
 
+/* Function to remove high and low values */
 #define SaturaLH(N, L, H) (((N)<(L))?(L):(((N)>(H))?(H):(N)))    
 
+/* Configuration to enable printing bytes representation of the captured .wav in console*/
 #define PRINT_WAV_ENABLED false
+/* Configuration to enable publishing into message store array of data captured from mic */
 #define PUBLISH_BUFFER_ENABLED false
 
 /*************** PRIVATE ***************/
@@ -55,10 +62,9 @@ static size_t SKIP_FIRST_EVENTS = 50;
 static size_t half_transfer_events = 0;
 static size_t transfer_complete_events = 0;
 
+/* Volume peak recognized? At the start is false, obviously */
 static bool flag_peak_recognized = false;
-
-static const struct device *led0;
-
+/* Data structure of a volume peak to send to the message store */
 static mic_peak_t mic_peak = {};
 
 /**
@@ -133,6 +139,7 @@ void static print_wav()
         printk("%02x", wav_header[ix]);
     }
 
+    // print slowly the buffer
 	for (size_t iy=0; iy<(TARGET_AUDIO_BUFFER_IX*2)/64; iy++) {
 		char logstring[64*2] = {};
 		for (size_t ix = 0; ix < 64; ix++) {
@@ -195,13 +202,12 @@ static void Detect_DB_Noise(void)
     median_filter((int32_t) RMS_Ch[NumberMic], &calc_median, &calc_peak);
 
     // This is a custom algorithm to detect real volume peaks:
-    // 1. compare computed volume peak from slide window and check if it's included in threshold
-    // 2. compare (median vs volume peak) ratio to detect highest volume peaks audio as much as possible
+    // 1. compare computed volume peak from sliding window and check if it's included in threshold
+    // 2. compare (median vs volume peak) ratio to detect highest volume peaks as much as possible
     if (calc_peak >= VOLUME_PEAK_THRESHOLD_MIN && calc_peak < VOLUME_PEAK_THRESHOLD_MAX && VOLUME_MEDIAN_PEAK_RATIO_MAX >= (float)calc_median/calc_peak) {
 
         // int64_t now = k_uptime_get();
         // printk("AUDIO PEAK RECOGNIZED %lld\n", now);  
-        // gpio_pin_set(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios), 1);    
 
         if (flag_peak_recognized == true)
         {
@@ -215,7 +221,6 @@ static void Detect_DB_Noise(void)
         }
 
     } else {
-        // gpio_pin_set(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios), 0);
         flag_peak_recognized = false;
     }
 
@@ -430,12 +435,6 @@ mpai_error_t* data_mic_aim_subscriber()
 
 mpai_error_t* data_mic_aim_start()
 {
-	// LED
-	led0 = device_get_binding(DT_GPIO_LABEL(DT_ALIAS(led0), gpios));
-	gpio_pin_configure(led0, DT_GPIO_PIN(DT_ALIAS(led0), gpios),
-					   GPIO_OUTPUT_ACTIVE |
-						   DT_GPIO_FLAGS(DT_ALIAS(led0), gpios));
-    
 	// CREATE PRODUCER
 	producer_mic_thread_id = k_thread_create(&thread_prod_mic_data, thread_prod_mic_stack_area,
 			K_THREAD_STACK_SIZEOF(thread_prod_mic_stack_area),

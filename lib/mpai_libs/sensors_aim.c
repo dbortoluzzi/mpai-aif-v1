@@ -1,4 +1,9 @@
 /*
+ * @file
+ * @brief Implementation of an AIM that reads data from sensors (temperature, pressure, acceleration ecc...)
+ * 
+ * Based on the official sample by Zephyr
+ * 
  * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com>
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -470,7 +475,7 @@ void produce_sensors_data(void *arg1, void *arg2) {
 		}
 	#endif
 
-	// GET SENSORS DATA
+	// get sensors data
 	#ifdef CONFIG_HTS221
 		sensor_channel_get(sensor_devices_ptr->hts221, SENSOR_CHAN_HUMIDITY, sensor_result_ptr->hts221_hum);
 		sensor_channel_get(sensor_devices_ptr->hts221, SENSOR_CHAN_AMBIENT_TEMP, sensor_result_ptr->hts221_temp);

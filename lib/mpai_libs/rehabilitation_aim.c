@@ -1,4 +1,9 @@
 /*
+ * @file
+ * @brief Implementation of an AIM that verify if the rehabilitation exercises are doing in a correct way:
+ * 1. the device has to be stationary when it's present a volume peak
+ * 2. the device has to be started to move when a volume peak it's ended
+ * 
  * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com>
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -25,16 +30,7 @@ LOG_MODULE_REGISTER(MPAI_LIBS_REHABILITATION_AIM, LOG_LEVEL_INF);
 /*************** STATIC ***************/
 static const struct device *led0, *led1;
 
-/**************** THREADS **********************/
-
-static k_tid_t subscriber_rehabilitation_thread_id;
-
-K_THREAD_STACK_DEFINE(thread_sub_rehabilitation_stack_area, STACKSIZE);
-static struct k_thread thread_sub_rehabilitation_sens_data;
-
-/* SUBSCRIBER */
-
-void show_movement_error()
+static void show_movement_error()
 {
 	// Show error blinking leds
 	int i, on = 1;
@@ -46,6 +42,15 @@ void show_movement_error()
 		on = (on == 1) ? 0 : 1;
 	}
 }
+
+/**************** THREADS **********************/
+
+static k_tid_t subscriber_rehabilitation_thread_id;
+
+K_THREAD_STACK_DEFINE(thread_sub_rehabilitation_stack_area, STACKSIZE);
+static struct k_thread thread_sub_rehabilitation_sens_data;
+
+/* SUBSCRIBER */
 
 void th_subscribe_rehabilitation_data(void *dummy1, void *dummy2, void *dummy3)
 {
@@ -59,10 +64,12 @@ void th_subscribe_rehabilitation_data(void *dummy1, void *dummy2, void *dummy3)
 
 	while (1)
 	{
+		// poll updates from MOTION_DATA_CHANNEL
 		int ret_motion = MPAI_MessageStore_poll(message_store_rehabilitation_aim, rehabilitation_aim_subscriber, K_MSEC(CONFIG_REHABILITATION_MOTION_TIMEOUT_MS), MOTION_DATA_CHANNEL);
 
 		if (ret_motion > 0)
 		{
+			// get the message from MOTION_DATA_CHANNEL
 			MPAI_MessageStore_copy(message_store_rehabilitation_aim, rehabilitation_aim_subscriber, MOTION_DATA_CHANNEL, &aim_motion_message);
 			LOG_DBG("Received from timestamp %lld\n", aim_motion_message.timestamp);
 
@@ -70,16 +77,20 @@ void th_subscribe_rehabilitation_data(void *dummy1, void *dummy2, void *dummy3)
 
 			if (motion_data->motion_type == STOPPED)
 			{
+				// if the event is STOPPED, the device waits for Audio Peak for a delay (CONFIG_REHABILITATION_MIC_PEAK_TIMEOUT_MS)
 				LOG_INF("MOTION STOPPED: Waiting for Audio Peak");
 				k_sleep(K_MSEC(10));
+
 				int ret_mic = MPAI_MessageStore_poll(message_store_rehabilitation_aim, rehabilitation_aim_subscriber, K_MSEC(CONFIG_REHABILITATION_MIC_PEAK_TIMEOUT_MS), MIC_PEAK_DATA_CHANNEL);
 
 				if (ret_mic > 0)
 				{
+					// if the Audio Peak is recognized, the movement it's done in a correct way
 					LOG_INF("MOVEMENT CORRECT!");
 				}
 				else if (ret_mic == 0)
 				{
+					// if the Audio Peak is not recognized, the movement it's done in a wrong way
 					LOG_ERR("MOVEMENT NOT CORRECT! Audio Peak NOT FOUND");
 
 					show_movement_error();
