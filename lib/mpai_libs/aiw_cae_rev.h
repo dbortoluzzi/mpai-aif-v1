@@ -23,6 +23,12 @@ static int AIW_CAE_REV = 1;
 #define MPAI_LIBS_CAE_REV_AIM_TEMP_LIMIT_NAME "AIM_TEMP_LIMIT"
 #define MPAI_LIBS_CAE_REV_AIM_MOTION_NAME "AIM_MOTION"
 #define MPAI_LIBS_CAE_REV_AIM_REHABILITATION_NAME "AIM_REHABILITATION"
+#define MPAI_LIBS_CAE_REV_AIM_COUNT 5
+
+typedef struct _aim_initialization_cb_t{
+    MPAI_Component_AIM_t* _aim;
+    module_t* _init_cb;
+} aim_initialization_cb_t;
 
 /* AIW global message store */
 extern MPAI_AIM_MessageStore_t* message_store_test_case_aiw;

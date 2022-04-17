@@ -464,7 +464,8 @@ mpai_error_t MPAI_AIFU_AIW_Stop(int AIW_ID)
 	return err;
 }
 
-// TODO: generalize the implementation. At the moment, we handle only AIW CAE-REV 
+// TODO: generalize the implementation. At the moment, we handle only AIW CAE-REV.
+// maybe using "MPAI_AIM_List" of aiw_cae_rev.c
 mpai_error_t MPAI_AIFU_AIM_GetStatus(int AIW_ID, const char* name, int* status)
 {
 	MPAI_Component_AIM_t* aim_to_check;
@@ -494,6 +495,7 @@ mpai_error_t MPAI_AIFU_AIM_GetStatus(int AIW_ID, const char* name, int* status)
 	{
 		*status = MPAI_AIM_DEAD;
 	}
-	MPAI_ERR_INIT(err, MPAI_ERROR);
+
+	MPAI_ERR_INIT(err, MPAI_AIF_OK);
 	return err;
 }
