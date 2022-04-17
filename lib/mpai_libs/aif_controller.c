@@ -14,6 +14,8 @@ LOG_MODULE_REGISTER(MPAI_LIBS_AIF_CONTROLLER, LOG_LEVEL_INF);
 #include <wifi_connect.h>
 #include <net_private.h>
 
+static int aiw_id;
+
 #ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS_PERIODIC
 
 /******** START PERIODIC MODE ***********/
@@ -366,9 +368,12 @@ mpai_error_t MPAI_AIFU_Controller_Initialize()
 		(void)close(get_coap_sock());
 	#endif
 
-	INIT_Test_Use_Case_AIW();
-
-	START_Test_Use_Case_AIW();
+	mpai_error_t err_aiw = MPAI_AIFU_AIW_Start(MPAI_LIBS_CAE_REV_AIW_NAME, &aiw_id);
+	if (err_aiw.code != MPAI_AIF_OK)
+	{
+		LOG_ERR("Error starting AIW %s: %s", MPAI_LIBS_CAE_REV_AIW_NAME, log_strdup(MPAI_ERR_STR(err_aiw.code)));
+		return;
+	} 
 
 	LOG_INF("MPAI_AIF initialized correctly");
 
@@ -385,5 +390,76 @@ mpai_error_t MPAI_AIFU_Controller_Destroy()
 	DESTROY_Test_Use_Case_AIW();
 	
 	MPAI_ERR_INIT(err, MPAI_AIF_OK);
+	return err;
+}
+
+mpai_error_t MPAI_AIFU_AIW_Start(const char* name, int* AIW_ID)
+{
+	LOG_INF("Starting AIW %s...", log_strdup(name));
+	
+	// At the moment, we handle only AIW CAE-REV 
+	if (strcmp(name, MPAI_LIBS_CAE_REV_AIW_NAME) == 0)
+	{
+		int aiw_id = INIT_Test_Use_Case_AIW();
+		*AIW_ID = aiw_id;
+
+		START_Test_Use_Case_AIW();
+
+		MPAI_ERR_INIT(err, MPAI_AIF_OK);
+		return err;
+	}
+
+	MPAI_ERR_INIT(err, MPAI_ERROR);
+	return err;
+}
+
+mpai_error_t MPAI_AIFU_AIW_Pause(int AIW_ID)
+{
+	LOG_INF("Pausing AIW %d...", AIW_ID);
+	
+	// At the moment, we handle only AIW CAE-REV 
+	if (AIW_ID == AIW_CAE_REV)
+	{
+		PAUSE_Test_Use_Case_AIW();
+		
+		MPAI_ERR_INIT(err, MPAI_AIF_OK);
+		return err;
+	}
+
+	MPAI_ERR_INIT(err, MPAI_ERROR);
+	return err;
+}
+
+mpai_error_t MPAI_AIFU_AIW_Resume(int AIW_ID)
+{
+	LOG_INF("Resuming AIW %d...", AIW_ID);
+	
+	// At the moment, we handle only AIW CAE-REV 
+	if (AIW_ID == AIW_CAE_REV)
+	{
+		RESUME_Test_Use_Case_AIW();
+		
+		MPAI_ERR_INIT(err, MPAI_AIF_OK);
+		return err;
+	}
+
+	MPAI_ERR_INIT(err, MPAI_ERROR);
+	return err;
+}
+
+mpai_error_t MPAI_AIFU_AIW_Stop(int AIW_ID)
+{
+	LOG_INF("Stopping AIW %d...", AIW_ID);
+	
+	// At the moment, we handle only AIW CAE-REV 
+	if (AIW_ID == AIW_CAE_REV)
+	{
+		STOP_Test_Use_Case_AIW();
+		
+		MPAI_ERR_INIT(err, MPAI_AIF_OK);
+		return err;
+	}
+
+	MPAI_ERR_INIT(err, MPAI_ERROR);
 	return err;
 }

@@ -26,7 +26,7 @@ MPAI_Component_AIM_t* aim_data_mic = NULL;
 MPAI_Component_AIM_t* aim_data_motion = NULL;
 MPAI_Component_AIM_t* aim_rehabilitation = NULL;
 
-void INIT_Test_Use_Case_AIW() 
+int INIT_Test_Use_Case_AIW() 
 {
     // create message store for the AIW
     message_store_test_case_aiw = MPAI_MessageStore_Creator(AIW_CAE_REV, MPAI_LIBS_CAE_REV_AIW_NAME, sizeof(mpai_parser_t));
@@ -41,6 +41,8 @@ void INIT_Test_Use_Case_AIW()
     SENSORS_DATA_CHANNEL = MPAI_MessageStore_new_channel();
     MIC_BUFFER_DATA_CHANNEL = MPAI_MessageStore_new_channel();
     MIC_PEAK_DATA_CHANNEL = MPAI_MessageStore_new_channel();
+
+	return AIW_CAE_REV;
 }
 
 void START_Test_Use_Case_AIW()

@@ -18,6 +18,7 @@
 #include <usb/usb_device.h>
 #include <drivers/uart.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <zephyr/types.h>
 #include <stddef.h>
@@ -59,5 +60,39 @@ mpai_error_t MPAI_AIFU_Controller_Initialize();
  * @return mpai_error_t 
  */
 mpai_error_t MPAI_AIFU_Controller_Destroy();
+
+/**
+ * @brief Start specified MPAI AIW
+ * 
+ * @param name name of the AIW
+ * @param AIW_ID AIW_ID generated
+ * @return error_t 
+ */
+mpai_error_t MPAI_AIFU_AIW_Start(const char* name, int* AIW_ID);
+
+/**
+ * @brief Start specified MPAI AIW
+ * 
+ * @param name name of the AIW
+ * @param AIW_ID AIW_ID generated
+ * @return error_t 
+ */
+mpai_error_t MPAI_AIFU_AIW_Pause(int AIW_ID);
+
+/**
+ * @brief Resume specified MPAI AIW
+ * 
+ * @param AIW_ID 
+ * @return mpai_error_t 
+ */
+mpai_error_t MPAI_AIFU_AIW_Resume(int AIW_ID);
+
+/**
+ * @brief Stop specified MPAI AIW
+ * 
+ * @param AIW_ID 
+ * @return mpai_error_t 
+ */
+mpai_error_t MPAI_AIFU_AIW_Stop(int AIW_ID);
 
 #endif

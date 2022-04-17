@@ -49,7 +49,7 @@ extern MPAI_Component_AIM_t* aim_rehabilitation;
  * @brief Initialize AIW Test Case (CAE-REV)
  * 
  */
-void INIT_Test_Use_Case_AIW();
+int INIT_Test_Use_Case_AIW();
 
 /**
  * @brief Start AIW Test Case (CAE-REV)
