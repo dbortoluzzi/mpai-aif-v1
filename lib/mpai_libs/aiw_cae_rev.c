@@ -29,7 +29,7 @@ MPAI_Component_AIM_t* aim_rehabilitation = NULL;
 void INIT_Test_Use_Case_AIW() 
 {
     // create message store for the AIW
-    message_store_test_case_aiw = MPAI_MessageStore_Creator(AIW_USE_CASE_ID, "AIW_CAE_REV", sizeof(mpai_parser_t));
+    message_store_test_case_aiw = MPAI_MessageStore_Creator(AIW_CAE_REV, MPAI_LIBS_CAE_REV_AIW_NAME, sizeof(mpai_parser_t));
     // link global message store to single message stores of the AIMs 
     message_store_data_mic_aim = message_store_test_case_aiw;
     message_store_sensors_aim = message_store_test_case_aiw;
@@ -41,9 +41,12 @@ void INIT_Test_Use_Case_AIW()
     SENSORS_DATA_CHANNEL = MPAI_MessageStore_new_channel();
     MIC_BUFFER_DATA_CHANNEL = MPAI_MessageStore_new_channel();
     MIC_PEAK_DATA_CHANNEL = MPAI_MessageStore_new_channel();
+}
 
-    #ifdef CONFIG_MPAI_AIM_VOLUME_PEAKS_ANALYSIS
-		aim_data_mic = MPAI_AIM_Creator("AIM_DATA_MIC", AIW_USE_CASE_ID, data_mic_aim_subscriber, data_mic_aim_start, data_mic_aim_stop, data_mic_aim_resume, data_mic_aim_pause);
+void START_Test_Use_Case_AIW()
+{
+	#ifdef CONFIG_MPAI_AIM_VOLUME_PEAKS_ANALYSIS
+		aim_data_mic = MPAI_AIM_Creator(MPAI_LIBS_CAE_REV_AIM_DATA_MIC_NAME, AIW_CAE_REV, data_mic_aim_subscriber, data_mic_aim_start, data_mic_aim_stop, data_mic_aim_resume, data_mic_aim_pause);
 		mpai_error_t err_data_mic = MPAI_AIM_Start(aim_data_mic);	
 
 		if (err_data_mic.code != MPAI_AIF_OK)
@@ -54,7 +57,7 @@ void INIT_Test_Use_Case_AIW()
 	#endif
 	
 	#ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS
-		aim_produce_sensors = MPAI_AIM_Creator("AIM_PRODUCE_SENSORS_DATA", AIW_USE_CASE_ID, sensors_aim_subscriber, sensors_aim_start, sensors_aim_stop, sensors_aim_resume, sensors_aim_pause);
+		aim_produce_sensors = MPAI_AIM_Creator(MPAI_LIBS_CAE_REV_AIM_SENSORS_NAME, AIW_CAE_REV, sensors_aim_subscriber, sensors_aim_start, sensors_aim_stop, sensors_aim_resume, sensors_aim_pause);
 		mpai_error_t err_sens_aim = MPAI_AIM_Start(aim_produce_sensors);
 
 		if (err_sens_aim.code != MPAI_AIF_OK) 
@@ -65,7 +68,7 @@ void INIT_Test_Use_Case_AIW()
 	#endif
 
 	#ifdef CONFIG_MPAI_AIM_TEMP_LIMIT
-		aim_temp_limit = MPAI_AIM_Creator("AIM_TEMP_LIMIT", AIW_USE_CASE_ID, temp_limit_aim_subscriber, temp_limit_aim_start, temp_limit_aim_stop, temp_limit_aim_resume, temp_limit_aim_pause);
+		aim_temp_limit = MPAI_AIM_Creator(MPAI_LIBS_CAE_REV_AIM_TEMP_LIMIT_NAME, AIW_CAE_REV, temp_limit_aim_subscriber, temp_limit_aim_start, temp_limit_aim_stop, temp_limit_aim_resume, temp_limit_aim_pause);
 		MPAI_MessageStore_register(message_store_test_case_aiw, MPAI_AIM_Get_Subscriber(aim_temp_limit), SENSORS_DATA_CHANNEL);
 		mpai_error_t err_temp_limit = MPAI_AIM_Start(aim_temp_limit);	
 
@@ -77,7 +80,7 @@ void INIT_Test_Use_Case_AIW()
 	#endif
 
 	#ifdef CONFIG_MPAI_AIM_MOTION_RECOGNITION_ANALYSIS
-		aim_data_motion = MPAI_AIM_Creator("AIM_MOTION", AIW_USE_CASE_ID, motion_aim_subscriber, motion_aim_start, motion_aim_stop, motion_aim_resume, motion_aim_pause);
+		aim_data_motion = MPAI_AIM_Creator(MPAI_LIBS_CAE_REV_AIM_MOTION_NAME, AIW_CAE_REV, motion_aim_subscriber, motion_aim_start, motion_aim_stop, motion_aim_resume, motion_aim_pause);
 		MPAI_MessageStore_register(message_store_test_case_aiw, MPAI_AIM_Get_Subscriber(aim_data_motion), SENSORS_DATA_CHANNEL);
 		mpai_error_t err_motion = MPAI_AIM_Start(aim_data_motion);	
 
@@ -89,7 +92,7 @@ void INIT_Test_Use_Case_AIW()
 	#endif
 
 	#ifdef CONFIG_MPAI_AIM_VALIDATION_MOVEMENT_WITH_AUDIO
-		aim_rehabilitation = MPAI_AIM_Creator("AIM_REHABILITATION", AIW_USE_CASE_ID, rehabilitation_aim_subscriber, rehabilitation_aim_start, rehabilitation_aim_stop, rehabilitation_aim_resume, rehabilitation_aim_pause);
+		aim_rehabilitation = MPAI_AIM_Creator(MPAI_LIBS_CAE_REV_AIM_REHABILITATION_NAME, AIW_CAE_REV, rehabilitation_aim_subscriber, rehabilitation_aim_start, rehabilitation_aim_stop, rehabilitation_aim_resume, rehabilitation_aim_pause);
 		MPAI_MessageStore_register(message_store_test_case_aiw, MPAI_AIM_Get_Subscriber(aim_rehabilitation), MOTION_DATA_CHANNEL);
 		MPAI_MessageStore_register(message_store_test_case_aiw, MPAI_AIM_Get_Subscriber(aim_rehabilitation), MIC_PEAK_DATA_CHANNEL);
 		mpai_error_t err_rehabilitation = MPAI_AIM_Start(aim_rehabilitation);	
@@ -107,8 +110,82 @@ void INIT_Test_Use_Case_AIW()
 	#endif
 }
 
+void STOP_Test_Use_Case_AIW() 
+{
+	#ifdef CONFIG_MPAI_AIM_VALIDATION_MOVEMENT_WITH_AUDIO
+		MPAI_AIM_Stop(aim_rehabilitation);
+	#endif
+	#ifdef CONFIG_MPAI_AIM_MOTION_RECOGNITION_ANALYSIS
+		MPAI_AIM_Stop(aim_data_motion);
+	#endif
+	#ifdef CONFIG_MPAI_AIM_TEMP_LIMIT
+		MPAI_AIM_Stop(aim_temp_limit);
+	#endif
+	#ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS
+		MPAI_AIM_Stop(aim_produce_sensors);
+	#endif
+	#ifdef CONFIG_MPAI_AIM_VOLUME_PEAKS_ANALYSIS
+		MPAI_AIM_Stop(aim_data_mic);
+	#endif
+}
+
+void RESUME_Test_Use_Case_AIW()
+{
+	#ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS
+		MPAI_AIM_Resume(aim_produce_sensors);
+	#endif
+	#ifdef CONFIG_MPAI_AIM_VOLUME_PEAKS_ANALYSIS
+		MPAI_AIM_Resume(aim_data_mic);
+	#endif
+	#ifdef CONFIG_MPAI_AIM_TEMP_LIMIT
+		MPAI_AIM_Resume(aim_temp_limit);
+	#endif
+	#ifdef CONFIG_MPAI_AIM_VALIDATION_MOVEMENT_WITH_AUDIO
+		MPAI_AIM_Resume(aim_rehabilitation);
+	#endif
+	#ifdef CONFIG_MPAI_AIM_MOTION_RECOGNITION_ANALYSIS
+		MPAI_AIM_Resume(aim_data_motion);
+	#endif
+}
+
+void PAUSE_Test_Use_Case_AIW()
+{
+	#ifdef CONFIG_MPAI_AIM_VALIDATION_MOVEMENT_WITH_AUDIO
+		MPAI_AIM_Pause(aim_rehabilitation);
+	#endif
+	#ifdef CONFIG_MPAI_AIM_MOTION_RECOGNITION_ANALYSIS
+		MPAI_AIM_Pause(aim_data_motion);
+	#endif
+	#ifdef CONFIG_MPAI_AIM_TEMP_LIMIT
+		MPAI_AIM_Pause(aim_temp_limit);
+	#endif
+	#ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS
+		MPAI_AIM_Pause(aim_produce_sensors);
+	#endif
+	#ifdef CONFIG_MPAI_AIM_VOLUME_PEAKS_ANALYSIS
+		MPAI_AIM_Pause(aim_data_mic);
+	#endif
+}
 
 void DESTROY_Test_Use_Case_AIW() 
 {
-    MPAI_MessageStore_Destructor(message_store_test_case_aiw);
+	STOP_Test_Use_Case_AIW();
+
+	k_sleep(K_SECONDS(2));
+
+	MPAI_MessageStore_Destructor(message_store_test_case_aiw);
+
+	#ifdef CONFIG_MPAI_AIM_VALIDATION_MOVEMENT_WITH_AUDIO
+		MPAI_AIM_Destructor(aim_rehabilitation);
+	#endif
+	#ifdef CONFIG_MPAI_AIM_MOTION_RECOGNITION_ANALYSIS
+		MPAI_AIM_Destructor(aim_data_motion);
+	#endif
+	#ifdef CONFIG_MPAI_AIM_TEMP_LIMIT
+		MPAI_AIM_Destructor(aim_temp_limit);
+	#endif
+	MPAI_AIM_Destructor(aim_produce_sensors);
+	#ifdef CONFIG_MPAI_AIM_VOLUME_PEAKS_ANALYSIS
+		MPAI_AIM_Destructor(aim_data_mic);
+	#endif
 }

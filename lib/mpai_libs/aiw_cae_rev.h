@@ -16,7 +16,13 @@
 #include <rehabilitation_aim.h>
 #include <message_store.h>
 
-static int AIW_USE_CASE_ID = 1;
+static int AIW_CAE_REV = 1;
+#define MPAI_LIBS_CAE_REV_AIW_NAME "AIW_CAE_REV"
+#define MPAI_LIBS_CAE_REV_AIM_DATA_MIC_NAME "AIM_DATA_MIC"
+#define MPAI_LIBS_CAE_REV_AIM_SENSORS_NAME "AIM_PRODUCE_SENSORS_DATA"
+#define MPAI_LIBS_CAE_REV_AIM_TEMP_LIMIT_NAME "AIM_TEMP_LIMIT"
+#define MPAI_LIBS_CAE_REV_AIM_MOTION_NAME "AIM_MOTION"
+#define MPAI_LIBS_CAE_REV_AIM_REHABILITATION_NAME "AIM_REHABILITATION"
 
 /* AIW global message store */
 extern MPAI_AIM_MessageStore_t* message_store_test_case_aiw;
@@ -44,6 +50,29 @@ extern MPAI_Component_AIM_t* aim_rehabilitation;
  * 
  */
 void INIT_Test_Use_Case_AIW();
+
+/**
+ * @brief Start AIW Test Case (CAE-REV)
+ * 
+ */
+void START_Test_Use_Case_AIW();
+
+/**
+ * @brief Stop AIW Test Case (CAE-REV)
+ * 
+ */
+void STOP_Test_Use_Case_AIW();
+
+/**
+ * @brief Resume AIW Test Case (CAE-REV)
+ */
+void RESUME_Test_Use_Case_AIW();
+
+/**
+ * @brief Pause AIW Test Case (CAE-REV)
+ * 
+ */
+void PAUSE_Test_Use_Case_AIW();
 
 /**
  * @brief Destroy AI Test Case (CAE-REV)

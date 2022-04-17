@@ -368,6 +368,8 @@ mpai_error_t MPAI_AIFU_Controller_Initialize()
 
 	INIT_Test_Use_Case_AIW();
 
+	START_Test_Use_Case_AIW();
+
 	LOG_INF("MPAI_AIF initialized correctly");
 
 	// k_sleep(K_SECONDS(2));
@@ -380,39 +382,7 @@ mpai_error_t MPAI_AIFU_Controller_Initialize()
 
 mpai_error_t MPAI_AIFU_Controller_Destroy() 
 {
-	#ifdef CONFIG_MPAI_AIM_VALIDATION_MOVEMENT_WITH_AUDIO
-		MPAI_AIM_Stop(aim_rehabilitation);
-	#endif
-	#ifdef CONFIG_MPAI_AIM_MOTION_RECOGNITION_ANALYSIS
-		MPAI_AIM_Stop(aim_data_motion);
-	#endif
-	#ifdef CONFIG_MPAI_AIM_TEMP_LIMIT
-		MPAI_AIM_Stop(aim_temp_limit);
-	#endif
-	#ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS
-		MPAI_AIM_Stop(aim_produce_sensors);
-	#endif
-	#ifdef CONFIG_MPAI_AIM_VOLUME_PEAKS_ANALYSIS
-		MPAI_AIM_Stop(aim_data_mic);
-	#endif
-
-	k_sleep(K_SECONDS(2));
-
 	DESTROY_Test_Use_Case_AIW();
-
-	#ifdef CONFIG_MPAI_AIM_VALIDATION_MOVEMENT_WITH_AUDIO
-		MPAI_AIM_Destructor(aim_rehabilitation);
-	#endif
-	#ifdef CONFIG_MPAI_AIM_MOTION_RECOGNITION_ANALYSIS
-		MPAI_AIM_Destructor(aim_data_motion);
-	#endif
-	#ifdef CONFIG_MPAI_AIM_TEMP_LIMIT
-		MPAI_AIM_Destructor(aim_temp_limit);
-	#endif
-	MPAI_AIM_Destructor(aim_produce_sensors);
-	#ifdef CONFIG_MPAI_AIM_VOLUME_PEAKS_ANALYSIS
-		MPAI_AIM_Destructor(aim_data_mic);
-	#endif
 	
 	MPAI_ERR_INIT(err, MPAI_AIF_OK);
 	return err;
