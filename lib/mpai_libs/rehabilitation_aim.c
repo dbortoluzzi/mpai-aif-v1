@@ -60,7 +60,7 @@ void th_subscribe_rehabilitation_data(void *dummy1, void *dummy2, void *dummy3)
 
 	mpai_parser_t aim_motion_message;
 
-	LOG_INF("START SUBSCRIBER");
+	LOG_DBG("START SUBSCRIBER");
 
 	while (1)
 	{

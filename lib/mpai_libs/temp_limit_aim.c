@@ -46,7 +46,7 @@ void th_subscribe_sensors_data(void *dummy1, void *dummy2, void *dummy3)
 
 	mpai_parser_t aim_message;
 
-	LOG_INF("START SUBSCRIBER");
+	LOG_DBG("START SUBSCRIBER");
 
 	while (1)
 	{
