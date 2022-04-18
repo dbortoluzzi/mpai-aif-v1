@@ -102,12 +102,15 @@ void START_Test_Use_Case_AIW()
 					LOG_DBG("Calling AIM %s: success", log_strdup(aim_name));
 					aim_init._init_cb();
 				}
+				k_free(aim_result);
 			} else 
 			{
 				LOG_ERR("AIM %s not found", log_strdup(aim_name));
 			}
 			k_sleep(K_MSEC(100));
     	}
+
+		k_free(aiw_result);
 	#endif
 
 	#ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS_PERIODIC

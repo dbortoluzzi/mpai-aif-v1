@@ -359,8 +359,6 @@ mpai_error_t MPAI_AIFU_Controller_Initialize()
 			char* aif_name = json_object_get_string(json_object(json_aif), "title");
 			LOG_INF("Initializing AIF with title \"%s\"...", log_strdup(aif_name));
 
-			// TODO: AIF initialization........
-
 			k_free(aif_result);
 		}
 
