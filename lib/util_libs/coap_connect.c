@@ -179,7 +179,7 @@ int process_large_coap_reply(uint8_t * data_result)
 	}
 
 	extract_data_result(reply, data_result, false);
-	printk("Response block %zd: %s\n", get_block_context().current / 64, data_result);
+	// printk("Response block %zd: %s\n", get_block_context().current / 64, data_result);
 
 	last_block = coap_next_block(&reply, &blk_ctx);
 	if (!last_block) {
@@ -378,8 +378,9 @@ char* get_large_coap_msgs(const char * const * large_path)
 
 	// loop until there are blocks
 	while (1) {
-		printk("\nCoAP client Large GET (block %zd)\n",
+		LOG_DBG("\nCoAP client Large GET (block %zd)\n",
 		       get_block_context().current / 64 /*COAP_BLOCK_64*/);
+		LOG_INF("Calling COAP (block %zd): %s", get_block_context().current / 64 /*COAP_BLOCK_64*/, log_strdup(large_path[0]));
 		r = send_large_coap_request(large_path);
 		if (r < 0) {
 			return NULL;

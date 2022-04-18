@@ -32,7 +32,7 @@ MPAI_Component_AIM_t* aim_rehabilitation = NULL;
 aim_initialization_cb_t MPAI_AIM_List[MPAI_LIBS_CAE_REV_AIM_COUNT] = {};
 
 /************* PRIVATE HEADER *************/
-aim_initialization_cb_t _linear_search_aim(char* name);
+aim_initialization_cb_t _linear_search_aim(const char* name);
 
 mpai_error_t* init_data_mic_aim();
 mpai_error_t* init_sensors_aim();
@@ -58,15 +58,15 @@ int INIT_Test_Use_Case_AIW()
     MIC_PEAK_DATA_CHANNEL = MPAI_MessageStore_new_channel();
 
 	// add aims to list with related callback
-	aim_initialization_cb_t aim_data_mic_init_cb = {._aim = aim_data_mic, ._init_cb = init_data_mic_aim};
+	aim_initialization_cb_t aim_data_mic_init_cb = {._aim_name = MPAI_LIBS_CAE_REV_AIM_DATA_MIC_NAME, ._aim = aim_data_mic, ._init_cb = init_data_mic_aim};
 	MPAI_AIM_List[0] = aim_data_mic_init_cb;
-	aim_initialization_cb_t aim_data_sensors_init_cb = {._aim = aim_produce_sensors, ._init_cb = init_sensors_aim};
+	aim_initialization_cb_t aim_data_sensors_init_cb = {._aim_name = MPAI_LIBS_CAE_REV_AIM_SENSORS_NAME, ._aim = aim_produce_sensors, ._init_cb = init_sensors_aim};
 	MPAI_AIM_List[1] = aim_data_sensors_init_cb;
-	aim_initialization_cb_t aim_temp_limit_init_cb = {._aim = aim_temp_limit, ._init_cb = init_temp_limit_aim};
+	aim_initialization_cb_t aim_temp_limit_init_cb = {._aim_name = MPAI_LIBS_CAE_REV_AIM_TEMP_LIMIT_NAME, ._aim = aim_temp_limit, ._init_cb = init_temp_limit_aim};
 	MPAI_AIM_List[2] = aim_temp_limit_init_cb;
-	aim_initialization_cb_t aim_motion_init_cb = {._aim = aim_data_motion, ._init_cb = init_motion_aim};
+	aim_initialization_cb_t aim_motion_init_cb = {._aim_name = MPAI_LIBS_CAE_REV_AIM_MOTION_NAME, ._aim = aim_data_motion, ._init_cb = init_motion_aim};
 	MPAI_AIM_List[3] = aim_motion_init_cb;
-	aim_initialization_cb_t aim_rehabilitation_init_cb = {._aim = aim_rehabilitation, ._init_cb = init_rehabilitation_aim};
+	aim_initialization_cb_t aim_rehabilitation_init_cb = {._aim_name = MPAI_LIBS_CAE_REV_AIM_REHABILITATION_NAME, ._aim = aim_rehabilitation, ._init_cb = init_rehabilitation_aim};
 	MPAI_AIM_List[4] = aim_rehabilitation_init_cb;
 
 	return AIW_CAE_REV;
@@ -74,12 +74,41 @@ int INIT_Test_Use_Case_AIW()
 
 void START_Test_Use_Case_AIW()
 {
-	// Start all initialization callbacks
-	// TODO: initialize AIMs according with the JSONs retrieved from MPAI Config Store
-	for (size_t i = 0; i < MPAI_LIBS_CAE_REV_AIM_COUNT; i++)
-	{
-		MPAI_AIM_List[i]._init_cb();
-	}
+	#if defined(CONFIG_MPAI_CONFIG_STORE) && defined (CONFIG_MPAI_CONFIG_STORE_USES_COAP)
+		char* aiw_result = MPAI_Config_Store_Get_AIW(MPAI_LIBS_CAE_REV_AIW_NAME);
+		// printk("AIW RESULT: \n");
+		// for ( size_t i = 0; i < strlen(aiw_result); i++ )
+		// {
+		// 	printk("%c", (char)aiw_result[i]);
+		// 	k_sleep(K_MSEC(5));
+		// }
+		// printk("\n");
+
+		JSON_Value* json_aiw = json_parse_string(aiw_result);
+		char* aiw_name = json_object_get_string(json_object(json_aiw), "title");
+		LOG_INF("Initializing AIW with title \"%s\"...", log_strdup(aiw_name));
+
+		JSON_Array* json_aiw_subaims = json_object_get_array(json_object(json_aiw), "SubAIMs");
+		for (size_t i = 0; i < json_array_get_count(json_aiw_subaims); i++) {
+			JSON_Object* aiw_subaim = json_array_get_object(json_aiw_subaims, i);
+			const char* aim_name = json_object_dotget_string(aiw_subaim, "Identifier.Specification.AIM");
+
+			aim_initialization_cb_t aim_init = _linear_search_aim(aim_name);
+			if (aim_init._init_cb != NULL) {
+				LOG_INF("AIM %s found for AIW %s, now initializing...", log_strdup(aim_name), log_strdup(aiw_name));
+
+				char* aim_result = MPAI_Config_Store_Get_AIM(aim_name);
+				if (aim_result != NULL) {
+					LOG_DBG("Calling AIM %s: success", log_strdup(aim_name));
+					aim_init._init_cb();
+				}
+			} else 
+			{
+				LOG_ERR("AIM %s not found", log_strdup(aim_name));
+			}
+			k_sleep(K_MSEC(100));
+    	}
+	#endif
 
 	#ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS_PERIODIC
 		/* start periodic timer to switch status */
@@ -171,17 +200,18 @@ void DESTROY_Test_Use_Case_AIW()
 	memset ( MPAI_AIM_List, 0, MPAI_LIBS_CAE_REV_AIM_COUNT*sizeof(MPAI_Component_AIM_t*) ) ;
 }
 
-aim_initialization_cb_t _linear_search_aim(char* name)
+aim_initialization_cb_t _linear_search_aim(const char* name)
 {
 	for (size_t i = 0; i < MPAI_LIBS_CAE_REV_AIM_COUNT; i++)
 	{
 		// verify aim name
-		if (strcmp(MPAI_AIM_Get_Component(MPAI_AIM_List[i]._aim)->name, name) == 0)
+		if (strcmp(MPAI_AIM_Get_Component(MPAI_AIM_List[i]._aim)->name, name) == 0 || strcmp(MPAI_AIM_List[i]._aim_name, name) == 0)
 		{
 			return MPAI_AIM_List[i];
 		}
 	}
-	return;
+	aim_initialization_cb_t empty = {._aim_name=NULL, ._aim=NULL,._init_cb=NULL};
+	return empty;
 }
 
 mpai_error_t* init_data_mic_aim()

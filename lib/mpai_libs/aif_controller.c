@@ -328,14 +328,14 @@ mpai_error_t MPAI_AIFU_Controller_Initialize()
 			(void)close(get_coap_sock());
 		}
 
-		// /* GET, PUT, POST, DELETE */
-		uint8_t* data_result = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN * sizeof(uint8_t));
-		r = send_simple_coap_msgs_and_wait_for_reply(data_result, test_path);
-		k_free(data_result);
+		// // /* GET, PUT, POST, DELETE */
+		// uint8_t* data_result = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN * sizeof(uint8_t));
+		// r = send_simple_coap_msgs_and_wait_for_reply(data_result, test_path);
+		// k_free(data_result);
 
-		/* Block-wise transfer */
-		char* data_large_result = get_large_coap_msgs(large_path);
-		k_free(data_large_result);
+		// /* Block-wise transfer */
+		// char* data_large_result = get_large_coap_msgs(large_path);
+		// k_free(data_large_result);
 
 		/* Register observer, get notifications and unregister */
 		// r = register_observer();
@@ -347,25 +347,23 @@ mpai_error_t MPAI_AIFU_Controller_Initialize()
 	#if defined(CONFIG_MPAI_CONFIG_STORE) && defined (CONFIG_MPAI_CONFIG_STORE_USES_COAP)
 		char* aif_result = MPAI_Config_Store_Get_AIF("demo");
 		if (aif_result != NULL) {
-			printk("AIF RESULT: \n");
-			for ( size_t i = 0; i < strlen(aif_result); i++ )
-			{
-				printk("%c", (char)aif_result[i]);
-				k_sleep(K_MSEC(5));
-			}
-			printk("\n");
+			// printk("AIF RESULT: \n");
+			// for ( size_t i = 0; i < strlen(aif_result); i++ )
+			// {
+			// 	printk("%c", (char)aif_result[i]);
+			// 	k_sleep(K_MSEC(5));
+			// }
+			// printk("\n");
 
-			JSON_Value* json2 = json_parse_string(aif_result);
-			char* name2 = json_object_get_string(json_object(json2), "title");
-			LOG_INF("Initializing AIF with title \"%s\"...", log_strdup(name2));
+			JSON_Value* json_aif = json_parse_string(aif_result);
+			char* aif_name = json_object_get_string(json_object(json_aif), "title");
+			LOG_INF("Initializing AIF with title \"%s\"...", log_strdup(aif_name));
 
 			// TODO: AIF initialization........
 
 			k_free(aif_result);
 		}
 
-		/* Close the socket when it's no longer usefull*/
-		(void)close(get_coap_sock());
 	#endif
 
 	mpai_error_t err_aiw = MPAI_AIFU_AIW_Start(MPAI_LIBS_CAE_REV_AIW_NAME, &aiw_id);
@@ -376,6 +374,11 @@ mpai_error_t MPAI_AIFU_Controller_Initialize()
 	} 
 
 	LOG_INF("MPAI_AIF initialized correctly");
+
+	#if defined(CONFIG_MPAI_CONFIG_STORE) && defined (CONFIG_MPAI_CONFIG_STORE_USES_COAP)
+		/* Close the socket when it's no longer usefull*/
+		(void)close(get_coap_sock());
+	#endif
 
 	// k_sleep(K_SECONDS(2));
 

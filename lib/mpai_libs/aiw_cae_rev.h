@@ -15,18 +15,20 @@
 #include <motion_aim.h>
 #include <rehabilitation_aim.h>
 #include <message_store.h>
+#include <parson.h>
 
 static int AIW_CAE_REV = 1;
-#define MPAI_LIBS_CAE_REV_AIW_NAME "AIW_CAE_REV"
-#define MPAI_LIBS_CAE_REV_AIM_DATA_MIC_NAME "AIM_DATA_MIC"
-#define MPAI_LIBS_CAE_REV_AIM_SENSORS_NAME "AIM_PRODUCE_SENSORS_DATA"
+#define MPAI_LIBS_CAE_REV_AIW_NAME "CAE-REV"
+#define MPAI_LIBS_CAE_REV_AIM_DATA_MIC_NAME "VolumePeaksAnalysis"
+#define MPAI_LIBS_CAE_REV_AIM_SENSORS_NAME "ControlUnitSensorsReading"
 #define MPAI_LIBS_CAE_REV_AIM_TEMP_LIMIT_NAME "AIM_TEMP_LIMIT"
-#define MPAI_LIBS_CAE_REV_AIM_MOTION_NAME "AIM_MOTION"
-#define MPAI_LIBS_CAE_REV_AIM_REHABILITATION_NAME "AIM_REHABILITATION"
+#define MPAI_LIBS_CAE_REV_AIM_MOTION_NAME "MotionRecognitionAnalysis"
+#define MPAI_LIBS_CAE_REV_AIM_REHABILITATION_NAME "MovementsWithAudioValidation"
 #define MPAI_LIBS_CAE_REV_AIM_COUNT 5
 
 typedef struct _aim_initialization_cb_t{
-    MPAI_Component_AIM_t* _aim;
+    char* _aim_name;
+    MPAI_Component_AIM_t* _aim; // at the moment it's not usefull
     module_t* _init_cb;
 } aim_initialization_cb_t;
 
