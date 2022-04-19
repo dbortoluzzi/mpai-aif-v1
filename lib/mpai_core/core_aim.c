@@ -149,11 +149,14 @@ mpai_error_t MPAI_AIM_Destructor(MPAI_Component_AIM_t* me)
 	// check errors
 	if (me == NULL) {
 		MPAI_ERR_INIT(err, MPAI_ERROR);
-		LOG_ERR("Found a failure destructing AIM: %s.", log_strdup(MPAI_ERR_STR(MPAI_ERROR)));
+		LOG_ERR("Found a failure destroying AIM: %s.", log_strdup(MPAI_ERR_STR(MPAI_ERROR)));
 		return err;
 	}
 
-	k_free(me->_component->name);
 	k_free(me->_component);
-	k_free(me);
+	// TODO: call the function "me->_destructor" to destroy all stack of AIM, otherwise we will have error from kernel calling k_free(me)
+	// k_free(me);
+
+	MPAI_ERR_INIT(err, MPAI_AIF_OK);
+	return err;
 }

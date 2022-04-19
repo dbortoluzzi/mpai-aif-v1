@@ -18,6 +18,8 @@ typedef enum
 
 typedef struct _motion_data_t{
 	MOTION_TYPE motion_type;
+	float accel_total;
+
 } motion_data_t;
 
 #endif

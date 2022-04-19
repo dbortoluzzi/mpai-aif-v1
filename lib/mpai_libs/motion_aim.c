@@ -36,11 +36,12 @@ LOG_MODULE_REGISTER(MPAI_LIBS_MOTION_AIM, LOG_LEVEL_INF);
 /* last time (in ms) that mcu has stopped */
 static int64_t mcu_has_stopped_ts = 0.0;
 /* motion data to send to message store */
-static motion_data_t motion_data = {.motion_type = UNKNOWN};
+static motion_data_t motion_data = {.accel_total = -1.0, .motion_type = UNKNOWN};
 
-static void publish_motion_to_message_store(MOTION_TYPE motion_type)
+static void publish_motion_to_message_store(MOTION_TYPE motion_type, float accel_total)
 {
 	motion_data.motion_type = motion_type;
+	motion_data.accel_total = accel_total;
 	
 	// Publish sensor message 
 	mpai_parser_t msg = {
@@ -68,7 +69,7 @@ void th_subscribe_motion_data(void *dummy1, void *dummy2, void *dummy3)
 
 	mpai_parser_t aim_message;
 
-	LOG_INF("START SUBSCRIBER");
+	LOG_DBG("START SUBSCRIBER");
 
 	while (1)
 	{
@@ -109,7 +110,7 @@ void th_subscribe_motion_data(void *dummy1, void *dummy2, void *dummy3)
 
 						printk("MCU Motion stopped: Accel (m.s-2): tot: %.5f\n", accel_tot);
 
-						publish_motion_to_message_store(STOPPED);
+						publish_motion_to_message_store(STOPPED, accel_tot);
 					}
 				} else 
 				{	
@@ -118,7 +119,7 @@ void th_subscribe_motion_data(void *dummy1, void *dummy2, void *dummy3)
 						printk("MCU Motion started: Accel (m.s-2): tot: %.5f\n", accel_tot);
 
 						// at the moment is commented
-						// publish_motion_to_message_store(STARTED);
+						// publish_motion_to_message_store(STARTED, accel_tot);
 					}
 					// reset last time that mcu is stopped
 					mcu_has_stopped_ts = 0;

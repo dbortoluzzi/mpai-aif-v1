@@ -19,9 +19,9 @@
 #ifdef CONFIG_MPAI_CONFIG_STORE_USES_COAP
     #include <coap_connect.h>
 
-    static const char * const AIF_CONFIG[] = { "config/aif/", NULL }; /*demo*/
-    static const char * const AIW_CAE_REV_CONFIG[] = { "config/aiw/", NULL }; /*cae_rev*/
-    static const char * const AIM_VOLUMEPEAKANALYSIS_CONFIG[] = { "config/aim/", NULL }; /*volume_peak_analysis*/
+    static const char * const AIF_CONFIG[] = { "config/aif/", NULL };
+    static const char * const AIW_CONFIG[] = { "config/aiw/", NULL };
+    static const char * const AIM_CONFIG[] = { "config/aim/", NULL };
 #endif
 
 /**
@@ -31,5 +31,21 @@
  * @return char* 
  */
 char* MPAI_Config_Store_Get_AIF(char* aif_name);
+
+/**
+ * @brief Retrieve AIW configuration in a JSON format
+ * 
+ * @param aiw_name 
+ * @return char* 
+ */
+char* MPAI_Config_Store_Get_AIW(char* aiw_name);
+
+/**
+ * @brief Retrieve AIM configuration in a JSON format
+ * 
+ * @param aim_name 
+ * @return char* 
+ */
+char* MPAI_Config_Store_Get_AIM(char* aim_name);
 
 #endif

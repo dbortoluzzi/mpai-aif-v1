@@ -161,6 +161,7 @@ mpai_error_t MPAI_MessageStore_Destructor(MPAI_AIM_MessageStore_t* me)
 	k_free(me->_topic_name);
 	k_free(me->_topic);
 	k_free(me->message_store_subscribers);
+	k_free(me);
 }
 
 /************* PRIVATE IMPLEMENTATION *************/

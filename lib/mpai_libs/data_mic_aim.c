@@ -39,7 +39,7 @@ LOG_MODULE_REGISTER(MPAI_LIBS_DATA_MIC_AIM, LOG_LEVEL_INF);
 
 /*************** PRIVATE ***************/
 void publish_buffer_to_message_store();
-void publish_peak_to_message_store(int64_t peak_value);
+void publish_peak_to_message_store(int32_t peak_value);
 
 /*************** STATIC ***************/
 #if PUBLISH_BUFFER_ENABLED == true || PRINT_WAV_ENABLED == true
@@ -369,7 +369,7 @@ void publish_buffer_to_message_store()
     #endif
 }
 
-void publish_peak_to_message_store(int64_t peak_value)
+void publish_peak_to_message_store(int32_t peak_value)
 {
     memcpy(mic_peak.data, &peak_value, sizeof(peak_value));
     
