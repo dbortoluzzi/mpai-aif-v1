@@ -1,5 +1,7 @@
 MPAI- AIF v1.0 implementation for the ST IOTNODE, (based on PlatformIO)
 =====================================
+This code refers to the first implementation of the MPAI-AIF specification as described in https://mpai.community/wp-content/uploads/2021/10/MPAI-AIF-WD0.12.pdf. It contains a given number of AI modules (AIMs) and implements a simple use case.
+
 
 1. `Install PlatformIO Core <http://docs.platformio.org/page/core.html>`_
 2. Download `development platform with examples <https://github.com/platformio/platform-ststm32/archive/develop.zip>`_
