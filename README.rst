@@ -8,7 +8,7 @@ The Architecture has the following characteristics
 •	Implements a message store according to the MPAI-AIF 1.0 spec
 •	Implements great part the MPAI APIs in the form of libraries
 •	Implements a communication interface via IP based on CoAP  (Constrained Application Protocol) that simulates the MPAI Store.
-•	Parses json files according to the MAPI-AIF V 2.0 specification
+•	Parses json files according to the MAPI-AIF V 1.0 specification
 •	All the code is written in C language.
  
 In order to test the architecture few test AIMs have been implemented:
