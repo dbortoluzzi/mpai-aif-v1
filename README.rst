@@ -2,6 +2,8 @@ MPAI- AIF v1.0 implementation for the ST IOTNODE, (based on PlatformIO)
 =====================================
 This code refers to the first implementation of the MPAI-AIF specification as described in https://mpai.community/wp-content/uploads/2021/10/MPAI-AIF-WD0.12.pdf. It contains a given number of AI modules (AIMs) and implements a simple use case.
 
+The software runs on the ST IoT NODE https://www.st.com/en/evaluation-tools/b-l475e-iot01a.html
+
 The Architecture has the following characteristics
 •	based on Zephyr operating system (based on RTOS)
 •	Implements only MPAI Events (High Priority events)
