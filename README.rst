@@ -1,4 +1,4 @@
-MPAI- AIF implementation for the ST IOTNODE, (based on PlatformIO)
+MPAI- AIF v1.0 implementation for the ST IOTNODE, (based on PlatformIO)
 =====================================
 
 1. `Install PlatformIO Core <http://docs.platformio.org/page/core.html>`_
