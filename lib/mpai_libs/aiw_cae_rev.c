@@ -31,11 +31,11 @@ MPAI_Component_AIM_t* aim_rehabilitation = NULL;
 /* AIM initialization List */
 aim_initialization_cb_t MPAI_AIM_List[MPAI_LIBS_CAE_REV_AIM_MAX] = {};
 channel_map_element_t message_store_channel_list[MPAI_LIBS_CAE_REV_CHANNEL_MAX] = {};
-void _set_aim_data_mic(MPAI_Component_AIM_t* aim);
-void _set_aim_produce_sensors(MPAI_Component_AIM_t* aim);
-void _set_aim_data_motion(MPAI_Component_AIM_t* aim);
-void _set_aim_rehabilitation(MPAI_Component_AIM_t* aim);
-void _set_aim_temp_limit(MPAI_Component_AIM_t* aim);
+bool _set_aim_data_mic(MPAI_Component_AIM_t* aim);
+bool _set_aim_produce_sensors(MPAI_Component_AIM_t* aim);
+bool _set_aim_data_motion(MPAI_Component_AIM_t* aim);
+bool _set_aim_rehabilitation(MPAI_Component_AIM_t* aim);
+bool _set_aim_temp_limit(MPAI_Component_AIM_t* aim);
 
 /************* PRIVATE HEADER *************/
 channel_map_element_t _linear_search_channel(const char* name);
@@ -117,7 +117,7 @@ void MPAI_AIW_CAE_REV_Start()
 				if (aim_result != NULL) {
 					LOG_DBG("Calling AIM %s: success", log_strdup(aim_name));
 					mpai_error_t err_aim = MPAI_AIFU_AIM_Start(AIW_CAE_REV, aim_init_cb);
-					if (err_aim.code != MPAI_AIF_OK)
+					if (err_aim.code != MPAI_AIF_OK && err_aim.code != MPAI_AIM_CREATION_SKIPPED)
 					{
 						    LOG_ERR("Stop initialization");
 							while (1) {};
@@ -252,26 +252,52 @@ channel_map_element_t _linear_search_channel(const char* name)
 	return empty;
 }
 
-void _set_aim_data_mic(MPAI_Component_AIM_t* aim)
+bool _set_aim_data_mic(MPAI_Component_AIM_t* aim)
 {
-	aim_data_mic = aim;
+	#ifndef CONFIG_MPAI_AIM_VOLUME_PEAKS_ANALYSIS
+		return false;
+	#else
+		aim_data_mic = aim;
+		return true;
+	#endif
 }
-void _set_aim_produce_sensors(MPAI_Component_AIM_t* aim)
+bool _set_aim_produce_sensors(MPAI_Component_AIM_t* aim)
 {
-	aim_produce_sensors = aim;
+
+	#ifndef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS
+		return false;
+	#else
+		aim_produce_sensors = aim;
+		return true;
+	#endif
 }
-void _set_aim_data_motion(MPAI_Component_AIM_t* aim)
+bool _set_aim_data_motion(MPAI_Component_AIM_t* aim)
 {
-	aim_data_motion = aim;
-	MPAI_MessageStore_register(message_store_test_case_aiw, MPAI_AIM_Get_Subscriber(aim_data_motion), SENSORS_DATA_CHANNEL);
+	#ifndef CONFIG_MPAI_AIM_MOTION_RECOGNITION_ANALYSIS
+		return false;
+	#else
+		aim_data_motion = aim;
+		MPAI_MessageStore_register(message_store_test_case_aiw, MPAI_AIM_Get_Subscriber(aim_data_motion), SENSORS_DATA_CHANNEL);
+		return true;
+	#endif
 }
-void _set_aim_rehabilitation(MPAI_Component_AIM_t* aim)
+bool _set_aim_rehabilitation(MPAI_Component_AIM_t* aim)
 {
-	aim_rehabilitation = aim;
-	MPAI_MessageStore_register(message_store_test_case_aiw, MPAI_AIM_Get_Subscriber(aim_rehabilitation), MOTION_DATA_CHANNEL);
-	MPAI_MessageStore_register(message_store_test_case_aiw, MPAI_AIM_Get_Subscriber(aim_rehabilitation), MIC_PEAK_DATA_CHANNEL);
+	#ifndef CONFIG_MPAI_AIM_VALIDATION_MOVEMENT_WITH_AUDIO
+		return false;
+	#else
+		aim_rehabilitation = aim;
+		MPAI_MessageStore_register(message_store_test_case_aiw, MPAI_AIM_Get_Subscriber(aim_rehabilitation), MOTION_DATA_CHANNEL);
+		MPAI_MessageStore_register(message_store_test_case_aiw, MPAI_AIM_Get_Subscriber(aim_rehabilitation), MIC_PEAK_DATA_CHANNEL);
+		return true;
+	#endif
 }
-void _set_aim_temp_limit(MPAI_Component_AIM_t* aim)
+bool _set_aim_temp_limit(MPAI_Component_AIM_t* aim)
 {
-	aim_temp_limit = aim;
+	#ifndef CONFIG_MPAI_AIM_TEMP_LIMIT
+		return false;
+	#else
+		aim_temp_limit = aim;
+		return true;
+	#endif
 }

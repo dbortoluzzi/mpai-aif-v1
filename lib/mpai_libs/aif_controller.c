@@ -504,13 +504,22 @@ mpai_error_t MPAI_AIFU_AIM_GetStatus(int AIW_ID, const char* name, int* status)
 mpai_error_t MPAI_AIFU_AIM_Start(int aiw_id, aim_initialization_cb_t aim_init)
 {
 	MPAI_Component_AIM_t* aim = MPAI_AIM_Creator(aim_init._aim_name, aiw_id, aim_init._subscriber, aim_init._start, aim_init._stop, aim_init._resume, aim_init._pause);
-	aim_init._post_cb(aim);
+	bool post_cb_result = aim_init._post_cb(aim);
 
-	mpai_error_t err_aim = MPAI_AIM_Start(aim);	
-
-	if (err_aim.code != MPAI_AIF_OK)
+	if (post_cb_result) 
 	{
-		LOG_ERR("Error starting AIM %s: %s", log_strdup(MPAI_AIM_Get_Component(aim)->name), log_strdup(MPAI_ERR_STR(err_aim.code)));
-	} 
-	return err_aim;
+		mpai_error_t err_aim = MPAI_AIM_Start(aim);	
+
+		if (err_aim.code != MPAI_AIF_OK)
+		{
+			LOG_ERR("Error starting AIM %s: %s", log_strdup(MPAI_AIM_Get_Component(aim)->name), log_strdup(MPAI_ERR_STR(err_aim.code)));
+		} 
+		return err_aim;
+	}
+	else 
+	{
+		LOG_WRN("Skipped creation AIM %s", log_strdup(MPAI_AIM_Get_Component(aim)->name));
+		MPAI_ERR_INIT(err, MPAI_AIM_CREATION_SKIPPED);
+		return err;
+	}
 }

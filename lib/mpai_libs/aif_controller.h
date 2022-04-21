@@ -48,7 +48,7 @@
 #define WHOAMI_REG 0x0F
 #define WHOAMI_ALT_REG 0x4F
 
-typedef void (*callback_aim_t)(MPAI_Component_AIM_t*);
+typedef bool (*callback_aim_t)(MPAI_Component_AIM_t*);
 
 /* Data structure usefull to initialize an AIM*/
 typedef struct _aim_initialization_cb_t{
