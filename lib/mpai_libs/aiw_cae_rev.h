@@ -21,6 +21,9 @@
 #endif
 
 static int AIW_CAE_REV = 1;
+static int aim_count = 0;
+static int channel_count = 0;
+
 #define MPAI_LIBS_CAE_REV_AIW_NAME "CAE-REV"
 #define MPAI_LIBS_CAE_REV_AIM_DATA_MIC_NAME "VolumePeaksAnalysis"
 #define MPAI_LIBS_CAE_REV_AIM_SENSORS_NAME "ControlUnitSensorsReading"
@@ -29,11 +32,10 @@ static int AIW_CAE_REV = 1;
 #define MPAI_LIBS_CAE_REV_AIM_REHABILITATION_NAME "MovementsWithAudioValidation"
 #define MPAI_LIBS_CAE_REV_SENSORS_DATA_CHANNEL_NAME "SensorsDataChannel"
 #define MPAI_LIBS_CAE_REV_MIC_BUFFER_DATA_CHANNEL_NAME "MicBufferDataChannel"
-#define MPAI_LIBS_CAE_REV_AIM_MIC_PEAK_DATA_CHANNEL_NAME "MicPeakDataChannel"
-#define MPAI_LIBS_CAE_REV_AIM_MOTION_DATA_CHANNEL_NAME "MotionDataChannel"
-// TODO: improve configuration
-#define MPAI_LIBS_CAE_REV_AIM_COUNT 5
-#define MPAI_LIBS_CAE_REV_CHANNEL_COUNT 4
+#define MPAI_LIBS_CAE_REV_MIC_PEAK_DATA_CHANNEL_NAME "MicPeakDataChannel"
+#define MPAI_LIBS_CAE_REV_MOTION_DATA_CHANNEL_NAME "MotionDataChannel"
+#define MPAI_LIBS_CAE_REV_AIM_MAX 10
+#define MPAI_LIBS_CAE_REV_CHANNEL_MAX 10
 
 typedef void (*callback_aim_t)(MPAI_Component_AIM_t*);
 
@@ -61,6 +63,7 @@ extern MPAI_AIM_MessageStore_t* message_store_rehabilitation_aim;
 extern subscriber_channel_t SENSORS_DATA_CHANNEL;
 extern subscriber_channel_t MIC_BUFFER_DATA_CHANNEL;
 extern subscriber_channel_t MIC_PEAK_DATA_CHANNEL;
+extern subscriber_channel_t MOTION_DATA_CHANNEL;
 
 /* AIMs to be configured */
 extern MPAI_Component_AIM_t* aim_produce_sensors;

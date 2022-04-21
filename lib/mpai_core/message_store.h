@@ -19,10 +19,6 @@
 #define PUB_SUB_MAX_SUBSCRIBERS 20
 #define PUB_SUB_DEFAULT_CHANNEL 0
 
-// overwrite MAX channel in pubsub library
-#undef MAX_CHANNELS
-#define MAX_CHANNELS 20
-
 typedef uint16_t subscriber_channel_t;
 typedef struct _subscriber_item{
     module_t* subscriber_key;

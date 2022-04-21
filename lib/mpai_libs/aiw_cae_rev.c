@@ -16,10 +16,10 @@ LOG_MODULE_REGISTER(MPAI_LIBS_AIW_CAE_REV, LOG_LEVEL_INF);
 MPAI_AIM_MessageStore_t* message_store_test_case_aiw;
 
 /* AIW global channels used by message store */
-// TODO: create a map of channel
 subscriber_channel_t SENSORS_DATA_CHANNEL;
 subscriber_channel_t MIC_BUFFER_DATA_CHANNEL;
 subscriber_channel_t MIC_PEAK_DATA_CHANNEL;
+subscriber_channel_t MOTION_DATA_CHANNEL;
 
 /* AIMs to be configured */
 MPAI_Component_AIM_t* aim_data_mic = NULL;
@@ -29,8 +29,8 @@ MPAI_Component_AIM_t* aim_data_motion = NULL;
 MPAI_Component_AIM_t* aim_rehabilitation = NULL;
 
 /* AIM initialization List */
-aim_initialization_cb_t MPAI_AIM_List[MPAI_LIBS_CAE_REV_AIM_COUNT] = {};
-channel_map_element_t message_store_channel_list[MPAI_LIBS_CAE_REV_CHANNEL_COUNT] = {};
+aim_initialization_cb_t MPAI_AIM_List[MPAI_LIBS_CAE_REV_AIM_MAX] = {};
+channel_map_element_t message_store_channel_list[MPAI_LIBS_CAE_REV_CHANNEL_MAX] = {};
 
 /************* PRIVATE HEADER *************/
 channel_map_element_t _linear_search_channel(const char* name);
@@ -57,23 +57,28 @@ int INIT_Test_Use_Case_AIW()
     // create channels
     SENSORS_DATA_CHANNEL = MPAI_MessageStore_new_channel();
 	channel_map_element_t sensors_data_channel = {._channel_name = MPAI_LIBS_CAE_REV_SENSORS_DATA_CHANNEL_NAME, ._channel = SENSORS_DATA_CHANNEL};
-	message_store_channel_list[0] = sensors_data_channel;
+	message_store_channel_list[channel_count++] = sensors_data_channel;
     MIC_BUFFER_DATA_CHANNEL = MPAI_MessageStore_new_channel();
 	channel_map_element_t mic_buffer_data_channel = {._channel_name = MPAI_LIBS_CAE_REV_MIC_BUFFER_DATA_CHANNEL_NAME, ._channel = MIC_BUFFER_DATA_CHANNEL};
-	message_store_channel_list[1] = mic_buffer_data_channel;
+	message_store_channel_list[channel_count++] = mic_buffer_data_channel;
     MIC_PEAK_DATA_CHANNEL = MPAI_MessageStore_new_channel();
+	channel_map_element_t mic_peak_data_channel = {._channel_name = MPAI_LIBS_CAE_REV_MIC_PEAK_DATA_CHANNEL_NAME, ._channel = MIC_PEAK_DATA_CHANNEL};
+	message_store_channel_list[channel_count++] = mic_peak_data_channel;
+	MOTION_DATA_CHANNEL = MPAI_MessageStore_new_channel();
+	channel_map_element_t motion_data_channel = {._channel_name = MPAI_LIBS_CAE_REV_MOTION_DATA_CHANNEL_NAME, ._channel = MOTION_DATA_CHANNEL};
+	message_store_channel_list[channel_count++] = motion_data_channel;
 
 	// add aims to list with related callback
 	aim_initialization_cb_t aim_data_mic_init_cb = {._aim_name = MPAI_LIBS_CAE_REV_AIM_DATA_MIC_NAME, ._aim = aim_data_mic, ._init_cb = init_data_mic_aim};
-	MPAI_AIM_List[0] = aim_data_mic_init_cb;
+	MPAI_AIM_List[aim_count++] = aim_data_mic_init_cb;
 	aim_initialization_cb_t aim_data_sensors_init_cb = {._aim_name = MPAI_LIBS_CAE_REV_AIM_SENSORS_NAME, ._aim = aim_produce_sensors, ._init_cb = init_sensors_aim};
-	MPAI_AIM_List[1] = aim_data_sensors_init_cb;
+	MPAI_AIM_List[aim_count++] = aim_data_sensors_init_cb;
 	aim_initialization_cb_t aim_temp_limit_init_cb = {._aim_name = MPAI_LIBS_CAE_REV_AIM_TEMP_LIMIT_NAME, ._aim = aim_temp_limit, ._init_cb = init_temp_limit_aim};
-	MPAI_AIM_List[2] = aim_temp_limit_init_cb;
+	MPAI_AIM_List[aim_count++] = aim_temp_limit_init_cb;
 	aim_initialization_cb_t aim_motion_init_cb = {._aim_name = MPAI_LIBS_CAE_REV_AIM_MOTION_NAME, ._aim = aim_data_motion, ._init_cb = init_motion_aim};
-	MPAI_AIM_List[3] = aim_motion_init_cb;
+	MPAI_AIM_List[aim_count++] = aim_motion_init_cb;
 	aim_initialization_cb_t aim_rehabilitation_init_cb = {._aim_name = MPAI_LIBS_CAE_REV_AIM_REHABILITATION_NAME, ._aim = aim_rehabilitation, ._init_cb = init_rehabilitation_aim};
-	MPAI_AIM_List[4] = aim_rehabilitation_init_cb;
+	MPAI_AIM_List[aim_count++] = aim_rehabilitation_init_cb;
 
 	return AIW_CAE_REV;
 }
@@ -143,7 +148,7 @@ void STOP_Test_Use_Case_AIW()
 		MPAI_AIM_Stop(aim_data_mic);
 	#endif
 
-	memset ( MPAI_AIM_List, 0, MPAI_LIBS_CAE_REV_AIM_COUNT*sizeof(MPAI_Component_AIM_t*) ) ;
+	memset ( MPAI_AIM_List, 0, MPAI_LIBS_CAE_REV_AIM_MAX*sizeof(MPAI_Component_AIM_t*) ) ;
 }
 
 void RESUME_Test_Use_Case_AIW()
@@ -206,12 +211,12 @@ void DESTROY_Test_Use_Case_AIW()
 		MPAI_AIM_Destructor(aim_data_mic);
 	#endif
 
-	memset ( MPAI_AIM_List, 0, MPAI_LIBS_CAE_REV_AIM_COUNT*sizeof(MPAI_Component_AIM_t*) ) ;
+	memset ( MPAI_AIM_List, 0, MPAI_LIBS_CAE_REV_AIM_MAX*sizeof(MPAI_Component_AIM_t*) ) ;
 }
 
 aim_initialization_cb_t _linear_search_aim(const char* name)
 {
-	for (size_t i = 0; i < MPAI_LIBS_CAE_REV_AIM_COUNT; i++)
+	for (size_t i = 0; i < aim_count; i++)
 	{
 		// verify aim name
 		if (strcmp(MPAI_AIM_Get_Component(MPAI_AIM_List[i]._aim)->name, name) == 0 || strcmp(MPAI_AIM_List[i]._aim_name, name) == 0)
