@@ -5,6 +5,7 @@ This code refers to the first implementation of the MPAI-AIF specification as de
 The software runs on the ST IoT NODE https://www.st.com/en/evaluation-tools/b-l475e-iot01a.html
 
 The Architecture has the following characteristics
+
 •	based on Zephyr operating system (based on RTOS)
 
 •	Implements only MPAI Events (High Priority events)
@@ -22,6 +23,7 @@ The Architecture has the following characteristics
 In order to test the architecture few test AIMs have been implemented:
 
 AIM Producers  
+
 •	Read data from sensors 
 
 •	Does some level of processing
@@ -31,6 +33,7 @@ AIM Producers
 •	Pass the message on a message store and make it ready for consumption 
 
 AIM Consumers
+
 •	Reads data as message from the message store produce an output
 
 
