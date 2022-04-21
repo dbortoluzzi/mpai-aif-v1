@@ -48,6 +48,26 @@
 #define WHOAMI_REG 0x0F
 #define WHOAMI_ALT_REG 0x4F
 
+typedef void (*callback_aim_t)(MPAI_Component_AIM_t*);
+
+/* Data structure usefull to initialize an AIM*/
+typedef struct _aim_initialization_cb_t{
+    char* _aim_name;
+    MPAI_Component_AIM_t* _aim; 
+    callback_aim_t _post_cb;	// callback called after aim creation
+	module_t* _subscriber; 	 	// related AIM subscriber identifier
+	module_t* _start;		 	// AIM's start function
+	module_t* _stop;		 	// AIM's stop function
+	module_t* _resume;		 	// AIM's resume function
+	module_t* _pause;		 	// AIM's pause function
+} aim_initialization_cb_t;
+
+/* Tuple of channel and related channel_name */
+typedef struct _channel_map_element_t{
+    char* _channel_name;
+    subscriber_channel_t _channel;
+} channel_map_element_t;
+
 /**
  * @brief Initialize the MPAI Libs AIF Controller
  * 
@@ -104,5 +124,14 @@ mpai_error_t MPAI_AIFU_AIW_Stop(int AIW_ID);
  * @return error_t 
  */
 mpai_error_t MPAI_AIFU_AIM_GetStatus(int AIW_ID, const char* name, int* status);
+
+/**
+ * @brief Initialize and start an AIM reading a configuration struct
+ * 
+ * @param aiw_id 
+ * @param aim_init 
+ * @return mpai_error_t 
+ */
+mpai_error_t MPAI_AIFU_AIM_Start(int aiw_id, aim_initialization_cb_t aim_init);
 
 #endif

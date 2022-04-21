@@ -36,7 +36,6 @@ void _set_aim_produce_sensors(MPAI_Component_AIM_t* aim);
 void _set_aim_data_motion(MPAI_Component_AIM_t* aim);
 void _set_aim_rehabilitation(MPAI_Component_AIM_t* aim);
 void _set_aim_temp_limit(MPAI_Component_AIM_t* aim);
-mpai_error_t _init_aim(int aiw_id, aim_initialization_cb_t aim_init);
 
 /************* PRIVATE HEADER *************/
 channel_map_element_t _linear_search_channel(const char* name);
@@ -49,7 +48,7 @@ mpai_error_t init_motion_aim();
 mpai_error_t init_rehabilitation_aim();
 
 /************* PUBLIC HEADER *************/
-int INIT_Test_Use_Case_AIW() 
+int MPAI_AIW_CAE_REV_Init() 
 {
     // create message store for the AIW
     message_store_test_case_aiw = MPAI_MessageStore_Creator(AIW_CAE_REV, MPAI_LIBS_CAE_REV_AIW_NAME, sizeof(mpai_parser_t));
@@ -89,7 +88,7 @@ int INIT_Test_Use_Case_AIW()
 	return AIW_CAE_REV;
 }
 
-void START_Test_Use_Case_AIW()
+void MPAI_AIW_CAE_REV_Start()
 {
 	#if defined(CONFIG_MPAI_CONFIG_STORE) && defined (CONFIG_MPAI_CONFIG_STORE_USES_COAP)
 		char* aiw_result = MPAI_Config_Store_Get_AIW(MPAI_LIBS_CAE_REV_AIW_NAME);
@@ -110,14 +109,14 @@ void START_Test_Use_Case_AIW()
 			JSON_Object* aiw_subaim = json_array_get_object(json_aiw_subaims, i);
 			const char* aim_name = json_object_dotget_string(aiw_subaim, "Identifier.Specification.AIM");
 
-			aim_initialization_cb_t aim_init = _linear_search_aim(aim_name);
-			if (aim_init._aim_name != NULL) {
+			aim_initialization_cb_t aim_init_cb = _linear_search_aim(aim_name);
+			if (aim_init_cb._aim_name != NULL) {
 				LOG_INF("AIM %s found for AIW %s, now initializing...", log_strdup(aim_name), log_strdup(aiw_name));
 
 				char* aim_result = MPAI_Config_Store_Get_AIM(aim_name);
 				if (aim_result != NULL) {
 					LOG_DBG("Calling AIM %s: success", log_strdup(aim_name));
-					mpai_error_t err_aim = _init_aim(AIW_CAE_REV, aim_init);
+					mpai_error_t err_aim = MPAI_AIFU_AIM_Start(AIW_CAE_REV, aim_init_cb);
 					if (err_aim.code != MPAI_AIF_OK)
 					{
 						    LOG_ERR("Stop initialization");
@@ -129,7 +128,7 @@ void START_Test_Use_Case_AIW()
 			{
 				LOG_ERR("AIM %s not found", log_strdup(aim_name));
 			}
-			k_sleep(K_MSEC(100));
+			k_sleep(K_MSEC(50));
     	}
 
 		k_free(aiw_result);
@@ -141,7 +140,7 @@ void START_Test_Use_Case_AIW()
 	#endif
 }
 
-void STOP_Test_Use_Case_AIW() 
+void MPAI_AIW_CAE_REV_Stop() 
 {
 	#ifdef CONFIG_MPAI_AIM_VALIDATION_MOVEMENT_WITH_AUDIO
 		MPAI_AIM_Stop(aim_rehabilitation);
@@ -162,7 +161,7 @@ void STOP_Test_Use_Case_AIW()
 	memset ( MPAI_AIM_List, 0, MPAI_LIBS_CAE_REV_AIM_MAX*sizeof(MPAI_Component_AIM_t*) ) ;
 }
 
-void RESUME_Test_Use_Case_AIW()
+void MPAI_AIW_CAE_REV_Resume()
 {
 	#ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS
 		MPAI_AIM_Resume(aim_produce_sensors);
@@ -181,7 +180,7 @@ void RESUME_Test_Use_Case_AIW()
 	#endif
 }
 
-void PAUSE_Test_Use_Case_AIW()
+void MPAI_AIW_CAE_REV_Pause()
 {
 	#ifdef CONFIG_MPAI_AIM_VALIDATION_MOVEMENT_WITH_AUDIO
 		MPAI_AIM_Pause(aim_rehabilitation);
@@ -200,9 +199,9 @@ void PAUSE_Test_Use_Case_AIW()
 	#endif
 }
 
-void DESTROY_Test_Use_Case_AIW() 
+void DESTROY_MPAI_AIW_CAE_REV() 
 {
-	STOP_Test_Use_Case_AIW();
+	MPAI_AIW_CAE_REV_Stop();
 
 	k_sleep(K_SECONDS(2));
 
@@ -275,18 +274,4 @@ void _set_aim_rehabilitation(MPAI_Component_AIM_t* aim)
 void _set_aim_temp_limit(MPAI_Component_AIM_t* aim)
 {
 	aim_temp_limit = aim;
-}
-
-mpai_error_t _init_aim(int aiw_id, aim_initialization_cb_t aim_init)
-{
-	MPAI_Component_AIM_t* aim = MPAI_AIM_Creator(aim_init._aim_name, aiw_id, aim_init._subscriber, aim_init._start, aim_init._stop, aim_init._resume, aim_init._pause);
-	aim_init._post_cb(aim);
-
-	mpai_error_t err_aim = MPAI_AIM_Start(aim);	
-
-	if (err_aim.code != MPAI_AIF_OK)
-	{
-		LOG_ERR("Error starting AIM %s: %s", log_strdup(MPAI_AIM_Get_Component(aim)->name), log_strdup(MPAI_ERR_STR(err_aim.code)));
-	} 
-	return err_aim;
 }

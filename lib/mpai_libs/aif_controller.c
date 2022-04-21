@@ -388,7 +388,7 @@ mpai_error_t MPAI_AIFU_Controller_Initialize()
 
 mpai_error_t MPAI_AIFU_Controller_Destroy() 
 {
-	DESTROY_Test_Use_Case_AIW();
+	DESTROY_MPAI_AIW_CAE_REV();
 	
 	MPAI_ERR_INIT(err, MPAI_AIF_OK);
 	return err;
@@ -401,10 +401,10 @@ mpai_error_t MPAI_AIFU_AIW_Start(const char* name, int* AIW_ID)
 	// At the moment, we handle only AIW CAE-REV 
 	if (strcmp(name, MPAI_LIBS_CAE_REV_AIW_NAME) == 0)
 	{
-		int aiw_id = INIT_Test_Use_Case_AIW();
+		int aiw_id = MPAI_AIW_CAE_REV_Init();
 		*AIW_ID = aiw_id;
 
-		START_Test_Use_Case_AIW();
+		MPAI_AIW_CAE_REV_Start();
 
 		MPAI_ERR_INIT(err, MPAI_AIF_OK);
 		return err;
@@ -421,7 +421,7 @@ mpai_error_t MPAI_AIFU_AIW_Pause(int AIW_ID)
 	// At the moment, we handle only AIW CAE-REV 
 	if (AIW_ID == AIW_CAE_REV)
 	{
-		PAUSE_Test_Use_Case_AIW();
+		MPAI_AIW_CAE_REV_Pause();
 		
 		MPAI_ERR_INIT(err, MPAI_AIF_OK);
 		return err;
@@ -438,7 +438,7 @@ mpai_error_t MPAI_AIFU_AIW_Resume(int AIW_ID)
 	// At the moment, we handle only AIW CAE-REV 
 	if (AIW_ID == AIW_CAE_REV)
 	{
-		RESUME_Test_Use_Case_AIW();
+		MPAI_AIW_CAE_REV_Resume();
 		
 		MPAI_ERR_INIT(err, MPAI_AIF_OK);
 		return err;
@@ -455,7 +455,7 @@ mpai_error_t MPAI_AIFU_AIW_Stop(int AIW_ID)
 	// At the moment, we handle only AIW CAE-REV 
 	if (AIW_ID == AIW_CAE_REV)
 	{
-		STOP_Test_Use_Case_AIW();
+		MPAI_AIW_CAE_REV_Stop();
 		
 		MPAI_ERR_INIT(err, MPAI_AIF_OK);
 		return err;
@@ -499,4 +499,18 @@ mpai_error_t MPAI_AIFU_AIM_GetStatus(int AIW_ID, const char* name, int* status)
 
 	MPAI_ERR_INIT(err, MPAI_AIF_OK);
 	return err;
+}
+
+mpai_error_t MPAI_AIFU_AIM_Start(int aiw_id, aim_initialization_cb_t aim_init)
+{
+	MPAI_Component_AIM_t* aim = MPAI_AIM_Creator(aim_init._aim_name, aiw_id, aim_init._subscriber, aim_init._start, aim_init._stop, aim_init._resume, aim_init._pause);
+	aim_init._post_cb(aim);
+
+	mpai_error_t err_aim = MPAI_AIM_Start(aim);	
+
+	if (err_aim.code != MPAI_AIF_OK)
+	{
+		LOG_ERR("Error starting AIM %s: %s", log_strdup(MPAI_AIM_Get_Component(aim)->name), log_strdup(MPAI_ERR_STR(err_aim.code)));
+	} 
+	return err_aim;
 }

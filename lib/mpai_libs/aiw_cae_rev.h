@@ -15,6 +15,7 @@
 #include <motion_aim.h>
 #include <rehabilitation_aim.h>
 #include <message_store.h>
+#include <aif_controller.h>
 #include <parson.h>
 #if defined(CONFIG_MPAI_CONFIG_STORE)
     #include <config_store.h>
@@ -36,25 +37,6 @@ static int channel_count = 0;
 #define MPAI_LIBS_CAE_REV_MOTION_DATA_CHANNEL_NAME "MotionDataChannel"
 #define MPAI_LIBS_CAE_REV_AIM_MAX 10
 #define MPAI_LIBS_CAE_REV_CHANNEL_MAX 10
-
-typedef void (*callback_aim_t)(MPAI_Component_AIM_t*);
-
-typedef struct _aim_initialization_cb_t{
-    char* _aim_name;
-    MPAI_Component_AIM_t* _aim; // at the moment it's not usefull
-    module_t* _init_cb;
-    callback_aim_t _post_cb;
-	module_t* _subscriber; 	 // related AIM subscriber identifier
-	module_t* _start;		 // AIM's start function
-	module_t* _stop;		 // AIM's stop function
-	module_t* _resume;		 // AIM's resume function
-	module_t* _pause;		 // AIM's pause function
-} aim_initialization_cb_t;
-
-typedef struct _channel_map_element_t{
-    char* _channel_name;
-    subscriber_channel_t _channel;
-} channel_map_element_t;
 
 /* AIW global message store */
 extern MPAI_AIM_MessageStore_t* message_store_test_case_aiw;
@@ -82,34 +64,34 @@ extern MPAI_Component_AIM_t* aim_rehabilitation;
  * @brief Initialize AIW Test Case (CAE-REV)
  * 
  */
-int INIT_Test_Use_Case_AIW();
+int MPAI_AIW_CAE_REV_Init();
 
 /**
  * @brief Start AIW Test Case (CAE-REV)
  * 
  */
-void START_Test_Use_Case_AIW();
+void MPAI_AIW_CAE_REV_Start();
 
 /**
  * @brief Stop AIW Test Case (CAE-REV)
  * 
  */
-void STOP_Test_Use_Case_AIW();
+void MPAI_AIW_CAE_REV_Stop();
 
 /**
  * @brief Resume AIW Test Case (CAE-REV)
  */
-void RESUME_Test_Use_Case_AIW();
+void MPAI_AIW_CAE_REV_Resume();
 
 /**
  * @brief Pause AIW Test Case (CAE-REV)
  * 
  */
-void PAUSE_Test_Use_Case_AIW();
+void MPAI_AIW_CAE_REV_Pause();
 
 /**
  * @brief Destroy AI Test Case (CAE-REV)
  * 
  */
-void DESTROY_Test_Use_Case_AIW();
+void DESTROY_MPAI_AIW_CAE_REV();
 #endif
