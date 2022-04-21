@@ -22,8 +22,6 @@
 #endif
 
 static int AIW_CAE_REV = 1;
-static int aim_count = 0;
-static int channel_count = 0;
 
 #define MPAI_LIBS_CAE_REV_AIW_NAME "CAE-REV"
 #define MPAI_LIBS_CAE_REV_AIM_DATA_MIC_NAME "VolumePeaksAnalysis"
@@ -35,8 +33,6 @@ static int channel_count = 0;
 #define MPAI_LIBS_CAE_REV_MIC_BUFFER_DATA_CHANNEL_NAME "MicBufferDataChannel"
 #define MPAI_LIBS_CAE_REV_MIC_PEAK_DATA_CHANNEL_NAME "MicPeakDataChannel"
 #define MPAI_LIBS_CAE_REV_MOTION_DATA_CHANNEL_NAME "MotionDataChannel"
-#define MPAI_LIBS_CAE_REV_AIM_MAX 10
-#define MPAI_LIBS_CAE_REV_CHANNEL_MAX 10
 
 /* AIW global message store */
 extern MPAI_AIM_MessageStore_t* message_store_test_case_aiw;
@@ -65,12 +61,6 @@ extern MPAI_Component_AIM_t* aim_rehabilitation;
  * 
  */
 int MPAI_AIW_CAE_REV_Init();
-
-/**
- * @brief Start AIW Test Case (CAE-REV)
- * 
- */
-void MPAI_AIW_CAE_REV_Start();
 
 /**
  * @brief Stop AIW Test Case (CAE-REV)

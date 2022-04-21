@@ -48,6 +48,10 @@
 #define WHOAMI_REG 0x0F
 #define WHOAMI_ALT_REG 0x4F
 
+#define MPAI_AIF_AIM_MAX 10
+#define MPAI_AIF_CHANNEL_MAX 10
+
+
 typedef bool (*callback_aim_t)(MPAI_Component_AIM_t*);
 
 /* Data structure usefull to initialize an AIM*/
@@ -67,6 +71,13 @@ typedef struct _channel_map_element_t{
     char* _channel_name;
     subscriber_channel_t _channel;
 } channel_map_element_t;
+
+/* AIM initialization List */
+extern aim_initialization_cb_t MPAI_AIM_List[MPAI_AIF_AIM_MAX];
+/* Channel List*/
+extern channel_map_element_t message_store_channel_list[MPAI_AIF_CHANNEL_MAX];
+extern int mpai_controller_aim_count;
+extern int mpai_message_store_channel_count;
 
 /**
  * @brief Initialize the MPAI Libs AIF Controller
@@ -133,5 +144,15 @@ mpai_error_t MPAI_AIFU_AIM_GetStatus(int AIW_ID, const char* name, int* status);
  * @return mpai_error_t 
  */
 mpai_error_t MPAI_AIFU_AIM_Start(int aiw_id, aim_initialization_cb_t aim_init);
+
+#if defined(CONFIG_MPAI_CONFIG_STORE) && defined (CONFIG_MPAI_CONFIG_STORE_USES_COAP)
+/**
+ * @brief Start an AIW, loading configurations from MPAI Store
+ * 
+ * @param name 
+ * @return mpai_error_t 
+ */
+mpai_error_t MPAI_AIFU_AIW_Start_From_MPAI_Store(const char* name);
+#endif
 
 #endif

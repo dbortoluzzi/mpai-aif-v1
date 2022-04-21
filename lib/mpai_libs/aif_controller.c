@@ -14,7 +14,20 @@ LOG_MODULE_REGISTER(MPAI_LIBS_AIF_CONTROLLER, LOG_LEVEL_INF);
 #include <wifi_connect.h>
 #include <net_private.h>
 
+/************* STATIC HEADER *************/
 static int aiw_id;
+
+/************* PRIVATE HEADER *************/
+channel_map_element_t _linear_search_channel(const char* name);
+aim_initialization_cb_t _linear_search_aim_init(const char* name);
+
+/* AIM initialization List */
+aim_initialization_cb_t MPAI_AIM_List[MPAI_AIF_AIM_MAX] = {};
+/* Channel List*/
+channel_map_element_t message_store_channel_list[MPAI_AIF_CHANNEL_MAX] = {};
+/* Counters */
+int mpai_controller_aim_count = 0;
+int mpai_message_store_channel_count = 0;
 
 #ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS_PERIODIC
 
@@ -389,10 +402,62 @@ mpai_error_t MPAI_AIFU_Controller_Initialize()
 mpai_error_t MPAI_AIFU_Controller_Destroy() 
 {
 	DESTROY_MPAI_AIW_CAE_REV();
+
+	memset ( MPAI_AIM_List, 0, MPAI_AIF_AIM_MAX*sizeof(MPAI_Component_AIM_t*) ) ;
 	
 	MPAI_ERR_INIT(err, MPAI_AIF_OK);
 	return err;
 }
+
+#if defined(CONFIG_MPAI_CONFIG_STORE) && defined (CONFIG_MPAI_CONFIG_STORE_USES_COAP)
+	mpai_error_t MPAI_AIFU_AIW_Start_From_MPAI_Store(const char* name)
+	{
+		char* aiw_result = MPAI_Config_Store_Get_AIW(name);
+		// printk("AIW RESULT: \n");
+		// for ( size_t i = 0; i < strlen(aiw_result); i++ )
+		// {
+		// 	printk("%c", (char)aiw_result[i]);
+		// 	k_sleep(K_MSEC(5));
+		// }
+		// printk("\n");
+
+		JSON_Value* json_aiw = json_parse_string(aiw_result);
+		char* aiw_name = json_object_get_string(json_object(json_aiw), "title");
+		LOG_INF("Initializing AIW with title \"%s\"...", log_strdup(aiw_name));
+
+		JSON_Array* json_aiw_subaims = json_object_get_array(json_object(json_aiw), "SubAIMs");
+		for (size_t i = 0; i < json_array_get_count(json_aiw_subaims); i++) {
+			JSON_Object* aiw_subaim = json_array_get_object(json_aiw_subaims, i);
+			const char* aim_name = json_object_dotget_string(aiw_subaim, "Identifier.Specification.AIM");
+
+			aim_initialization_cb_t aim_init_cb = _linear_search_aim_init(aim_name);
+			if (aim_init_cb._aim_name != NULL) {
+				LOG_INF("AIM %s found for AIW %s, now initializing...", log_strdup(aim_name), log_strdup(aiw_name));
+
+				char* aim_result = MPAI_Config_Store_Get_AIM(aim_name);
+				if (aim_result != NULL) {
+					LOG_DBG("Calling AIM %s: success", log_strdup(aim_name));
+					mpai_error_t err_aim = MPAI_AIFU_AIM_Start(AIW_CAE_REV, aim_init_cb);
+					if (err_aim.code != MPAI_AIF_OK && err_aim.code != MPAI_AIM_CREATION_SKIPPED)
+					{
+							LOG_ERR("Stop initialization");
+							while (1) {};
+					}
+				}
+				k_free(aim_result);
+			} else 
+			{
+				LOG_ERR("AIM %s not found", log_strdup(aim_name));
+			}
+			k_sleep(K_MSEC(50));
+		}
+
+		k_free(aiw_result);
+
+		MPAI_ERR_INIT(err, MPAI_AIF_OK);
+		return err;
+	}
+#endif
 
 mpai_error_t MPAI_AIFU_AIW_Start(const char* name, int* AIW_ID)
 {
@@ -401,14 +466,22 @@ mpai_error_t MPAI_AIFU_AIW_Start(const char* name, int* AIW_ID)
 	// At the moment, we handle only AIW CAE-REV 
 	if (strcmp(name, MPAI_LIBS_CAE_REV_AIW_NAME) == 0)
 	{
-		int aiw_id = MPAI_AIW_CAE_REV_Init();
-		*AIW_ID = aiw_id;
+		#if defined(CONFIG_MPAI_CONFIG_STORE) && defined (CONFIG_MPAI_CONFIG_STORE_USES_COAP)
+			int aiw_id = MPAI_AIW_CAE_REV_Init();
+			*AIW_ID = aiw_id;
+		
+			mpai_error_t err_aiw = MPAI_AIFU_AIW_Start_From_MPAI_Store(name);
 
-		MPAI_AIW_CAE_REV_Start();
-
-		MPAI_ERR_INIT(err, MPAI_AIF_OK);
-		return err;
-	}
+			if (err_aiw.code == MPAI_AIF_OK)
+			{
+				#ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS_PERIODIC
+				/* start periodic timer to switch status */
+				k_timer_start(&aim_timer, K_SECONDS(5), K_SECONDS(5));		
+				#endif
+			}
+			return err_aiw;
+		#endif
+	}	
 
 	MPAI_ERR_INIT(err, MPAI_ERROR);
 	return err;
@@ -461,6 +534,8 @@ mpai_error_t MPAI_AIFU_AIW_Stop(int AIW_ID)
 		return err;
 	}
 
+	memset ( MPAI_AIM_List, 0, MPAI_AIF_AIM_MAX*sizeof(MPAI_Component_AIM_t*) ) ;
+
 	MPAI_ERR_INIT(err, MPAI_AIF_OK);
 	return err;
 }
@@ -501,6 +576,7 @@ mpai_error_t MPAI_AIFU_AIM_GetStatus(int AIW_ID, const char* name, int* status)
 	return err;
 }
 
+// TODO: rename and check from MPAI specs
 mpai_error_t MPAI_AIFU_AIM_Start(int aiw_id, aim_initialization_cb_t aim_init)
 {
 	MPAI_Component_AIM_t* aim = MPAI_AIM_Creator(aim_init._aim_name, aiw_id, aim_init._subscriber, aim_init._start, aim_init._stop, aim_init._resume, aim_init._pause);
@@ -522,4 +598,32 @@ mpai_error_t MPAI_AIFU_AIM_Start(int aiw_id, aim_initialization_cb_t aim_init)
 		MPAI_ERR_INIT(err, MPAI_AIM_CREATION_SKIPPED);
 		return err;
 	}
+}
+
+aim_initialization_cb_t _linear_search_aim_init(const char* name)
+{
+	for (size_t i = 0; i < mpai_controller_aim_count; i++)
+	{
+		// verify aim name
+		if (strcmp(MPAI_AIM_Get_Component(MPAI_AIM_List[i]._aim)->name, name) == 0 || strcmp(MPAI_AIM_List[i]._aim_name, name) == 0)
+		{
+			return MPAI_AIM_List[i];
+		}
+	}
+	aim_initialization_cb_t empty = {};
+	return empty;
+}
+
+channel_map_element_t _linear_search_channel(const char* name)
+{
+	for (size_t i = 0; i < mpai_message_store_channel_count; i++)
+	{
+		// verify aim name
+		if (strcmp(message_store_channel_list[i]._channel_name, name) == 0)
+		{
+			return message_store_channel_list[i];
+		}
+	}
+	channel_map_element_t empty = {};
+	return empty;
 }
