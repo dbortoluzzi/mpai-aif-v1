@@ -6,19 +6,28 @@ The software runs on the ST IoT NODE https://www.st.com/en/evaluation-tools/b-l4
 
 The Architecture has the following characteristics
 •	based on Zephyr operating system (based on RTOS)
+
 •	Implements only MPAI Events (High Priority events)
+
 •	Implements a message store according to the MPAI-AIF 1.0 spec
+
 •	Implements great part the MPAI APIs in the form of libraries
+
 •	Implements a communication interface via IP based on CoAP  (Constrained Application Protocol) that simulates the MPAI Store.
+
 •	Parses json files according to the MAPI-AIF V 1.0 specification
+
 •	All the code is written in C language.
  
 In order to test the architecture few test AIMs have been implemented:
 
 AIM Producers  
 •	Read data from sensors 
+
 •	Does some level of processing
+
 •	Produces an output as a message
+
 •	Pass the message on a message store and make it ready for consumption 
 
 AIM Consumers
