@@ -43,6 +43,12 @@ typedef struct _aim_initialization_cb_t{
     char* _aim_name;
     MPAI_Component_AIM_t* _aim; // at the moment it's not usefull
     module_t* _init_cb;
+    callback_aim_t _post_cb;
+	module_t* _subscriber; 	 // related AIM subscriber identifier
+	module_t* _start;		 // AIM's start function
+	module_t* _stop;		 // AIM's stop function
+	module_t* _resume;		 // AIM's resume function
+	module_t* _pause;		 // AIM's pause function
 } aim_initialization_cb_t;
 
 typedef struct _channel_map_element_t{
