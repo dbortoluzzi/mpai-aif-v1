@@ -16,6 +16,9 @@
 #include <rehabilitation_aim.h>
 #include <message_store.h>
 #include <parson.h>
+#if defined(CONFIG_MPAI_CONFIG_STORE)
+    #include <config_store.h>
+#endif
 
 static int AIW_CAE_REV = 1;
 #define MPAI_LIBS_CAE_REV_AIW_NAME "CAE-REV"
@@ -24,13 +27,26 @@ static int AIW_CAE_REV = 1;
 #define MPAI_LIBS_CAE_REV_AIM_TEMP_LIMIT_NAME "AIM_TEMP_LIMIT"
 #define MPAI_LIBS_CAE_REV_AIM_MOTION_NAME "MotionRecognitionAnalysis"
 #define MPAI_LIBS_CAE_REV_AIM_REHABILITATION_NAME "MovementsWithAudioValidation"
+#define MPAI_LIBS_CAE_REV_SENSORS_DATA_CHANNEL_NAME "SensorsDataChannel"
+#define MPAI_LIBS_CAE_REV_MIC_BUFFER_DATA_CHANNEL_NAME "MicBufferDataChannel"
+#define MPAI_LIBS_CAE_REV_AIM_MIC_PEAK_DATA_CHANNEL_NAME "MicPeakDataChannel"
+#define MPAI_LIBS_CAE_REV_AIM_MOTION_DATA_CHANNEL_NAME "MotionDataChannel"
+// TODO: improve configuration
 #define MPAI_LIBS_CAE_REV_AIM_COUNT 5
+#define MPAI_LIBS_CAE_REV_CHANNEL_COUNT 4
+
+typedef void (*callback_aim_t)(MPAI_Component_AIM_t*);
 
 typedef struct _aim_initialization_cb_t{
     char* _aim_name;
     MPAI_Component_AIM_t* _aim; // at the moment it's not usefull
     module_t* _init_cb;
 } aim_initialization_cb_t;
+
+typedef struct _channel_map_element_t{
+    char* _channel_name;
+    subscriber_channel_t _channel;
+} channel_map_element_t;
 
 /* AIW global message store */
 extern MPAI_AIM_MessageStore_t* message_store_test_case_aiw;
