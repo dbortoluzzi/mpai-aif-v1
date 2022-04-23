@@ -321,11 +321,7 @@ mpai_error_t MPAI_AIFU_Controller_Initialize()
 				++wp;
 			}
 		}
-		JSON_Value* json = json_parse_string(buf);
-		const JSON_Object* root_json = json_object(json);
-		const char* name = json_object_get_string(root_json, "name");
-		LOG_INF("Hello, %s.", log_strdup(name));
-		json_value_free(json);
+		LOG_INF("Hello, %s.", log_strdup(buf));
 		/*** END SPI FLASH ***/
 	#endif
 
@@ -421,41 +417,81 @@ mpai_error_t MPAI_AIFU_Controller_Destroy()
 		// }
 		// printk("\n");
 
-		JSON_Value* json_aiw = json_parse_string(aiw_result);
-		char* aiw_name = json_object_get_string(json_object(json_aiw), "title");
-		LOG_INF("Initializing AIW with title \"%s\"...", log_strdup(aiw_name));
+		bool aif_ok = true;
+		cJSON *root = cJSON_Parse(aiw_result);
+		if (root != NULL) 
+		{
+			cJSON* aiw_name_cjson = cJSON_GetObjectItem(root, "title");
+        	if(aiw_name_cjson != NULL) {
+				bool aiw_init_ok = true;
+				char* aiw_name = aiw_name_cjson->valuestring;
+				LOG_INF("Initializing AIW with title \"%s\"...", log_strdup(aiw_name));
 
-		JSON_Array* json_aiw_subaims = json_object_get_array(json_object(json_aiw), "SubAIMs");
-		for (size_t i = 0; i < json_array_get_count(json_aiw_subaims); i++) {
-			JSON_Object* aiw_subaim = json_array_get_object(json_aiw_subaims, i);
-			const char* aim_name = json_object_dotget_string(aiw_subaim, "Identifier.Specification.AIM");
-
-			aim_initialization_cb_t aim_init_cb = _linear_search_aim_init(aim_name);
-			if (aim_init_cb._aim_name != NULL) {
-				LOG_INF("AIM %s found for AIW %s, now initializing...", log_strdup(aim_name), log_strdup(aiw_name));
-
-				char* aim_result = MPAI_Config_Store_Get_AIM(aim_name);
-				if (aim_result != NULL) {
-					LOG_DBG("Calling AIM %s: success", log_strdup(aim_name));
-					mpai_error_t err_aim = MPAI_AIFU_AIM_Start(AIW_CAE_REV, aim_init_cb);
-					if (err_aim.code != MPAI_AIF_OK && err_aim.code != MPAI_AIM_CREATION_SKIPPED)
+				cJSON * aiw_subaims_cjson = cJSON_GetObjectItem(root, "SubAIMs");
+				if (cJSON_Array == aiw_subaims_cjson->type)
+				{
+					int aims_count = cJSON_GetArraySize(aiw_subaims_cjson);
+					for (int idx=0; idx<aims_count; idx++)
 					{
-							LOG_ERR("Stop initialization");
-							while (1) {};
+						bool aim_init_ok = false;
+						cJSON *aim_cjson = cJSON_GetArrayItem(aiw_subaims_cjson, idx);
+						cJSON * aim_identifier_cjson = cJSON_GetObjectItem(aim_cjson, "Identifier");
+						if (aim_identifier_cjson != NULL)
+						{
+							cJSON * aim_specification_cjson = cJSON_GetObjectItem(aim_identifier_cjson, "Specification");
+							if (aim_identifier_cjson != NULL)
+							{
+								cJSON * aim_name_cjson = cJSON_GetObjectItem(aim_specification_cjson, "AIM");
+								char * aim_name = aim_name_cjson->valuestring;
+
+								aim_initialization_cb_t aim_init_cb = _linear_search_aim_init(aim_name);
+								if (aim_init_cb._aim_name != NULL) {
+									LOG_INF("AIM %s found for AIW %s, now initializing...", log_strdup(aim_name), log_strdup(aiw_name));
+									char* aim_result = MPAI_Config_Store_Get_AIM(aim_name);
+									if (aim_result != NULL) {
+										LOG_DBG("Calling AIM %s: success", log_strdup(aim_name));
+										mpai_error_t err_aim = MPAI_AIFU_AIM_Start(AIW_CAE_REV, aim_init_cb);
+										if (err_aim.code == MPAI_AIF_OK || err_aim.code == MPAI_AIM_CREATION_SKIPPED)
+										{
+											aim_init_ok = true;
+										} else 
+										{
+											LOG_ERR("Stop initialization");
+											while (1) {};	
+										}
+									}
+									k_free(aim_result);
+									free(aim_name_cjson);
+								} else 
+								{
+									LOG_ERR("AIM %s not found", log_strdup(aim_name));
+								}
+							}
+							free(aim_specification_cjson);
+						}
+						free(aim_identifier_cjson);
+						aiw_init_ok = aiw_init_ok & aim_init_ok;
 					}
+				} else {
+					aiw_init_ok = false;
 				}
-				k_free(aim_result);
-			} else 
-			{
-				LOG_ERR("AIM %s not found", log_strdup(aim_name));
+
+				free(aiw_name_cjson);
+				free(root);
+				aif_ok = aif_ok && aiw_init_ok;
 			}
-			k_sleep(K_MSEC(50));
+		} else {
+			aif_ok = false;
 		}
-
-		k_free(aiw_result);
-
-		MPAI_ERR_INIT(err, MPAI_AIF_OK);
-		return err;
+		if (aif_ok)
+		{
+			MPAI_ERR_INIT(err, MPAI_AIF_OK);
+			return err;
+		} else 
+		{
+			MPAI_ERR_INIT(err, MPAI_ERROR);
+			return err;
+		}
 	}
 #endif
 
