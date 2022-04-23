@@ -67,15 +67,69 @@ int MPAI_AIW_CAE_REV_Init()
 	message_store_channel_list[mpai_message_store_channel_count++] = motion_data_channel;
 
 	// add aims to list with related callback
-	aim_initialization_cb_t aim_data_mic_init_cb = {._aim_name = MPAI_LIBS_CAE_REV_AIM_DATA_MIC_NAME, ._aim = aim_data_mic, ._post_cb = _set_aim_data_mic, ._subscriber = data_mic_aim_subscriber, ._start = data_mic_aim_start, ._stop = data_mic_aim_stop, ._resume = data_mic_aim_resume, ._pause = data_mic_aim_pause};
+	aim_initialization_cb_t* aim_data_mic_init_cb = (aim_initialization_cb_t *) k_malloc(sizeof(aim_initialization_cb_t));
+	aim_data_mic_init_cb->_aim_name = MPAI_LIBS_CAE_REV_AIM_DATA_MIC_NAME;
+	aim_data_mic_init_cb->_aim = aim_data_mic;
+	aim_data_mic_init_cb->_post_cb = _set_aim_data_mic;
+	aim_data_mic_init_cb->_subscriber = data_mic_aim_subscriber;
+	aim_data_mic_init_cb->_start = data_mic_aim_start;
+	aim_data_mic_init_cb->_stop = data_mic_aim_stop;
+	aim_data_mic_init_cb->_resume = data_mic_aim_resume;
+	aim_data_mic_init_cb->_pause = data_mic_aim_pause;
+	aim_data_mic_init_cb->_input_channels = NULL;
+	aim_data_mic_init_cb->_count_channels = 0;
 	MPAI_AIM_List[mpai_controller_aim_count++] = aim_data_mic_init_cb;
-	aim_initialization_cb_t aim_data_sensors_init_cb = {._aim_name = MPAI_LIBS_CAE_REV_AIM_SENSORS_NAME, ._aim = aim_produce_sensors, ._post_cb = _set_aim_produce_sensors, ._subscriber = sensors_aim_subscriber, ._start = sensors_aim_start, ._stop = sensors_aim_stop, ._resume = sensors_aim_resume, ._pause = sensors_aim_pause};
+
+	aim_initialization_cb_t* aim_data_sensors_init_cb = (aim_initialization_cb_t *) k_malloc(sizeof(aim_initialization_cb_t));
+	aim_data_sensors_init_cb->_aim_name = MPAI_LIBS_CAE_REV_AIM_SENSORS_NAME;
+	aim_data_sensors_init_cb->_aim = aim_produce_sensors;
+	aim_data_sensors_init_cb->_post_cb = _set_aim_produce_sensors;
+	aim_data_sensors_init_cb->_subscriber = sensors_aim_subscriber;
+	aim_data_sensors_init_cb->_start = sensors_aim_start;
+	aim_data_sensors_init_cb->_stop = sensors_aim_stop;
+	aim_data_sensors_init_cb->_resume = sensors_aim_resume;
+	aim_data_sensors_init_cb->_pause = sensors_aim_pause;
+	aim_data_sensors_init_cb->_input_channels = NULL;
+	aim_data_sensors_init_cb->_count_channels = 0;
 	MPAI_AIM_List[mpai_controller_aim_count++] = aim_data_sensors_init_cb;
-	aim_initialization_cb_t aim_temp_limit_init_cb = {._aim_name = MPAI_LIBS_CAE_REV_AIM_TEMP_LIMIT_NAME, ._aim = aim_temp_limit, ._post_cb = _set_aim_temp_limit, ._subscriber = temp_limit_aim_subscriber, ._start = temp_limit_aim_start, ._stop = temp_limit_aim_stop, ._resume = temp_limit_aim_resume, ._pause = temp_limit_aim_pause};
+
+	aim_initialization_cb_t* aim_temp_limit_init_cb = (aim_initialization_cb_t *) k_malloc(sizeof(aim_initialization_cb_t));
+	aim_temp_limit_init_cb->_aim_name = MPAI_LIBS_CAE_REV_AIM_TEMP_LIMIT_NAME;
+	aim_temp_limit_init_cb->_aim = aim_produce_sensors;
+	aim_temp_limit_init_cb->_post_cb = _set_aim_temp_limit;
+	aim_temp_limit_init_cb->_subscriber = temp_limit_aim_subscriber;
+	aim_temp_limit_init_cb->_start = temp_limit_aim_start;
+	aim_temp_limit_init_cb->_stop = temp_limit_aim_stop;
+	aim_temp_limit_init_cb->_resume = temp_limit_aim_resume;
+	aim_temp_limit_init_cb->_pause = temp_limit_aim_pause;
+	aim_temp_limit_init_cb->_input_channels = NULL;
+	aim_temp_limit_init_cb->_count_channels = 0;
 	MPAI_AIM_List[mpai_controller_aim_count++] = aim_temp_limit_init_cb;
-	aim_initialization_cb_t aim_motion_init_cb = {._aim_name = MPAI_LIBS_CAE_REV_AIM_MOTION_NAME, ._aim = aim_data_motion, ._post_cb = _set_aim_data_motion, ._subscriber = motion_aim_subscriber, ._start = motion_aim_start, ._stop = motion_aim_stop, ._resume = motion_aim_resume, ._pause = motion_aim_pause};
+
+	aim_initialization_cb_t* aim_motion_init_cb = (aim_initialization_cb_t *) k_malloc(sizeof(aim_initialization_cb_t));
+	aim_motion_init_cb->_aim_name = MPAI_LIBS_CAE_REV_AIM_MOTION_NAME;
+	aim_motion_init_cb->_aim = aim_data_motion;
+	aim_motion_init_cb->_post_cb = _set_aim_data_motion;
+	aim_motion_init_cb->_subscriber = motion_aim_subscriber;
+	aim_motion_init_cb->_start = motion_aim_start;
+	aim_motion_init_cb->_stop = motion_aim_stop;
+	aim_motion_init_cb->_resume = motion_aim_resume;
+	aim_motion_init_cb->_pause = motion_aim_pause;
+	aim_motion_init_cb->_input_channels = NULL;
+	aim_motion_init_cb->_count_channels = 0;
 	MPAI_AIM_List[mpai_controller_aim_count++] = aim_motion_init_cb;
-	aim_initialization_cb_t aim_rehabilitation_init_cb = {._aim_name = MPAI_LIBS_CAE_REV_AIM_REHABILITATION_NAME, ._aim = aim_rehabilitation, ._post_cb = _set_aim_rehabilitation, ._subscriber = rehabilitation_aim_subscriber, ._start = rehabilitation_aim_start, ._stop = rehabilitation_aim_stop, ._resume = rehabilitation_aim_resume, ._pause = rehabilitation_aim_pause};
+
+	aim_initialization_cb_t* aim_rehabilitation_init_cb = (aim_initialization_cb_t *) k_malloc(sizeof(aim_initialization_cb_t));
+	aim_rehabilitation_init_cb->_aim_name = MPAI_LIBS_CAE_REV_AIM_REHABILITATION_NAME;
+	aim_rehabilitation_init_cb->_aim = aim_rehabilitation;
+	aim_rehabilitation_init_cb->_post_cb = _set_aim_rehabilitation;
+	aim_rehabilitation_init_cb->_subscriber = rehabilitation_aim_subscriber;
+	aim_rehabilitation_init_cb->_start = rehabilitation_aim_start;
+	aim_rehabilitation_init_cb->_stop = rehabilitation_aim_stop;
+	aim_rehabilitation_init_cb->_resume = rehabilitation_aim_resume;
+	aim_rehabilitation_init_cb->_pause = rehabilitation_aim_pause;
+	aim_rehabilitation_init_cb->_input_channels = NULL;
+	aim_rehabilitation_init_cb->_count_channels = 0;
 	MPAI_AIM_List[mpai_controller_aim_count++] = aim_rehabilitation_init_cb;
 
 	return AIW_CAE_REV;

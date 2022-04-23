@@ -58,12 +58,14 @@ typedef bool (*callback_aim_t)(MPAI_Component_AIM_t*);
 typedef struct _aim_initialization_cb_t{
     char* _aim_name;
     MPAI_Component_AIM_t* _aim; 
-    callback_aim_t _post_cb;	// callback called after aim creation
-	module_t* _subscriber; 	 	// related AIM subscriber identifier
-	module_t* _start;		 	// AIM's start function
-	module_t* _stop;		 	// AIM's stop function
-	module_t* _resume;		 	// AIM's resume function
-	module_t* _pause;		 	// AIM's pause function
+    callback_aim_t _post_cb;				// callback called after aim creation
+	module_t* _subscriber; 	 				// related AIM subscriber identifier
+	module_t* _start;		 				// AIM's start function
+	module_t* _stop;		 				// AIM's stop function
+	module_t* _resume;		 				// AIM's resume function
+	module_t* _pause;		 				// AIM's pause function
+	subscriber_channel_t* _input_channels;	// AIM subscribes to these input channels
+	int8_t _count_channels;					// number of AIM's input channels
 } aim_initialization_cb_t;
 
 /* Tuple of channel and related channel_name */
@@ -73,7 +75,7 @@ typedef struct _channel_map_element_t{
 } channel_map_element_t;
 
 /* AIM initialization List */
-extern aim_initialization_cb_t MPAI_AIM_List[MPAI_AIF_AIM_MAX];
+extern aim_initialization_cb_t* MPAI_AIM_List[MPAI_AIF_AIM_MAX];
 /* Channel List*/
 extern channel_map_element_t message_store_channel_list[MPAI_AIF_CHANNEL_MAX];
 extern int mpai_controller_aim_count;
@@ -143,7 +145,7 @@ mpai_error_t MPAI_AIFU_AIM_GetStatus(int AIW_ID, const char* name, int* status);
  * @param aim_init 
  * @return mpai_error_t 
  */
-mpai_error_t MPAI_AIFU_AIM_Start(int aiw_id, aim_initialization_cb_t aim_init);
+mpai_error_t MPAI_AIFU_AIM_Start(int aiw_id, aim_initialization_cb_t* aim_init);
 
 #if defined(CONFIG_MPAI_CONFIG_STORE) && defined (CONFIG_MPAI_CONFIG_STORE_USES_COAP)
 /**
