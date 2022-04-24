@@ -40,6 +40,38 @@ mpai_error_t init_temp_limit_aim();
 mpai_error_t init_motion_aim();
 mpai_error_t init_rehabilitation_aim();
 
+#ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS_PERIODIC
+
+/******** START PERIODIC MODE ***********/
+void aim_timer_switch_status(struct k_work *work)
+{
+	int* status = (int *)k_malloc(sizeof(int));
+	mpai_error_t err = MPAI_AIFU_AIM_GetStatus(AIW_CAE_REV, MPAI_LIBS_CAE_REV_AIM_SENSORS_NAME, status);
+	if (err.code == MPAI_AIF_OK)
+	{
+		if (MPAI_AIM_ALIVE == *status)
+		{
+			MPAI_AIM_Pause(aim_produce_sensors);
+		}
+		else
+		{
+			MPAI_AIM_Resume(aim_produce_sensors);
+		}
+	}
+	k_free(status);
+}
+
+K_WORK_DEFINE(my_work, aim_timer_switch_status);
+
+void aim_timer_handler(struct k_timer *dummy)
+{
+	k_work_submit(&my_work);
+}
+
+K_TIMER_DEFINE(aim_timer, aim_timer_handler, NULL);
+/******** END PERIODIC MODE ***********/
+#endif
+
 /************* PUBLIC HEADER *************/
 int MPAI_AIW_CAE_REV_Init() 
 {
@@ -133,6 +165,11 @@ int MPAI_AIW_CAE_REV_Init()
 	aim_rehabilitation_init_cb->_input_channels = NULL;
 	aim_rehabilitation_init_cb->_count_channels = 0;
 	MPAI_AIM_List[mpai_controller_aim_count++] = aim_rehabilitation_init_cb;
+
+	#ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS_PERIODIC
+			/* start periodic timer to switch status */
+			k_timer_start(&aim_timer, K_SECONDS(5), K_SECONDS(5));
+	#endif
 
 	return AIW_CAE_REV;
 }
