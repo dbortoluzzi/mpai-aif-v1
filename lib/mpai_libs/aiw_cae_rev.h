@@ -16,7 +16,6 @@
 #include <rehabilitation_aim.h>
 #include <message_store.h>
 #include <aif_controller.h>
-#include <parson.h>
 #if defined(CONFIG_MPAI_CONFIG_STORE)
     #include <config_store.h>
 #endif

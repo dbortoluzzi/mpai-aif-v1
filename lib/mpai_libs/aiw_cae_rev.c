@@ -45,6 +45,8 @@ int MPAI_AIW_CAE_REV_Init()
 {
     // create message store for the AIW
     message_store_test_case_aiw = MPAI_MessageStore_Creator(AIW_CAE_REV, MPAI_LIBS_CAE_REV_AIW_NAME, sizeof(mpai_parser_t));
+	message_store_map_element_t message_store_map_el_test_case_aiw = {._aiw_id = AIW_CAE_REV, ._message_store = message_store_test_case_aiw};
+	message_store_list[mpai_message_store_count++] = message_store_map_el_test_case_aiw;
     // link global message store to single message stores of the AIMs 
     message_store_data_mic_aim = message_store_test_case_aiw;
     message_store_sensors_aim = message_store_test_case_aiw;
@@ -243,7 +245,6 @@ bool _set_aim_data_motion(MPAI_Component_AIM_t* aim)
 		return false;
 	#else
 		aim_data_motion = aim;
-		MPAI_MessageStore_register(message_store_test_case_aiw, MPAI_AIM_Get_Subscriber(aim_data_motion), SENSORS_DATA_CHANNEL);
 		return true;
 	#endif
 }
@@ -253,8 +254,6 @@ bool _set_aim_rehabilitation(MPAI_Component_AIM_t* aim)
 		return false;
 	#else
 		aim_rehabilitation = aim;
-		MPAI_MessageStore_register(message_store_test_case_aiw, MPAI_AIM_Get_Subscriber(aim_rehabilitation), MOTION_DATA_CHANNEL);
-		MPAI_MessageStore_register(message_store_test_case_aiw, MPAI_AIM_Get_Subscriber(aim_rehabilitation), MIC_PEAK_DATA_CHANNEL);
 		return true;
 	#endif
 }

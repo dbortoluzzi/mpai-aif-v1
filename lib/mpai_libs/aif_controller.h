@@ -50,6 +50,7 @@
 
 #define MPAI_AIF_AIM_MAX 10
 #define MPAI_AIF_CHANNEL_MAX 10
+#define MPAI_AIF_AIW_MAX 10
 
 
 typedef bool (*callback_aim_t)(MPAI_Component_AIM_t*);
@@ -74,12 +75,20 @@ typedef struct _channel_map_element_t{
     subscriber_channel_t _channel;
 } channel_map_element_t;
 
+typedef struct _message_store_map_element_t{
+    int _aiw_id;
+    MPAI_AIM_MessageStore_t*  _message_store;
+} message_store_map_element_t;
+
 /* AIM initialization List */
 extern aim_initialization_cb_t* MPAI_AIM_List[MPAI_AIF_AIM_MAX];
-/* Channel List*/
+/* Channel List */
 extern channel_map_element_t message_store_channel_list[MPAI_AIF_CHANNEL_MAX];
+/* Message Store List */
+extern message_store_map_element_t message_store_list[MPAI_AIF_AIW_MAX];
 extern int mpai_controller_aim_count;
 extern int mpai_message_store_channel_count;
+extern int mpai_message_store_count;
 
 /**
  * @brief Initialize the MPAI Libs AIF Controller
