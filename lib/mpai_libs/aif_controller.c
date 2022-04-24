@@ -18,16 +18,19 @@ LOG_MODULE_REGISTER(MPAI_LIBS_AIF_CONTROLLER, LOG_LEVEL_INF);
 static int aiw_id;
 
 /************* PRIVATE HEADER *************/
-channel_map_element_t _linear_search_channel(const char *name);
 aim_initialization_cb_t *_linear_search_aim_init(const char *name);
+channel_map_element_t _linear_search_channel(const char *name);
+message_store_map_element_t _linear_search_message_store(int aiw_id);
 
 /* AIM initialization List */
 aim_initialization_cb_t *MPAI_AIM_List[MPAI_AIF_AIM_MAX] = {};
 /* Channel List*/
 channel_map_element_t message_store_channel_list[MPAI_AIF_CHANNEL_MAX] = {};
+message_store_map_element_t message_store_list[MPAI_AIF_AIW_MAX] = {};
 /* Counters */
 int mpai_controller_aim_count = 0;
 int mpai_message_store_channel_count = 0;
+int mpai_message_store_count = 0;
 
 #ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS_PERIODIC
 
@@ -539,14 +542,6 @@ mpai_error_t MPAI_AIFU_AIW_Start_From_MPAI_Store(const char *name)
 								{
 									LOG_DBG("Calling AIM %s: success", log_strdup(aim_name));
 
-									if (aim_init_cb->_input_channels != NULL)
-									{
-										for (size_t i = 0; i < aim_init_cb->_count_channels; i++)
-										{
-											LOG_INF("channel %d", aim_init_cb->_input_channels[i]);
-										}
-									}
-
 									mpai_error_t err_aim = MPAI_AIFU_AIM_Start(AIW_CAE_REV, aim_init_cb);
 									if (err_aim.code == MPAI_AIF_OK || err_aim.code == MPAI_AIM_CREATION_SKIPPED)
 									{
@@ -728,10 +723,23 @@ mpai_error_t MPAI_AIFU_AIM_GetStatus(int AIW_ID, const char *name, int *status)
 mpai_error_t MPAI_AIFU_AIM_Start(int aiw_id, aim_initialization_cb_t *aim_init)
 {
 	MPAI_Component_AIM_t *aim = MPAI_AIM_Creator(aim_init->_aim_name, aiw_id, aim_init->_subscriber, aim_init->_start, aim_init->_stop, aim_init->_resume, aim_init->_pause);
+	aim_init->_aim = aim;
 	bool post_cb_result = aim_init->_post_cb(aim);
 
 	if (post_cb_result)
 	{
+		if (aim_init->_input_channels != NULL)
+		{
+			message_store_map_element_t message_store_map_el = _linear_search_message_store(aiw_id);
+			if (message_store_map_el._message_store != NULL)
+			{
+				for (size_t i = 0; i < aim_init->_count_channels; i++)
+				{
+					LOG_INF("Registring channel %d for AIM", aim_init->_input_channels[i]);
+					MPAI_MessageStore_register(message_store_map_el._message_store, aim_init->_subscriber, aim_init->_input_channels[i]);
+				}
+			}
+		}
 		mpai_error_t err_aim = MPAI_AIM_Start(aim);
 
 		if (err_aim.code != MPAI_AIF_OK)
@@ -772,5 +780,18 @@ channel_map_element_t _linear_search_channel(const char *name)
 		}
 	}
 	channel_map_element_t empty = {};
+	return empty;
+}
+
+message_store_map_element_t _linear_search_message_store(int aiw_id)
+{
+	for (size_t i = 0; i < mpai_message_store_count; i++)
+	{
+		if (message_store_list[i]._aiw_id == aiw_id)
+		{
+			return message_store_list[i];
+		}
+	}
+	message_store_map_element_t empty = {};
 	return empty;
 }
