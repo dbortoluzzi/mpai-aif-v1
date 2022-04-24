@@ -37,7 +37,9 @@ int mpai_message_store_count = 0;
 /******** START PERIODIC MODE ***********/
 void aim_timer_switch_status(struct k_work *work)
 {
-	if (MPAI_AIM_Is_Alive(aim_produce_sensors) == true)
+	int* status = (int *)k_malloc(sizeof(int));
+	MPAI_AIFU_AIM_GetStatus(AIW_CAE_REV, MPAI_LIBS_CAE_REV_AIM_SENSORS_NAME, status);
+	if (MPAI_AIM_ALIVE == *status)
 	{
 		MPAI_AIM_Pause(aim_produce_sensors);
 	}
@@ -45,6 +47,7 @@ void aim_timer_switch_status(struct k_work *work)
 	{
 		MPAI_AIM_Resume(aim_produce_sensors);
 	}
+	k_free(status);
 }
 
 K_WORK_DEFINE(my_work, aim_timer_switch_status);
@@ -687,44 +690,24 @@ mpai_error_t MPAI_AIFU_AIW_Stop(int AIW_ID)
 	return err;
 }
 
-// TODO: generalize the implementation. At the moment, we handle only AIW CAE-REV.
-// maybe using "MPAI_AIM_List" of aiw_cae_rev.c
 mpai_error_t MPAI_AIFU_AIM_GetStatus(int AIW_ID, const char *name, int *status)
 {
-	MPAI_Component_AIM_t *aim_to_check;
-	if (AIW_ID == AIW_CAE_REV)
+	aim_initialization_cb_t* aim_init = _linear_search_aim_init(name);
+	if (aim_init != NULL)
 	{
-		if (strcmp(name, MPAI_LIBS_CAE_REV_AIM_DATA_MIC_NAME) == 0)
+		if (MPAI_AIM_Is_Alive(aim_init->_aim))
 		{
-			aim_to_check = aim_data_mic;
+			*status = MPAI_AIM_ALIVE;
 		}
-		else if (strcmp(name, MPAI_LIBS_CAE_REV_AIM_SENSORS_NAME) == 0)
+		else
 		{
-			aim_to_check = aim_produce_sensors;
+			*status = MPAI_AIM_DEAD;
 		}
-		else if (strcmp(name, MPAI_LIBS_CAE_REV_AIM_TEMP_LIMIT_NAME) == 0)
-		{
-			aim_to_check = aim_temp_limit;
-		}
-		else if (strcmp(name, MPAI_LIBS_CAE_REV_AIM_MOTION_NAME) == 0)
-		{
-			aim_to_check = aim_data_motion;
-		}
-		else if (strcmp(name, MPAI_LIBS_CAE_REV_AIM_REHABILITATION_NAME) == 0)
-		{
-			aim_to_check = aim_rehabilitation;
-		}
-	}
-	if (MPAI_AIM_Is_Alive(aim_to_check))
-	{
-		*status = MPAI_AIM_ALIVE;
-	}
-	else
-	{
-		*status = MPAI_AIM_DEAD;
+		MPAI_ERR_INIT(err, MPAI_AIF_OK);
+		return err;
 	}
 
-	MPAI_ERR_INIT(err, MPAI_AIF_OK);
+	MPAI_ERR_INIT(err, MPAI_ERROR);
 	return err;
 }
 
