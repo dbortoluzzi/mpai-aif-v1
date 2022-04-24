@@ -400,10 +400,19 @@ mpai_error_t MPAI_AIFU_Controller_Initialize()
 		// }
 		// printk("\n");
 
-		JSON_Value *json_aif = json_parse_string(aif_result);
-		char *aif_name = json_object_get_string(json_object(json_aif), "title");
-		LOG_INF("Initializing AIF with title \"%s\"...", log_strdup(aif_name));
-
+		cJSON *root_aif = cJSON_Parse(aif_result);
+		if (root_aif != NULL)
+		{
+			// read aiw
+			cJSON *aif_name_cjson = cJSON_GetObjectItem(root_aif, "title");
+			if (aif_name_cjson != NULL)
+			{
+				char *aif_name = aif_name_cjson->valuestring;
+				LOG_INF("Initializing AIF with title \"%s\"...", log_strdup(aif_name));
+			}
+			free(aif_name_cjson);
+		}
+		free(root_aif);
 		k_free(aif_result);
 	}
 
@@ -735,7 +744,7 @@ mpai_error_t MPAI_AIFU_AIM_Start(int aiw_id, aim_initialization_cb_t *aim_init)
 			{
 				for (size_t i = 0; i < aim_init->_count_channels; i++)
 				{
-					LOG_INF("Registring channel %d for AIM", aim_init->_input_channels[i]);
+					LOG_INF("Registring channel %d for AIM %s", aim_init->_input_channels[i], log_strdup(aim_init->_aim_name));
 					MPAI_MessageStore_register(message_store_map_el._message_store, aim_init->_subscriber, aim_init->_input_channels[i]);
 				}
 			}
