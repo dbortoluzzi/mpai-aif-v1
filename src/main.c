@@ -3,7 +3,7 @@
  *
  * Based on the official sample by Zephyr at https://github.com/zephyrproject-rtos/zephyr/
  *
- SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include <zephyr.h>

@@ -6,7 +6,7 @@
  *
  * Based on the official sample by Intel at https://github.com/zephyrproject-rtos/zephyr/tree/main/samples/net/sockets/coap_client
  *
- SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include <coap_connect.h>
