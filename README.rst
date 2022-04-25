@@ -41,7 +41,7 @@ AIM Consumers
 BRIEF DESCRIPTION OF USE CASE
 =====================================    
 
-A use case for testing the MPAI-AIF implementation has been identified. We call this use case the rehabilitation UC in which specific movements need to be performed in sync with the audio clue. The system listens via the ASC AIM to the audio signal for specific patterns (i.e., a low frequency impulse coming from a metronome) and simultaneously monitor the movement patterns via the Human Activity Classification HAC AIM.  An additional AIM monitors if the movement is detected as correct and executed in synchronization with the spe-cific audio pattern. In affirmative case outputs a message via the serial port AIM. 
+A use case for testing the MPAI-AIF implementation has been identified. We call this use case the rehabilitation UC in which specific movements need to be performed in sync with the audio clue. The system listens via the ASC AIM to the audio signal for specific patterns (i.e., a low frequency impulse coming from a metronome) and simultaneously monitor the movement patterns via the Human Activity Classification HAC AIM.  An additional AIM monitors if the movement is detected as correct and executed in synchronization with the spe-cific audio pattern. In affirmative case outputs a message via the serial port AIM.  The use case is described in detail in the file JSON_MPAI_UseCase.json in the repo. 
 
 
 
