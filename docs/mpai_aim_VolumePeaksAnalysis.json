@@ -1,0 +1,23 @@
+{
+  "Identifier": {
+    "ImplementerID": 1,
+    "Specification": {
+      "Name": "CAE",
+      "AIW": "REV",
+      "AIM": "VolumePeaksAnalysis",
+      "Version": "1"
+    }
+  },
+  "Description": "This AIM implements analysis transform function for CAE-REV that recognizes volume peaks from microphone array audio.",
+  "Ports": [],
+  "Topology": [],
+  "SubAIMs": [],
+  "Topology": [],
+  "Implementations": [],
+  "Documentation": [
+    {
+      "Type": "Tutorial",
+      "URI": "https://mpai.community/standards/mpai-cae/"
+    }
+  ]
+}

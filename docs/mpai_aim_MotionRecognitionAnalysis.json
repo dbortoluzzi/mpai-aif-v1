@@ -1,0 +1,23 @@
+{
+  "Identifier": {
+    "ImplementerID": 1,
+    "Specification": {
+      "Name": "CAE",
+      "AIW": "REV",
+      "AIM": "MotionRecognitionAnalysis",
+      "Version": "1"
+    }
+  },
+  "Description": "This AIM implements motion recognition analysing data from inertial unit.",
+  "Ports": [],
+  "Topology": [],
+  "SubAIMs": [],
+  "Topology": [],
+  "Implementations": [],
+  "Documentation": [
+    {
+      "Type": "Tutorial",
+      "URI": "https://mpai.community/standards/mpai-cae/"
+    }
+  ]
+}

@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mpai.community/standards/resources/MPAI-AIF/V1/AIW-AIM-metadata.schema.json",
+  "title": "CAE AIF v1 AIW/AIM metadata",
+  "Identifier": {
+    "ImplementerID": 1,
+    "Specification": {
+      "Standard": "MPAI-CAE",
+      "AIW": "CAE-REV",
+      "AIM": "CAE-REV",
+      "Version": "1"
+    }
+  },
+  "APIProfile": "Main",
+  "Description": "AIW that implements Use-Case CAE-REV (Rehabilitation Exercises Validation)",
+  "Types": [
+    {
+      "Name": "SENSORS_DATA",
+      "Type": "mpai_parser_t"
+    },
+    {
+      "Name": "MIC_BUFFER_DATA",
+      "Type": "mpai_parser_t"
+    },
+    {
+      "Name": "MIC_PEAK_DATA",
+      "Type": "mpai_parser_t"
+    },
+    {
+      "Name": "MOTION_DATA",
+      "Type": "mpai_parser_t"
+    }
+  ],
+  "Ports": [
+    {
+      "Name": "SensorsDataChannel",
+      "Direction": "InputOutput",
+      "RecordType": "SENSORS_DATA",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "MicBufferDataChannel",
+      "Direction": "InputOutput",
+      "RecordType": "MIC_BUFFER_DATA",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "MicPeakDataChannel",
+      "Direction": "InputOutput",
+      "RecordType": "MIC_PEAK_DATA",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    },
+    {
+      "Name": "MotionDataChannel",
+      "Direction": "InputOutput",
+      "RecordType": "MOTION_DATA",
+      "Technology": "Software",
+      "Protocol": "",
+      "IsRemote": false
+    }
+  ],
+  "Topology": [
+    {
+      "Output": {
+        "AIMName": "MotionRecognitionAnalysis",
+        "PortName": "SensorsDataChannel"
+      },
+      "Input": {
+        "AIMName": "ControlUnitSensorsReading",
+        "PortName": "SensorsDataChannel"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "MovementsWithAudioValidation",
+        "PortName": "MicPeakDataChannel"
+      },
+      "Input": {
+        "AIMName": "VolumePeaksAnalysis",
+        "PortName": "MicPeakDataChannel"
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "",
+        "PortName": "MicBufferDataChannel"
+      },
+      "Input": {
+        "AIMName": "VolumePeaksAnalysis",
+        "PortName": ""
+      }
+    },
+    {
+      "Output": {
+        "AIMName": "MovementsWithAudioValidation",
+        "PortName": "MotionDataChannel"
+      },
+      "Input": {
+        "AIMName": "MotionRecognitionAnalysis",
+        "PortName": "MotionDataChannel"
+      }
+    }
+  ],
+  "SubAIMs": [
+    {
+      "Name": "VolumePeaksAnalysis",
+      "Identifier": {
+        "ImplementerID": 1,
+        "Specification": {
+          "Standard": "MPAI-CAE",
+          "AIW": "CAE-REV",
+          "AIM": "VolumePeaksAnalysis",
+          "Version": "1"
+        }
+      }
+    },
+    {
+      "Name": "ControlUnitSensorsReading",
+      "Identifier": {
+        "ImplementerID": 1,
+        "Specification": {
+          "Standard": "MPAI-CAE",
+          "AIW": "CAE-REV",
+          "AIM": "ControlUnitSensorsReading",
+          "Version": "1"
+        }
+      }
+    },
+    {
+      "Name": "MotionRecognitionAnalysis",
+      "Identifier": {
+        "ImplementerID": 1,
+        "Specification": {
+          "Standard": "MPAI-CAE",
+          "AIW": "CAE-REV",
+          "AIM": "MotionRecognitionAnalysis",
+          "Version": "1"
+        }
+      }
+    },
+    {
+      "Name": "MovementsWithAudioValidation",
+      "Identifier": {
+        "ImplementerID": 1,
+        "Specification": {
+          "Standard": "MPAI-CAE",
+          "AIW": "CAE-REV",
+          "AIM": "MovementsWithAudioValidation",
+          "Version": "1"
+        }
+      }
+    }
+  ],
+  "Implementations": [
+    {
+      "BinaryName": "firmware.bin",
+      "Architecture": "arm",
+      "OperatingSystem": "Zephyr RTOS",
+      "Version": "v0.1",
+      "Source": "AIMStorage",
+      "Destination": ""
+    }
+  ],
+  "ResourcePolicies": [
+    {
+      "Name": "Memory",
+      "Minimum": "50000",
+      "Maximum": "120000",
+      "Request": "80000"
+    },
+    {
+      "Name": "CPUNumber",
+      "Minimum": "1",
+      "Maximum": "2",
+      "Request": "1"
+    },
+    {
+      "Name": "CPU:Class",
+      "Minimum": "Low",
+      "Maximum": "High",
+      "Request": "Low"
+    }
+  ],
+  "Documentation": [
+    {
+      "Type": "Tutorial",
+      "URI": "https://mpai.community/standards/mpai-cae/"
+    }
+  ]
+}

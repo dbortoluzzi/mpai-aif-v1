@@ -6,7 +6,7 @@ The software runs on the ST IoT NODE https://www.st.com/en/evaluation-tools/b-l4
 The Architecture has the following characteristics:
 - based on Zephyr operating system (based on RTOS)
 - Implements only MPAI Events (High Priority events)
-- Implements a message store according to the MPAI-AIF 1.0 spec
+- Implements messages and a message store according to the MPAI-AIF 1.0 spec
 - Implements great part the MPAI APIs in the form of libraries
 - Implements a communication interface via IP based on CoAP  (Constrained Application Protocol) that simulates the MPAI Store.
 - Parses json files according to the MPAI-AIF V 1.0 specification
@@ -48,211 +48,22 @@ An additional AIM monitors if the movement is detected as correct and executed i
 
 ### Technical overview:
 
-The *CAE-REV AIW* ("Context-based Audio Enhancement" for "Rehabilitation Exercises Validation") is described by this JSON according with MPAI-AIF specification:
-```json
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://mpai.community/standards/resources/MPAI-AIF/V1/AIW-AIM-metadata.schema.json",
-  "title": "CAE AIF v1 AIW/AIM metadata",
-  "Identifier": {
-    "ImplementerID": 1,
-    "Specification": {
-      "Standard": "MPAI-CAE",
-      "AIW": "CAE-REV",
-      "AIM": "CAE-REV",
-      "Version": "1"
-    }
-  },
-  "APIProfile": "Main",
-  "Description": "AIW that implements Use-Case CAE-REV (Rehabilitation Exercises Validation)",
-  "Types": [
-    {
-      "Name": "SENSORS_DATA",
-      "Type": "mpai_parser_t"
-    },
-    {
-      "Name": "MIC_BUFFER_DATA",
-      "Type": "mpai_parser_t"
-    },
-    {
-      "Name": "MIC_PEAK_DATA",
-      "Type": "mpai_parser_t"
-    },
-    {
-      "Name": "MOTION_DATA",
-      "Type": "mpai_parser_t"
-    }
-  ],
-  "Ports": [
-    {
-      "Name": "SensorsDataChannel",
-      "Direction": "InputOutput",
-      "RecordType": "SENSORS_DATA",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "MicBufferDataChannel",
-      "Direction": "InputOutput",
-      "RecordType": "MIC_BUFFER_DATA",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "MicPeakDataChannel",
-      "Direction": "InputOutput",
-      "RecordType": "MIC_PEAK_DATA",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    },
-    {
-      "Name": "MotionDataChannel",
-      "Direction": "InputOutput",
-      "RecordType": "MOTION_DATA",
-      "Technology": "Software",
-      "Protocol": "",
-      "IsRemote": false
-    }
-  ],
-  "Topology": [
-    {
-      "Output": {
-        "AIMName": "MotionRecognitionAnalysis",
-        "PortName": "SensorsDataChannel"
-      },
-      "Input": {
-        "AIMName": "ControlUnitSensorsReading",
-        "PortName": "SensorsDataChannel"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "MovementsWithAudioValidation",
-        "PortName": "MicPeakDataChannel"
-      },
-      "Input": {
-        "AIMName": "VolumePeaksAnalysis",
-        "PortName": "MicPeakDataChannel"
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "",
-        "PortName": "MicBufferDataChannel"
-      },
-      "Input": {
-        "AIMName": "VolumePeaksAnalysis",
-        "PortName": ""
-      }
-    },
-    {
-      "Output": {
-        "AIMName": "MovementsWithAudioValidation",
-        "PortName": "MotionDataChannel"
-      },
-      "Input": {
-        "AIMName": "MotionRecognitionAnalysis",
-        "PortName": "MotionDataChannel"
-      }
-    }
-  ],
-  "SubAIMs": [
-    {
-      "Name": "VolumePeaksAnalysis",
-      "Identifier": {
-        "ImplementerID": 1,
-        "Specification": {
-          "Standard": "MPAI-CAE",
-          "AIW": "CAE-REV",
-          "AIM": "VolumePeaksAnalysis",
-          "Version": "1"
-        }
-      }
-    },
-    {
-      "Name": "ControlUnitSensorsReading",
-      "Identifier": {
-        "ImplementerID": 1,
-        "Specification": {
-          "Standard": "MPAI-CAE",
-          "AIW": "CAE-REV",
-          "AIM": "ControlUnitSensorsReading",
-          "Version": "1"
-        }
-      }
-    },
-    {
-      "Name": "MotionRecognitionAnalysis",
-      "Identifier": {
-        "ImplementerID": 1,
-        "Specification": {
-          "Standard": "MPAI-CAE",
-          "AIW": "CAE-REV",
-          "AIM": "MotionRecognitionAnalysis",
-          "Version": "1"
-        }
-      }
-    },
-    {
-      "Name": "MovementsWithAudioValidation",
-      "Identifier": {
-        "ImplementerID": 1,
-        "Specification": {
-          "Standard": "MPAI-CAE",
-          "AIW": "CAE-REV",
-          "AIM": "MovementsWithAudioValidation",
-          "Version": "1"
-        }
-      }
-    }
-  ],
-  "Implementations": [
-    {
-      "BinaryName": "firmware.bin",
-      "Architecture": "arm",
-      "OperatingSystem": "Zephyr RTOS",
-      "Version": "v0.1",
-      "Source": "AIMStorage",
-      "Destination": ""
-    }
-  ],
-  "ResourcePolicies": [
-    {
-      "Name": "Memory",
-      "Minimum": "50000",
-      "Maximum": "120000",
-      "Request": "80000"
-    },
-    {
-      "Name": "CPUNumber",
-      "Minimum": "1",
-      "Maximum": "2",
-      "Request": "1"
-    },
-    {
-      "Name": "CPU:Class",
-      "Minimum": "Low",
-      "Maximum": "High",
-      "Request": "Low"
-    }
-  ],
-  "Documentation": [
-    {
-      "Type": "Tutorial",
-      "URI": "https://mpai.community/standards/mpai-cae/"
-    }
-  ]
-}
-```
+The *CAE-REV AIW* ("Context-based Audio Enhancement" for "Rehabilitation Exercises Validation") is described by this JSON according with MPAI-AIF specification 1.0 and can be downloaded [here](/docs/mpai_aiw_cae_rev.json): 
 
-and consists of 4 AIMs:
-1. *VolumePeaksAnalysis*: uses microphones to identify audio pattern (in this case volume peaks) and publish it to the channel `MicPeakDataChannel` of the message store
-2. *ControlUnitSensorsReading*: reads data from all device sensors (like temperature, acceleration, pressure and others) and publish the values to the channel `SensorsDataChannel` of the message store
-3. *MotionRecognitionAnalysis*:  uses data from inertial unit, coming from `SensorsDataChannel`, to detect motion events such as start, stop etc and publish them to channel `MotionDataChannel` of the message store
-4. *MovementsWithAudioValidation*: uses data, cross-referencing it between `MotionDataChannel` and `MicPeakDataChannel`, to recognize if the movement is done in a correct way. In particular, detects a stop event and waits for a volume peak at maximum for 1sec (configurable). It also blinks alternately the leds to alert the error.
+The MPAI AIW consists of 4 AIMs:
+1. *VolumePeaksAnalysis* ([json](/docs/mpai_aim_VolumePeaksAnalysis.json)): uses microphones to identify audio pattern (in this case volume peaks) and publish it to the channel `MicPeakDataChannel` of the message store
+2. *ControlUnitSensorsReading* ([json](/docs/mpai_aim_ControlUnitSensorsReading.json)): reads data from all device sensors (like temperature, acceleration, pressure and others) and publish the values to the channel `SensorsDataChannel` of the message store
+3. *MotionRecognitionAnalysis* ([json](/docs/mpai_aim_MotionRecognitionAnalysis.json)):  uses data from inertial unit, coming from `SensorsDataChannel`, to detect motion events such as start, stop etc and publish them to channel `MotionDataChannel` of the message store
+4. *MovementsWithAudioValidation* ([json](/docs/mpai_aim_MovementsWithAudioValidation.json)): uses data, cross-referencing it between `MotionDataChannel` and `MicPeakDataChannel`, to recognize if the movement is done in a correct way. In particular, detects a stop event and waits for a volume peak at maximum for 1sec (configurable). It also blinks alternately the leds to alert the error.
+
+# MPAI STORE SIMULATION
+Currently the MPAI STORE functionality is simulated via the delivery over CoAP/IP of the description of the use case in json. The corresponding AIMs are already resident on the board. A CoAP server that simulates the MPAI STORE is provided in Java.
+The source code can be found [here](https://github.com/dbortoluzzi/mpai_store_coap_server) or downloaded [here](/executable/coap-server-0.0.1-SNAPSHOT.jar).
+In order to run it:
+
+```bash
+java -Dmpai.store.host=$IP_ADDRESS -jar coap-server-0.0.1-SNAPSHOT.jar
+```
 
 # INSTALLATION  
 1. Install PlatformIO Core [here](http://docs.platformio.org/page/core.html)
