@@ -21,20 +21,6 @@ subscriber_channel_t MIC_BUFFER_DATA_CHANNEL;
 subscriber_channel_t MIC_PEAK_DATA_CHANNEL;
 subscriber_channel_t MOTION_DATA_CHANNEL;
 
-/* AIMs to be configured */
-MPAI_Component_AIM_t* aim_data_mic = NULL;
-MPAI_Component_AIM_t* aim_produce_sensors = NULL;
-MPAI_Component_AIM_t* aim_temp_limit = NULL;
-MPAI_Component_AIM_t* aim_data_motion = NULL;
-MPAI_Component_AIM_t* aim_rehabilitation = NULL;
-
-/* callbacks used after AIM creation */
-bool _set_aim_data_mic(MPAI_Component_AIM_t* aim);
-bool _set_aim_produce_sensors(MPAI_Component_AIM_t* aim);
-bool _set_aim_data_motion(MPAI_Component_AIM_t* aim);
-bool _set_aim_rehabilitation(MPAI_Component_AIM_t* aim);
-bool _set_aim_temp_limit(MPAI_Component_AIM_t* aim);
-
 #ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS_PERIODIC
 
 /******** START PERIODIC MODE ***********/
@@ -98,8 +84,6 @@ int MPAI_AIW_CAE_REV_Init()
 	// add aims to list with related callback
 	aim_initialization_cb_t* aim_data_mic_init_cb = (aim_initialization_cb_t *) k_malloc(sizeof(aim_initialization_cb_t));
 	aim_data_mic_init_cb->_aim_name = MPAI_LIBS_CAE_REV_AIM_DATA_MIC_NAME;
-	aim_data_mic_init_cb->_aim = aim_data_mic;
-	aim_data_mic_init_cb->_post_cb = _set_aim_data_mic;
 	aim_data_mic_init_cb->_subscriber = data_mic_aim_subscriber;
 	aim_data_mic_init_cb->_start = data_mic_aim_start;
 	aim_data_mic_init_cb->_stop = data_mic_aim_stop;
@@ -111,8 +95,6 @@ int MPAI_AIW_CAE_REV_Init()
 
 	aim_initialization_cb_t* aim_data_sensors_init_cb = (aim_initialization_cb_t *) k_malloc(sizeof(aim_initialization_cb_t));
 	aim_data_sensors_init_cb->_aim_name = MPAI_LIBS_CAE_REV_AIM_SENSORS_NAME;
-	aim_data_sensors_init_cb->_aim = aim_produce_sensors;
-	aim_data_sensors_init_cb->_post_cb = _set_aim_produce_sensors;
 	aim_data_sensors_init_cb->_subscriber = sensors_aim_subscriber;
 	aim_data_sensors_init_cb->_start = sensors_aim_start;
 	aim_data_sensors_init_cb->_stop = sensors_aim_stop;
@@ -124,8 +106,6 @@ int MPAI_AIW_CAE_REV_Init()
 
 	aim_initialization_cb_t* aim_temp_limit_init_cb = (aim_initialization_cb_t *) k_malloc(sizeof(aim_initialization_cb_t));
 	aim_temp_limit_init_cb->_aim_name = MPAI_LIBS_CAE_REV_AIM_TEMP_LIMIT_NAME;
-	aim_temp_limit_init_cb->_aim = aim_produce_sensors;
-	aim_temp_limit_init_cb->_post_cb = _set_aim_temp_limit;
 	aim_temp_limit_init_cb->_subscriber = temp_limit_aim_subscriber;
 	aim_temp_limit_init_cb->_start = temp_limit_aim_start;
 	aim_temp_limit_init_cb->_stop = temp_limit_aim_stop;
@@ -137,8 +117,6 @@ int MPAI_AIW_CAE_REV_Init()
 
 	aim_initialization_cb_t* aim_motion_init_cb = (aim_initialization_cb_t *) k_malloc(sizeof(aim_initialization_cb_t));
 	aim_motion_init_cb->_aim_name = MPAI_LIBS_CAE_REV_AIM_MOTION_NAME;
-	aim_motion_init_cb->_aim = aim_data_motion;
-	aim_motion_init_cb->_post_cb = _set_aim_data_motion;
 	aim_motion_init_cb->_subscriber = motion_aim_subscriber;
 	aim_motion_init_cb->_start = motion_aim_start;
 	aim_motion_init_cb->_stop = motion_aim_stop;
@@ -150,8 +128,6 @@ int MPAI_AIW_CAE_REV_Init()
 
 	aim_initialization_cb_t* aim_rehabilitation_init_cb = (aim_initialization_cb_t *) k_malloc(sizeof(aim_initialization_cb_t));
 	aim_rehabilitation_init_cb->_aim_name = MPAI_LIBS_CAE_REV_AIM_REHABILITATION_NAME;
-	aim_rehabilitation_init_cb->_aim = aim_rehabilitation;
-	aim_rehabilitation_init_cb->_post_cb = _set_aim_rehabilitation;
 	aim_rehabilitation_init_cb->_subscriber = rehabilitation_aim_subscriber;
 	aim_rehabilitation_init_cb->_start = rehabilitation_aim_start;
 	aim_rehabilitation_init_cb->_stop = rehabilitation_aim_stop;
@@ -172,57 +148,57 @@ int MPAI_AIW_CAE_REV_Init()
 void MPAI_AIW_CAE_REV_Stop() 
 {
 	#ifdef CONFIG_MPAI_AIM_VALIDATION_MOVEMENT_WITH_AUDIO
-		MPAI_AIM_Stop(aim_rehabilitation);
+		MPAI_AIFM_AIM_Stop(MPAI_LIBS_CAE_REV_AIM_REHABILITATION_NAME);
 	#endif
 	#ifdef CONFIG_MPAI_AIM_MOTION_RECOGNITION_ANALYSIS
-		MPAI_AIM_Stop(aim_data_motion);
+		MPAI_AIFM_AIM_Stop(MPAI_LIBS_CAE_REV_AIM_MOTION_NAME);
 	#endif
 	#ifdef CONFIG_MPAI_AIM_TEMP_LIMIT
-		MPAI_AIM_Stop(aim_temp_limit);
+		MPAI_AIFM_AIM_Stop(MPAI_LIBS_CAE_REV_AIM_TEMP_LIMIT_NAME);
 	#endif
 	#ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS
-		MPAI_AIM_Stop(aim_produce_sensors);
+		MPAI_AIFM_AIM_Stop(MPAI_LIBS_CAE_REV_AIM_SENSORS_NAME);
 	#endif
 	#ifdef CONFIG_MPAI_AIM_VOLUME_PEAKS_ANALYSIS
-		MPAI_AIM_Stop(aim_data_mic);
+		MPAI_AIFM_AIM_Stop(MPAI_LIBS_CAE_REV_AIM_DATA_MIC_NAME);
 	#endif
 }
 
 void MPAI_AIW_CAE_REV_Resume()
 {
 	#ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS
-		MPAI_AIM_Resume(aim_produce_sensors);
+		MPAI_AIFM_AIM_Resume(MPAI_LIBS_CAE_REV_AIM_SENSORS_NAME);
 	#endif
 	#ifdef CONFIG_MPAI_AIM_VOLUME_PEAKS_ANALYSIS
-		MPAI_AIM_Resume(aim_data_mic);
+		MPAI_AIFM_AIM_Resume(MPAI_LIBS_CAE_REV_AIM_DATA_MIC_NAME);
 	#endif
 	#ifdef CONFIG_MPAI_AIM_TEMP_LIMIT
-		MPAI_AIM_Resume(aim_temp_limit);
+		MPAI_AIFM_AIM_Resume(MPAI_LIBS_CAE_REV_AIM_TEMP_LIMIT_NAME);
 	#endif
 	#ifdef CONFIG_MPAI_AIM_VALIDATION_MOVEMENT_WITH_AUDIO
-		MPAI_AIM_Resume(aim_rehabilitation);
+		MPAI_AIFM_AIM_Resume(MPAI_LIBS_CAE_REV_AIM_REHABILITATION_NAME);
 	#endif
 	#ifdef CONFIG_MPAI_AIM_MOTION_RECOGNITION_ANALYSIS
-		MPAI_AIM_Resume(aim_data_motion);
+		MPAI_AIFM_AIM_Resume(MPAI_LIBS_CAE_REV_AIM_MOTION_NAME);
 	#endif
 }
 
 void MPAI_AIW_CAE_REV_Pause()
 {
 	#ifdef CONFIG_MPAI_AIM_VALIDATION_MOVEMENT_WITH_AUDIO
-		MPAI_AIM_Pause(aim_rehabilitation);
+		MPAI_AIFM_AIM_Pause(MPAI_LIBS_CAE_REV_AIM_REHABILITATION_NAME);
 	#endif
 	#ifdef CONFIG_MPAI_AIM_MOTION_RECOGNITION_ANALYSIS
-		MPAI_AIM_Pause(aim_data_motion);
+		MPAI_AIFM_AIM_Pause(MPAI_LIBS_CAE_REV_AIM_MOTION_NAME);
 	#endif
 	#ifdef CONFIG_MPAI_AIM_TEMP_LIMIT
-		MPAI_AIM_Pause(aim_temp_limit);
+		MPAI_AIFM_AIM_Pause(MPAI_LIBS_CAE_REV_AIM_TEMP_LIMIT_NAME);
 	#endif
 	#ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS
-		MPAI_AIM_Pause(aim_produce_sensors);
+		MPAI_AIFM_AIM_Pause(MPAI_LIBS_CAE_REV_AIM_SENSORS_NAME);
 	#endif
 	#ifdef CONFIG_MPAI_AIM_VOLUME_PEAKS_ANALYSIS
-		MPAI_AIM_Pause(aim_data_mic);
+		MPAI_AIFM_AIM_Pause(MPAI_LIBS_CAE_REV_AIM_DATA_MIC_NAME);
 	#endif
 }
 
@@ -235,66 +211,33 @@ void DESTROY_MPAI_AIW_CAE_REV()
 	MPAI_MessageStore_Destructor(message_store_test_case_aiw);
 
 	#ifdef CONFIG_MPAI_AIM_VALIDATION_MOVEMENT_WITH_AUDIO
-		MPAI_AIM_Destructor(aim_rehabilitation);
+		{
+			aim_initialization_cb_t* aim_init = MPAI_AIFU_AIM_Find_AIM_Init_Config(MPAI_LIBS_CAE_REV_AIM_REHABILITATION_NAME);
+			MPAI_AIM_Destructor(aim_init->_aim);
+		}
 	#endif
 	#ifdef CONFIG_MPAI_AIM_MOTION_RECOGNITION_ANALYSIS
-		MPAI_AIM_Destructor(aim_data_motion);
+		{
+			aim_initialization_cb_t* aim_init = MPAI_AIFU_AIM_Find_AIM_Init_Config(MPAI_LIBS_CAE_REV_AIM_MOTION_NAME);
+			MPAI_AIM_Destructor(aim_init->_aim);
+		}
 	#endif
 	#ifdef CONFIG_MPAI_AIM_TEMP_LIMIT
-		MPAI_AIM_Destructor(aim_temp_limit);
+		{
+			aim_initialization_cb_t* aim_init = MPAI_AIFU_AIM_Find_AIM_Init_Config(MPAI_LIBS_CAE_REV_AIM_TEMP_LIMIT_NAME);
+			MPAI_AIM_Destructor(aim_init->_aim);
+		}
 	#endif
 	#ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS
-		MPAI_AIM_Destructor(aim_produce_sensors);
+		{
+			aim_initialization_cb_t* aim_init = MPAI_AIFU_AIM_Find_AIM_Init_Config(MPAI_LIBS_CAE_REV_AIM_SENSORS_NAME);
+			MPAI_AIM_Destructor(aim_init->_aim);
+		}
 	#endif
 	#ifdef CONFIG_MPAI_AIM_VOLUME_PEAKS_ANALYSIS
-		MPAI_AIM_Destructor(aim_data_mic);
-	#endif
-
-}
-
-bool _set_aim_data_mic(MPAI_Component_AIM_t* aim)
-{
-	#ifndef CONFIG_MPAI_AIM_VOLUME_PEAKS_ANALYSIS
-		return false;
-	#else
-		aim_data_mic = aim;
-		return true;
-	#endif
-}
-bool _set_aim_produce_sensors(MPAI_Component_AIM_t* aim)
-{
-
-	#ifndef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS
-		return false;
-	#else
-		aim_produce_sensors = aim;
-		return true;
-	#endif
-}
-bool _set_aim_data_motion(MPAI_Component_AIM_t* aim)
-{
-	#ifndef CONFIG_MPAI_AIM_MOTION_RECOGNITION_ANALYSIS
-		return false;
-	#else
-		aim_data_motion = aim;
-		return true;
-	#endif
-}
-bool _set_aim_rehabilitation(MPAI_Component_AIM_t* aim)
-{
-	#ifndef CONFIG_MPAI_AIM_VALIDATION_MOVEMENT_WITH_AUDIO
-		return false;
-	#else
-		aim_rehabilitation = aim;
-		return true;
-	#endif
-}
-bool _set_aim_temp_limit(MPAI_Component_AIM_t* aim)
-{
-	#ifndef CONFIG_MPAI_AIM_TEMP_LIMIT
-		return false;
-	#else
-		aim_temp_limit = aim;
-		return true;
+		{
+			aim_initialization_cb_t* aim_init = MPAI_AIFU_AIM_Find_AIM_Init_Config(MPAI_LIBS_CAE_REV_AIM_DATA_MIC_NAME);
+			MPAI_AIM_Destructor(aim_init->_aim);
+		}
 	#endif
 }

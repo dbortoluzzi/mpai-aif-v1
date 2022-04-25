@@ -35,7 +35,7 @@ Implementing the MPAI-AIF specification, the system at the boot time:
     - Reads the configuration from MPAI Store    
     - Initialize it
     - Start it
-    
+
 
 ## BRIEF DESCRIPTION OF USE CASE
 
@@ -293,4 +293,4 @@ and consists of 4 AIMs:
 ```
 
 # License
-License information for each components of this example is detailed in [LICENCE.MD](/LICENCE.md)
+License information for each components of this example is detailed in [LICENSE.MD](/LICENSE.md)

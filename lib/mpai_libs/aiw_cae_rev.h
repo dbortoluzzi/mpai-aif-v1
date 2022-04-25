@@ -51,13 +51,6 @@ extern subscriber_channel_t MIC_BUFFER_DATA_CHANNEL;
 extern subscriber_channel_t MIC_PEAK_DATA_CHANNEL;
 extern subscriber_channel_t MOTION_DATA_CHANNEL;
 
-/* AIMs to be configured */
-extern MPAI_Component_AIM_t* aim_produce_sensors;
-extern MPAI_Component_AIM_t* aim_temp_limit;
-extern MPAI_Component_AIM_t* aim_data_mic;
-extern MPAI_Component_AIM_t* aim_data_motion;
-extern MPAI_Component_AIM_t* aim_rehabilitation;
-
 /**
  * @brief Initialize AIW Test Case (CAE-REV)
  * 
