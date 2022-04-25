@@ -89,7 +89,6 @@ int process_simple_coap_reply(uint8_t * data_result);
  */
 int process_large_coap_reply(uint8_t * data_result);
 
-int process_obs_coap_reply(void);
 
 /**
  * @brief Rebuild entire large coap msgs
@@ -97,5 +96,9 @@ int process_obs_coap_reply(void);
  * @return char* 
  */
 char* get_large_coap_msgs(const char * const * large_path);
+
+// TODO: to test observer
+int register_observer(const char * const * obs_path);
+int process_obs_coap_reply(const char * const * obs_path);
 
 #endif /* COAP_CONNECT_H_ */

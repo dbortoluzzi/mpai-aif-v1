@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef MPAI_LIBS_SENSORS_AIM_H
-#define MPAI_LIBS_SENSORS_AIM_H
+#ifndef MISC_UTILS_H
+#define MISC_UTILS_H
 
 #include <stdlib.h>
 #include <stdio.h>

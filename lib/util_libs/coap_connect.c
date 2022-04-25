@@ -29,6 +29,7 @@ struct coap_block_context blk_ctx;
 
 /*** PRIVATE ***/
 void extract_data_result(struct coap_packet packet, uint8_t* data_result, bool add_termination);
+int send_obs_reply_ack(uint16_t id, uint8_t *token, uint8_t tkl, const char * const * obs_path);
 
 /*** PUBLIC ***/
 int get_coap_sock(void)
@@ -195,7 +196,7 @@ end:
 	return ret;
 }
 
-int process_obs_coap_reply(void)
+int process_obs_coap_reply(const char * const *  obs_path)
 {
 	struct coap_packet reply;
 	uint16_t id;
@@ -244,7 +245,7 @@ int process_obs_coap_reply(void)
 	if (type == COAP_TYPE_ACK) {
 		ret = 0;
 	} else if (type == COAP_TYPE_CON) {
-		ret = send_obs_reply_ack(id, token, tkl);
+		ret = send_obs_reply_ack(id, token, tkl, obs_path);
 	}
 end:
 	k_free(data);
@@ -435,4 +436,219 @@ void extract_data_result(struct coap_packet packet, uint8_t* data_result, bool a
 	else {
 		memset(data_result, 0, MAX_COAP_MSG_LEN);
 	} 
+}
+
+int send_simple_coap_msgs_and_wait_for_reply(uint8_t * data_result, const char * const * simple_path)
+{
+    uint8_t test_type = 0U;
+    int r;
+
+    while (1) {
+        switch (test_type) {
+        case 0:
+            /* Test CoAP GET method */
+            printk("\nCoAP client GET\n");
+            r = send_simple_coap_request(COAP_METHOD_GET, simple_path);
+            if (r < 0) {
+                return r;
+            }
+
+            break;
+        case 1:
+            /* Test CoAP PUT method */
+            printk("\nCoAP client PUT\n");
+            r = send_simple_coap_request(COAP_METHOD_PUT, simple_path);
+            if (r < 0) {
+                return r;
+            }
+
+            break;
+        case 2:
+            /* Test CoAP POST method*/
+            printk("\nCoAP client POST\n");
+            r = send_simple_coap_request(COAP_METHOD_POST, simple_path);
+            if (r < 0) {
+                return r;
+            }
+
+            break;
+        case 3:
+            /* Test CoAP DELETE method*/
+            printk("\nCoAP client DELETE\n");
+            r = send_simple_coap_request(COAP_METHOD_DELETE, simple_path);
+            if (r < 0) {
+                return r;
+            }
+
+            break;
+        default:
+            return 0;
+        }
+
+        memset(data_result, 0, MAX_COAP_MSG_LEN);
+        r = process_simple_coap_reply(data_result);
+        if (r < 0) {
+            return r;
+        }
+        test_type++;
+    }
+
+    return 0;
+}
+
+int send_obs_reply_ack(uint16_t id, uint8_t *token, uint8_t tkl, const char * const * obs_path)
+{
+    struct coap_packet request;
+    uint8_t *data;
+    int r;
+
+    data = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN);
+    if (!data) {
+        return -ENOMEM;
+    }
+
+    r = coap_packet_init(&request, data, MAX_COAP_MSG_LEN,
+                COAP_VERSION_1, COAP_TYPE_ACK, tkl, token, 0, id);
+    if (r < 0) {
+        LOG_ERR("Failed to init CoAP message");
+        goto end;
+    }
+
+    net_hexdump("Request", request.data, request.offset);
+
+    r = send(get_coap_sock(), request.data, request.offset, 0);
+end:
+    k_free(data);
+
+    return r;
+}
+
+int send_obs_coap_request(const char * const * obs_path)
+{
+    struct coap_packet request;
+    const char * const *p;
+    uint8_t *data;
+    int r;
+
+    data = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN);
+    if (!data) {
+        return -ENOMEM;
+    }
+
+    r = coap_packet_init(&request, data, MAX_COAP_MSG_LEN,
+                COAP_VERSION_1, COAP_TYPE_CON,
+                COAP_TOKEN_MAX_LEN, coap_next_token(),
+                COAP_METHOD_GET, coap_next_id());
+    if (r < 0) {
+        LOG_ERR("Failed to init CoAP message");
+        goto end;
+    }
+
+    r = coap_append_option_int(&request, COAP_OPTION_OBSERVE, 0);
+    if (r < 0) {
+        LOG_ERR("Failed to append Observe option");
+        goto end;
+    }
+
+    for (p = obs_path; p && *p; p++) {
+        r = coap_packet_append_option(&request, COAP_OPTION_URI_PATH,
+                        *p, strlen(*p));
+        if (r < 0) {
+            LOG_ERR("Unable add option to request");
+            goto end;
+        }
+    }
+
+    net_hexdump("Request", request.data, request.offset);
+
+    r = send(get_coap_sock(), request.data, request.offset, 0);
+
+end:
+    k_free(data);
+
+    return r;
+}
+
+int send_obs_reset_coap_request(const char * const * obs_path)
+{
+    struct coap_packet request;
+    const char * const *p;
+    uint8_t *data;
+    int r;
+
+    data = (uint8_t *)k_malloc(MAX_COAP_MSG_LEN);
+    if (!data) {
+        return -ENOMEM;
+    }
+
+    r = coap_packet_init(&request, data, MAX_COAP_MSG_LEN,
+                COAP_VERSION_1, COAP_TYPE_RESET,
+                COAP_TOKEN_MAX_LEN, coap_next_token(),
+                0, coap_next_id());
+    if (r < 0) {
+        LOG_ERR("Failed to init CoAP message");
+        goto end;
+    }
+
+    r = coap_append_option_int(&request, COAP_OPTION_OBSERVE, 0);
+    if (r < 0) {
+        LOG_ERR("Failed to append Observe option");
+        goto end;
+    }
+
+    for (p = obs_path; p && *p; p++) {
+        r = coap_packet_append_option(&request, COAP_OPTION_URI_PATH,
+                        *p, strlen(*p));
+        if (r < 0) {
+            LOG_ERR("Unable add option to request");
+            goto end;
+        }
+    }
+
+    net_hexdump("Request", request.data, request.offset);
+
+    r = send(get_coap_sock(), request.data, request.offset, 0);
+
+end:
+    k_free(data);
+
+    return r;
+}
+
+int register_observer(const char * const * obs_path)
+{
+    uint8_t counter = 0U;
+    int r;
+
+    while (1) {
+        /* Test CoAP OBS GET method */
+        if (!counter) {
+            printk("\nCoAP client OBS GET\n");
+            r = send_obs_coap_request(obs_path);
+            if (r < 0) {
+                return r;
+            }
+        } else {
+            printk("\nCoAP OBS Notification\n");
+        }
+
+        r = process_obs_coap_reply(obs_path);
+        if (r < 0) {
+            return r;
+        }
+
+        counter++;
+
+        /* Unregister */
+        if (counter == 5U) {
+            /* TODO: Functionality can be verified byt waiting for
+            * some time and make sure client shouldn't receive
+            * any notifications. If client still receives
+            * notifications means, Observer is not removed.
+            */
+            return send_obs_reset_coap_request(obs_path);
+        }
+    }
+
+    return 0;
 }
