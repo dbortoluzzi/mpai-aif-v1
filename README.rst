@@ -47,7 +47,9 @@ JSON for the USE CASE
 =====================================    
 The use case is described in detail in the file JSON_MPAI_UseCase.json in the repo. The json is structured acoring to the MPAI-AIF specification 1.0
 
-
+MPAI STORE SIMULATION
+=====================================  
+Currently the MPAI STORE functionality is simulated via the delivery over CoAP/IP of the description of the use case. The corresponding AIMs are already resident on the board. a CoAP server that simulates the MPAI STORE is provided in Java
 
 INSTALLATION
 =====================================    
