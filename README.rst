@@ -49,7 +49,12 @@ The use case is described in detail in the file JSON_MPAI_UseCase.json in the re
 
 MPAI STORE SIMULATION
 =====================================  
-Currently the MPAI STORE functionality is simulated via the delivery over CoAP/IP of the description of the use case. The corresponding AIMs are already resident on the board. a CoAP server that simulates the MPAI STORE is provided in Java
+Currently the MPAI STORE functionality is simulated via the delivery over CoAP/IP of the description of the use case. The corresponding AIMs are already resident on the board. a CoAP server that simulates the MPAI STORE is provided in Java.
+in order to run it:
+
+.. code-block:: bash
+
+      java -Dmpai.store.host=$IP_ADDRESS -jar coap-server-0.0.1-SNAPSHOT.jar
 
 INSTALLATION
 =====================================    
