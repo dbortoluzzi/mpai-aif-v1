@@ -45,7 +45,7 @@ A use case for testing the MPAI-AIF implementation has been identified. We call 
 
 JSON for the USE CASE
 =====================================    
-The use case is described in detail in the file JSON_MPAI_UseCase.json in the repo. The json is structured acoring to the MPAI-AIF specification 1.0
+The use case is described in detail in the file JSON_MPAI_UseCase.json in the repo. The json is structured according to the MPAI-AIF specification 1.0
 
 MPAI STORE SIMULATION
 =====================================  
