@@ -10,7 +10,7 @@ The Architecture has the following characteristics
 
 •	Implements only MPAI Events (High Priority events)
 
-•	Implements a message store according to the MPAI-AIF 1.0 spec
+•	Implements messages and a message store according to the MPAI-AIF 1.0 spec
 
 •	Implements great part the MPAI APIs in the form of libraries
 
