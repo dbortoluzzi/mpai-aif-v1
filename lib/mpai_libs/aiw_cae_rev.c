@@ -212,31 +212,31 @@ void DESTROY_MPAI_AIW_CAE_REV()
 
 	#ifdef CONFIG_MPAI_AIM_VALIDATION_MOVEMENT_WITH_AUDIO
 		{
-			aim_initialization_cb_t* aim_init = MPAI_AIFU_AIM_Find_AIM_Init_Config(MPAI_LIBS_CAE_REV_AIM_REHABILITATION_NAME);
+			aim_initialization_cb_t* aim_init = MPAI_Controller_Find_AIM_Init_Config(MPAI_LIBS_CAE_REV_AIM_REHABILITATION_NAME);
 			MPAI_AIM_Destructor(aim_init->_aim);
 		}
 	#endif
 	#ifdef CONFIG_MPAI_AIM_MOTION_RECOGNITION_ANALYSIS
 		{
-			aim_initialization_cb_t* aim_init = MPAI_AIFU_AIM_Find_AIM_Init_Config(MPAI_LIBS_CAE_REV_AIM_MOTION_NAME);
+			aim_initialization_cb_t* aim_init = MPAI_Controller_Find_AIM_Init_Config(MPAI_LIBS_CAE_REV_AIM_MOTION_NAME);
 			MPAI_AIM_Destructor(aim_init->_aim);
 		}
 	#endif
 	#ifdef CONFIG_MPAI_AIM_TEMP_LIMIT
 		{
-			aim_initialization_cb_t* aim_init = MPAI_AIFU_AIM_Find_AIM_Init_Config(MPAI_LIBS_CAE_REV_AIM_TEMP_LIMIT_NAME);
+			aim_initialization_cb_t* aim_init = MPAI_Controller_Find_AIM_Init_Config(MPAI_LIBS_CAE_REV_AIM_TEMP_LIMIT_NAME);
 			MPAI_AIM_Destructor(aim_init->_aim);
 		}
 	#endif
 	#ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS
 		{
-			aim_initialization_cb_t* aim_init = MPAI_AIFU_AIM_Find_AIM_Init_Config(MPAI_LIBS_CAE_REV_AIM_SENSORS_NAME);
+			aim_initialization_cb_t* aim_init = MPAI_Controller_Find_AIM_Init_Config(MPAI_LIBS_CAE_REV_AIM_SENSORS_NAME);
 			MPAI_AIM_Destructor(aim_init->_aim);
 		}
 	#endif
 	#ifdef CONFIG_MPAI_AIM_VOLUME_PEAKS_ANALYSIS
 		{
-			aim_initialization_cb_t* aim_init = MPAI_AIFU_AIM_Find_AIM_Init_Config(MPAI_LIBS_CAE_REV_AIM_DATA_MIC_NAME);
+			aim_initialization_cb_t* aim_init = MPAI_Controller_Find_AIM_Init_Config(MPAI_LIBS_CAE_REV_AIM_DATA_MIC_NAME);
 			MPAI_AIM_Destructor(aim_init->_aim);
 		}
 	#endif

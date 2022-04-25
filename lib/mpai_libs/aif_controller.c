@@ -167,32 +167,6 @@ mpai_error_t MPAI_AIFU_Controller_Destroy()
 	return err;
 }
 
-#if defined(CONFIG_MPAI_CONFIG_STORE)
-mpai_error_t MPAI_AIFU_AIW_Start_Loading_From_MPAI_Store(const char *name, int aiw_id)
-{
-	char *aiw_result = MPAI_Config_Store_Get_AIW(name);
-	// printk("AIW RESULT: \n");
-	// for ( size_t i = 0; i < strlen(aiw_result); i++ )
-	// {
-	// 	printk("%c", (char)aiw_result[i]);
-	// 	k_sleep(K_MSEC(5));
-	// }
-	// printk("\n");
-
-	bool aiw_ok = MPAI_Metadata_Parser_Parse_AIW_JSON(aiw_result, aiw_id, _start_aim_after_parsing_callback, _update_input_channels_after_parsing_callback);
-	if (aiw_ok)
-	{
-		MPAI_ERR_INIT(err, MPAI_AIF_OK);
-		return err;
-	}
-	else
-	{
-		MPAI_ERR_INIT(err, MPAI_ERROR);
-		return err;
-	}
-}
-#endif
-
 mpai_error_t MPAI_AIFU_AIW_Start(const char *name, int *AIW_ID)
 {
 	LOG_INF("Starting AIW %s...", log_strdup(name));
@@ -204,7 +178,7 @@ mpai_error_t MPAI_AIFU_AIW_Start(const char *name, int *AIW_ID)
 		*AIW_ID = aiw_id;
 
 #if defined(CONFIG_MPAI_CONFIG_STORE)
-		mpai_error_t err_aiw = MPAI_AIFU_AIW_Start_Loading_From_MPAI_Store(name, aiw_id);
+		mpai_error_t err_aiw = MPAI_Controller_Start_Loading_AIW_From_MPAI_Store(name, aiw_id);
 		return err_aiw;
 #endif
 	}
@@ -287,7 +261,77 @@ mpai_error_t MPAI_AIFU_AIM_GetStatus(int AIW_ID, const char *name, int *status)
 	return err;
 }
 
-mpai_error_t MPAI_AIFU_AIM_Start_Loading_From_Config_Init(int aiw_id, aim_initialization_cb_t *aim_init)
+mpai_error_t MPAI_AIFM_AIM_Start(const char *name)
+{
+	aim_initialization_cb_t* aim_init = MPAI_Controller_Find_AIM_Init_Config(name);
+	if (aim_init == NULL)
+	{
+		MPAI_ERR_INIT(err, MPAI_ERROR);
+		return err;
+	}
+	return MPAI_AIM_Start(aim_init->_aim);
+}
+
+mpai_error_t MPAI_AIFM_AIM_Stop(const char *name)
+{
+	aim_initialization_cb_t* aim_init = MPAI_Controller_Find_AIM_Init_Config(name);
+	if (aim_init == NULL)
+	{
+		MPAI_ERR_INIT(err, MPAI_ERROR);
+		return err;
+	}
+	return MPAI_AIM_Stop(aim_init->_aim);
+}
+
+mpai_error_t MPAI_AIFM_AIM_Pause(const char *name)
+{
+	aim_initialization_cb_t* aim_init = MPAI_Controller_Find_AIM_Init_Config(name);
+	if (aim_init == NULL)
+	{
+		MPAI_ERR_INIT(err, MPAI_ERROR);
+		return err;
+	}
+	return MPAI_AIM_Pause(aim_init->_aim);
+}
+
+mpai_error_t MPAI_AIFM_AIM_Resume(const char *name)
+{
+	aim_initialization_cb_t* aim_init = MPAI_Controller_Find_AIM_Init_Config(name);
+	if (aim_init == NULL)
+	{
+		MPAI_ERR_INIT(err, MPAI_ERROR);
+		return err;
+	}
+	return MPAI_AIM_Resume(aim_init->_aim);
+}
+
+#if defined(CONFIG_MPAI_CONFIG_STORE)
+mpai_error_t MPAI_Controller_Start_Loading_AIW_From_MPAI_Store(const char *name, int aiw_id)
+{
+	char *aiw_result = MPAI_Config_Store_Get_AIW(name);
+	// printk("AIW RESULT: \n");
+	// for ( size_t i = 0; i < strlen(aiw_result); i++ )
+	// {
+	// 	printk("%c", (char)aiw_result[i]);
+	// 	k_sleep(K_MSEC(5));
+	// }
+	// printk("\n");
+
+	bool aiw_ok = MPAI_Metadata_Parser_Parse_AIW_JSON(aiw_result, aiw_id, _start_aim_after_parsing_callback, _update_input_channels_after_parsing_callback);
+	if (aiw_ok)
+	{
+		MPAI_ERR_INIT(err, MPAI_AIF_OK);
+		return err;
+	}
+	else
+	{
+		MPAI_ERR_INIT(err, MPAI_ERROR);
+		return err;
+	}
+}
+#endif
+
+mpai_error_t MPAI_Controller_Start_Loading_AIM_From_Config_Init(int aiw_id, aim_initialization_cb_t *aim_init)
 {
 	// create AIM
 	MPAI_Component_AIM_t *aim = MPAI_AIM_Creator(aim_init->_aim_name, aiw_id, aim_init->_subscriber, aim_init->_start, aim_init->_stop, aim_init->_resume, aim_init->_pause);
@@ -319,7 +363,7 @@ mpai_error_t MPAI_AIFU_AIM_Start_Loading_From_Config_Init(int aiw_id, aim_initia
 	return err_aim;
 }
 
-aim_initialization_cb_t *MPAI_AIFU_AIM_Find_AIM_Init_Config(const char *name)
+aim_initialization_cb_t *MPAI_Controller_Find_AIM_Init_Config(const char *name)
 {
 	for (size_t i = 0; i < mpai_controller_aim_count; i++)
 	{
@@ -330,50 +374,6 @@ aim_initialization_cb_t *MPAI_AIFU_AIM_Find_AIM_Init_Config(const char *name)
 		}
 	}
 	return NULL;
-}
-
-mpai_error_t MPAI_AIFM_AIM_Start(const char *name)
-{
-	aim_initialization_cb_t* aim_init = MPAI_AIFU_AIM_Find_AIM_Init_Config(name);
-	if (aim_init == NULL)
-	{
-		MPAI_ERR_INIT(err, MPAI_ERROR);
-		return err;
-	}
-	return MPAI_AIM_Start(aim_init->_aim);
-}
-
-mpai_error_t MPAI_AIFM_AIM_Stop(const char *name)
-{
-	aim_initialization_cb_t* aim_init = MPAI_AIFU_AIM_Find_AIM_Init_Config(name);
-	if (aim_init == NULL)
-	{
-		MPAI_ERR_INIT(err, MPAI_ERROR);
-		return err;
-	}
-	return MPAI_AIM_Stop(aim_init->_aim);
-}
-
-mpai_error_t MPAI_AIFM_AIM_Pause(const char *name)
-{
-	aim_initialization_cb_t* aim_init = MPAI_AIFU_AIM_Find_AIM_Init_Config(name);
-	if (aim_init == NULL)
-	{
-		MPAI_ERR_INIT(err, MPAI_ERROR);
-		return err;
-	}
-	return MPAI_AIM_Pause(aim_init->_aim);
-}
-
-mpai_error_t MPAI_AIFM_AIM_Resume(const char *name)
-{
-	aim_initialization_cb_t* aim_init = MPAI_AIFU_AIM_Find_AIM_Init_Config(name);
-	if (aim_init == NULL)
-	{
-		MPAI_ERR_INIT(err, MPAI_ERROR);
-		return err;
-	}
-	return MPAI_AIM_Resume(aim_init->_aim);
 }
 
 channel_map_element_t _linear_search_channel(const char *name)
@@ -405,7 +405,7 @@ message_store_map_element_t _linear_search_message_store(int aiw_id)
 
 bool _start_aim_after_parsing_callback(const char * aim_name)
 {
-	aim_initialization_cb_t *aim_init_cb = MPAI_AIFU_AIM_Find_AIM_Init_Config(aim_name);
+	aim_initialization_cb_t *aim_init_cb = MPAI_Controller_Find_AIM_Init_Config(aim_name);
 	if (aim_init_cb != NULL)
 	{
 		LOG_INF("AIM %s found, now initializing...", log_strdup(aim_name));
@@ -416,7 +416,7 @@ bool _start_aim_after_parsing_callback(const char * aim_name)
 			LOG_DBG("Calling AIM %s: success", log_strdup(aim_name));
 
 			// start AIM according with the aim_init configuration
-			mpai_error_t err_aim = MPAI_AIFU_AIM_Start_Loading_From_Config_Init(aiw_id, aim_init_cb);
+			mpai_error_t err_aim = MPAI_Controller_Start_Loading_AIM_From_Config_Init(aiw_id, aim_init_cb);
 			if (err_aim.code == MPAI_AIF_OK)
 			{
 				return true;
@@ -444,7 +444,7 @@ void _update_input_channels_after_parsing_callback(const char * aim_name, const 
 	if (channel_map_element._channel_name != NULL && strcmp(aim_name, "") != 0)
 	{
 		// search aim_init to add the input ports
-		aim_initialization_cb_t *aim_init_cb = MPAI_AIFU_AIM_Find_AIM_Init_Config(aim_name);
+		aim_initialization_cb_t *aim_init_cb = MPAI_Controller_Find_AIM_Init_Config(aim_name);
 		if (aim_init_cb->_input_channels == NULL || sizeof(aim_init_cb->_input_channels) == 0)
 		{
 			aim_init_cb->_input_channels = (subscriber_channel_t *)k_malloc(sizeof(subscriber_channel_t));

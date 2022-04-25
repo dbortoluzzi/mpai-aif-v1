@@ -133,8 +133,6 @@ mpai_error_t MPAI_AIFU_AIW_Resume(int AIW_ID);
  */
 mpai_error_t MPAI_AIFU_AIW_Stop(int AIW_ID);
 
-aim_initialization_cb_t *MPAI_AIFU_AIM_Find_AIM_Init_Config(const char *name);
-
 /**
  * @brief Get AIM Status of an AIW
  * 
@@ -144,33 +142,6 @@ aim_initialization_cb_t *MPAI_AIFU_AIM_Find_AIM_Init_Config(const char *name);
  * @return error_t 
  */
 mpai_error_t MPAI_AIFU_AIM_GetStatus(int AIW_ID, const char* name, int* status);
-
-/**
- * @brief Initialize and start an AIM reading a configuration struct
- * 
- * @param aiw_id 
- * @param aim_init 
- * @return mpai_error_t 
- */
-mpai_error_t MPAI_AIFU_AIM_Start_Loading_From_Config_Init(int aiw_id, aim_initialization_cb_t* aim_init);
-
-#if defined(CONFIG_MPAI_CONFIG_STORE)
-/**
- * @brief Start an AIW, loading configurations from MPAI Store
- * 
- * @param name 
- * @return mpai_error_t 
- */
-mpai_error_t MPAI_AIFU_AIW_Start_Loading_From_MPAI_Store(const char *name, int aiw_id);
-#endif
-
-/**
- * @brief Retrieve AIM Initialization config of an AIM
- * 
- * @param name 
- * @return aim_initialization_cb_t* 
- */
-aim_initialization_cb_t *MPAI_AIFU_AIM_Find_AIM_Init_Config(const char *name);
 
 /**
  * @brief Starts an AIW by name
@@ -203,5 +174,33 @@ mpai_error_t MPAI_AIFM_AIM_Pause(const char *name);
  * @return mpai_error_t 
  */
 mpai_error_t MPAI_AIFM_AIM_Resume(const char *name);
+
+/**
+ * @brief Initialize and start an AIM reading a configuration struct
+ * 
+ * @param aiw_id 
+ * @param aim_init 
+ * @return mpai_error_t 
+ */
+mpai_error_t MPAI_Controller_Start_Loading_AIM_From_Config_Init(int aiw_id, aim_initialization_cb_t* aim_init);
+
+#if defined(CONFIG_MPAI_CONFIG_STORE)
+/**
+ * @brief Start an AIW, loading configurations from MPAI Store
+ * 
+ * @param name 
+ * @return mpai_error_t 
+ */
+mpai_error_t MPAI_Controller_Start_Loading_AIW_From_MPAI_Store(const char *name, int aiw_id);
+#endif
+
+/**
+ * @brief Retrieve AIM Initialization config of an AIM
+ * 
+ * @param name 
+ * @return aim_initialization_cb_t* 
+ */
+aim_initialization_cb_t *MPAI_Controller_Find_AIM_Init_Config(const char *name);
+
 
 #endif
