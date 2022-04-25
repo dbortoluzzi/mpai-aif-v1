@@ -45,11 +45,17 @@ A use case for testing the MPAI-AIF implementation has been identified. We call 
 
 JSON for the USE CASE
 =====================================    
-The use case is described in detail in the file JSON_MPAI_UseCase.json in the repo. The json is structured according to the MPAI-AIF specification 1.0
+The use case is described in detail in the file
+
+.. code-block:: bash
+
+    JSON_MPAI_UseCase.json 
+
+in the repo. The json is structured according to the MPAI-AIF specification 1.0
 
 MPAI STORE SIMULATION
 =====================================  
-Currently the MPAI STORE functionality is simulated via the delivery over CoAP/IP of the description of the use case. The corresponding AIMs are already resident on the board. a CoAP server that simulates the MPAI STORE is provided in Java.
+Currently the MPAI STORE functionality is simulated via the delivery over CoAP/IP of the description of the use case in json. The corresponding AIMs are already resident on the board. a CoAP server that simulates the MPAI STORE is provided in Java.
 in order to run it:
 
 .. code-block:: bash
