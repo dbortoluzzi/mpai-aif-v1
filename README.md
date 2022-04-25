@@ -292,5 +292,5 @@ and consists of 4 AIMs:
     > platformio run --target clean
 ```
 
-# License
-License information for each components of this example is detailed in [LICENSE.MD](/LICENSE.md)
+# Licence
+Licence information for each components of this example is detailed in [LICENCE.MD](/LICENCE.md)
