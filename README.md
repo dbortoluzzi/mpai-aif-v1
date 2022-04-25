@@ -59,7 +59,8 @@ The MPAI AIW consists of 4 AIMs:
 # MPAI STORE SIMULATION
 Currently the MPAI STORE functionality is simulated via the delivery over CoAP/IP of the description of the use case in json. The corresponding AIMs are already resident on the board. A CoAP server that simulates the MPAI STORE is provided in Java.
 The source code can be found [here](https://github.com/dbortoluzzi/mpai_store_coap_server) or downloaded [here](/executable/coap-server-0.0.1-SNAPSHOT.jar).
-In order to run it:
+
+In order to run it ($IP_ADDRESS is the CoAP endpoint):
 
 ```bash
 java -Dmpai.store.host=$IP_ADDRESS -jar coap-server-0.0.1-SNAPSHOT.jar
