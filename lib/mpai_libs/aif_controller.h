@@ -182,7 +182,7 @@ mpai_error_t MPAI_AIFM_AIM_Resume(const char *name);
  * @param aim_init 
  * @return mpai_error_t 
  */
-mpai_error_t MPAI_Controller_Start_Loading_AIM_From_Config_Init(int aiw_id, aim_initialization_cb_t* aim_init);
+mpai_error_t MPAI_Controller_Start_Loading_AIM_From_Init_Config(int aiw_id, aim_initialization_cb_t* aim_init);
 
 #if defined(CONFIG_MPAI_CONFIG_STORE)
 /**

@@ -1,7 +1,7 @@
 /*
  * @file
  * @brief Implementation of an AIM that verify if the rehabilitation exercises are doing in a correct way:
- * 1. the device has to be stationary when it's present a volume peak
+ * 1. the device has to be stationary when there is a volume peak
  * 2. the device has to be started to move when a volume peak it's ended
  * 
  * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com>

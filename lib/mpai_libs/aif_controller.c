@@ -331,7 +331,7 @@ mpai_error_t MPAI_Controller_Start_Loading_AIW_From_MPAI_Store(const char *name,
 }
 #endif
 
-mpai_error_t MPAI_Controller_Start_Loading_AIM_From_Config_Init(int aiw_id, aim_initialization_cb_t *aim_init)
+mpai_error_t MPAI_Controller_Start_Loading_AIM_From_Init_Config(int aiw_id, aim_initialization_cb_t *aim_init)
 {
 	// create AIM
 	MPAI_Component_AIM_t *aim = MPAI_AIM_Creator(aim_init->_aim_name, aiw_id, aim_init->_subscriber, aim_init->_start, aim_init->_stop, aim_init->_resume, aim_init->_pause);
@@ -416,7 +416,7 @@ bool _start_aim_after_parsing_callback(const char * aim_name)
 			LOG_DBG("Calling AIM %s: success", log_strdup(aim_name));
 
 			// start AIM according with the aim_init configuration
-			mpai_error_t err_aim = MPAI_Controller_Start_Loading_AIM_From_Config_Init(aiw_id, aim_init_cb);
+			mpai_error_t err_aim = MPAI_Controller_Start_Loading_AIM_From_Init_Config(aiw_id, aim_init_cb);
 			if (err_aim.code == MPAI_AIF_OK)
 			{
 				return true;

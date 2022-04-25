@@ -101,7 +101,7 @@ void th_subscribe_motion_data(void *dummy1, void *dummy2, void *dummy3)
 				{
 					if (mcu_has_stopped_ts != 0 && aim_message.timestamp - mcu_has_stopped_ts >=  MCU_MIN_DETECTED_STOP_DELAY_MS)
 					{
-						// MCU is stopped but no publish event	
+						// MCU is stopped but it doesn't publish event, because it was already stopped
 					}
 					// 2. check if mcu was moving previously
 					else if (mcu_has_stopped_ts == 0)

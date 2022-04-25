@@ -13,6 +13,13 @@
 #define STOPPER 0                                /* Smaller than any datum */
 #define MEDIAN_FILTER_SIZE    (20)
 
+/**
+ * @brief Concatenate two strings, returning a new one
+ * 
+ * @param old 
+ * @param new 
+ * @return char* 
+ */
 char * append_strings(const char * old, const char * new);
 
 #endif

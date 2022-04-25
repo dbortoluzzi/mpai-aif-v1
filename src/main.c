@@ -235,6 +235,7 @@ void main(void)
 
 	/** END BLUETOOTH **/
 
+	// Initialize MPAI Controller
 	mpai_error_t err_mpai_controller = MPAI_AIFU_Controller_Initialize();
 
 	if (err_mpai_controller.code != MPAI_AIF_OK) 
