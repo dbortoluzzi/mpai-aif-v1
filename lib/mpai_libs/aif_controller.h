@@ -30,11 +30,11 @@
 
 #include <errno.h>
 #include <sys/byteorder.h>
+#include <aif_metadata_parser.h>
 
 #ifdef CONFIG_APP_TEST_WRITE_TO_FLASH
 	#include <flash_store.h>
 #endif
-#include <parson.h>
 
 #include <aiw_cae_rev.h>
 
@@ -47,6 +47,44 @@
 
 #define WHOAMI_REG 0x0F
 #define WHOAMI_ALT_REG 0x4F
+
+#define MPAI_AIF_AIM_MAX 10
+#define MPAI_AIF_CHANNEL_MAX 10
+#define MPAI_AIF_AIW_MAX 10
+
+/* Data structure usefull to initialize an AIM*/
+typedef struct _aim_initialization_cb_t{
+    char* _aim_name;
+    MPAI_Component_AIM_t* _aim; 
+	module_t* _subscriber; 	 				// related AIM subscriber identifier
+	module_t* _start;		 				// AIM's start function
+	module_t* _stop;		 				// AIM's stop function
+	module_t* _resume;		 				// AIM's resume function
+	module_t* _pause;		 				// AIM's pause function
+	subscriber_channel_t* _input_channels;	// AIM subscribes to these input channels
+	int8_t _count_channels;					// number of AIM's input channels
+} aim_initialization_cb_t;
+
+/* Tuple of channel and related channel_name */
+typedef struct _channel_map_element_t{
+    char* _channel_name;
+    subscriber_channel_t _channel;
+} channel_map_element_t;
+
+typedef struct _message_store_map_element_t{
+    int _aiw_id;
+    MPAI_AIM_MessageStore_t*  _message_store;
+} message_store_map_element_t;
+
+/* AIM initialization List */
+extern aim_initialization_cb_t* MPAI_AIM_List[MPAI_AIF_AIM_MAX];
+/* Channel List */
+extern channel_map_element_t message_store_channel_list[MPAI_AIF_CHANNEL_MAX];
+/* Message Store List */
+extern message_store_map_element_t message_store_list[MPAI_AIF_AIW_MAX];
+extern int mpai_controller_aim_count;
+extern int mpai_message_store_channel_count;
+extern int mpai_message_store_count;
 
 /**
  * @brief Initialize the MPAI Libs AIF Controller
@@ -95,6 +133,8 @@ mpai_error_t MPAI_AIFU_AIW_Resume(int AIW_ID);
  */
 mpai_error_t MPAI_AIFU_AIW_Stop(int AIW_ID);
 
+aim_initialization_cb_t *MPAI_AIFU_AIM_Find_AIM_Init_Config(const char *name);
+
 /**
  * @brief Get AIM Status of an AIW
  * 
@@ -104,5 +144,64 @@ mpai_error_t MPAI_AIFU_AIW_Stop(int AIW_ID);
  * @return error_t 
  */
 mpai_error_t MPAI_AIFU_AIM_GetStatus(int AIW_ID, const char* name, int* status);
+
+/**
+ * @brief Initialize and start an AIM reading a configuration struct
+ * 
+ * @param aiw_id 
+ * @param aim_init 
+ * @return mpai_error_t 
+ */
+mpai_error_t MPAI_AIFU_AIM_Start_Loading_From_Config_Init(int aiw_id, aim_initialization_cb_t* aim_init);
+
+#if defined(CONFIG_MPAI_CONFIG_STORE)
+/**
+ * @brief Start an AIW, loading configurations from MPAI Store
+ * 
+ * @param name 
+ * @return mpai_error_t 
+ */
+mpai_error_t MPAI_AIFU_AIW_Start_Loading_From_MPAI_Store(const char *name, int aiw_id);
+#endif
+
+/**
+ * @brief Retrieve AIM Initialization config of an AIM
+ * 
+ * @param name 
+ * @return aim_initialization_cb_t* 
+ */
+aim_initialization_cb_t *MPAI_AIFU_AIM_Find_AIM_Init_Config(const char *name);
+
+/**
+ * @brief Starts an AIW by name
+ * 
+ * @param name 
+ * @return mpai_error_t 
+ */
+mpai_error_t MPAI_AIFM_AIM_Start(const char *name);
+
+/**
+ * @brief Stop an AIW by name
+ * 
+ * @param name 
+ * @return mpai_error_t 
+ */
+mpai_error_t MPAI_AIFM_AIM_Stop(const char *name);
+
+/**
+ * @brief Pauses an AIW by name
+ * 
+ * @param name 
+ * @return mpai_error_t 
+ */
+mpai_error_t MPAI_AIFM_AIM_Pause(const char *name);
+
+/**
+ * @brief Resumes an AIW by name
+ * 
+ * @param name 
+ * @return mpai_error_t 
+ */
+mpai_error_t MPAI_AIFM_AIM_Resume(const char *name);
 
 #endif

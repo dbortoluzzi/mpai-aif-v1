@@ -1,0 +1,23 @@
+{
+  "Identifier": {
+    "ImplementerID": 1,
+    "Specification": {
+      "Name": "CAE",
+      "AIW": "REV",
+      "AIM": "MovementsWithAudioValidation",
+      "Version": "1"
+    }
+  },
+  "Description": "This AIM implements a validation of body movements during rehabilitation exercizes, according with music rythm",
+  "Ports": [],
+  "Topology": [],
+  "SubAIMs": [],
+  "Topology": [],
+  "Implementations": [],
+  "Documentation": [
+    {
+      "Type": "Tutorial",
+      "URI": "https://mpai.community/standards/mpai-cae/"
+    }
+  ]
+}

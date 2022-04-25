@@ -1,6 +1,6 @@
 /*
  * @file
- * @brief Implementation of an AIM that warn if the temperature exceeds a configurable limit
+ * @brief Implementation of an AIM that warns if the temperature exceeds a configurable limit
  * 
  * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com>
  *

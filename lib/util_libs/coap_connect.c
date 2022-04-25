@@ -6,7 +6,7 @@
  *
  * Based on the official sample by Intel at https://github.com/zephyrproject-rtos/zephyr/tree/main/samples/net/sockets/coap_client
  *
- SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include <coap_connect.h>
@@ -412,6 +412,7 @@ char* get_large_coap_msgs(const char * const * large_path)
 
 			// concat full result and return
 			char * data_large_result_concat = append_strings(data_large_result_tmp, "");
+			k_free(data_large_result_tmp);
 			return data_large_result_concat;
 		}
 	}
