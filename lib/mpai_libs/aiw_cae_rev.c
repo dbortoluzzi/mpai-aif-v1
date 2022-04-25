@@ -202,7 +202,7 @@ void MPAI_AIW_CAE_REV_Pause()
 	#endif
 }
 
-void DESTROY_MPAI_AIW_CAE_REV() 
+void MPAI_AIW_CAE_REV_Destroy() 
 {
 	MPAI_AIW_CAE_REV_Stop();
 

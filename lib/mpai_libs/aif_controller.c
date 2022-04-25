@@ -159,7 +159,7 @@ mpai_error_t MPAI_AIFU_Controller_Initialize()
 
 mpai_error_t MPAI_AIFU_Controller_Destroy()
 {
-	DESTROY_MPAI_AIW_CAE_REV();
+	MPAI_AIW_CAE_REV_Destroy();
 
 	memset(MPAI_AIM_List, 0, MPAI_AIF_AIM_MAX * sizeof(aim_initialization_cb_t *));
 

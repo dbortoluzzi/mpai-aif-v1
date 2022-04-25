@@ -76,8 +76,8 @@ void MPAI_AIW_CAE_REV_Resume();
 void MPAI_AIW_CAE_REV_Pause();
 
 /**
- * @brief Destroy AI Test Case (CAE-REV)
+ * @brief Destroy AIW Test Case (CAE-REV)
  * 
  */
-void DESTROY_MPAI_AIW_CAE_REV();
+void MPAI_AIW_CAE_REV_Destroy();
 #endif
