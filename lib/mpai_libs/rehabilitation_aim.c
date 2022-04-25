@@ -59,6 +59,8 @@ void th_subscribe_rehabilitation_data(void *dummy1, void *dummy2, void *dummy3)
 	ARG_UNUSED(dummy3);
 
 	mpai_parser_t aim_motion_message;
+	mpai_parser_t aim_peak_audio_message;
+	int64_t last_event_peak_audio = 0;
 
 	LOG_DBG("START SUBSCRIBER");
 
@@ -75,36 +77,46 @@ void th_subscribe_rehabilitation_data(void *dummy1, void *dummy2, void *dummy3)
 
 			motion_data_t *motion_data = (motion_data_t *)aim_motion_message.data;
 
-			if (motion_data->motion_type == STOPPED)
+			// discard old messages
+			if (aim_motion_message.timestamp > last_event_peak_audio || last_event_peak_audio == 0)
 			{
-				// if the event is STOPPED, the device waits for Audio Peak for a delay (CONFIG_REHABILITATION_MIC_PEAK_TIMEOUT_MS)
-				LOG_INF("MOTION STOPPED: Waiting for Audio Peak");
-				k_sleep(K_MSEC(10));
-
-				int ret_mic = MPAI_MessageStore_poll(message_store_rehabilitation_aim, rehabilitation_aim_subscriber, K_MSEC(CONFIG_REHABILITATION_MIC_PEAK_TIMEOUT_MS), MIC_PEAK_DATA_CHANNEL);
-
-				if (ret_mic > 0)
+				if (motion_data->motion_type == STOPPED)
 				{
-					// if the Audio Peak is recognized, the movement it's done in a correct way
-					LOG_INF("MOVEMENT CORRECT!");
-				}
-				else if (ret_mic == 0)
-				{
-					// if the Audio Peak is not recognized, the movement it's done in a wrong way
-					LOG_ERR("MOVEMENT NOT CORRECT! Audio Peak NOT FOUND");
+					// if the event is STOPPED, the device waits for Audio Peak for a delay (CONFIG_REHABILITATION_MIC_PEAK_TIMEOUT_MS)
+					LOG_INF("MOTION STOPPED: Waiting for Audio Peak");
+					k_sleep(K_MSEC(10));
 
-					show_movement_error();
+					int ret_mic = MPAI_MessageStore_poll(message_store_rehabilitation_aim, rehabilitation_aim_subscriber, K_MSEC(CONFIG_REHABILITATION_MIC_PEAK_TIMEOUT_MS), MIC_PEAK_DATA_CHANNEL);
+				
+					if (ret_mic > 0)
+					{
+						MPAI_MessageStore_copy(message_store_rehabilitation_aim, rehabilitation_aim_subscriber, MIC_PEAK_DATA_CHANNEL, &aim_peak_audio_message);
+						last_event_peak_audio = aim_peak_audio_message.timestamp;
+						// if the Audio Peak is recognized, the movement it's done in a correct way
+						LOG_INF("MOVEMENT CORRECT!");
+					}
+					else if (ret_mic == 0)
+					{
+						last_event_peak_audio = 0;
+						// if the Audio Peak is not recognized, the movement it's done in a wrong way
+						LOG_ERR("MOVEMENT NOT CORRECT! Audio Peak NOT FOUND");
+
+						show_movement_error();
+					}
+					else
+					{
+						last_event_peak_audio = 0;
+						printk("ERROR: error while polling: %d\n", ret_mic);
+						return;
+					}
+				} else if (motion_data->motion_type == STARTED)
+				{	
+					// TODO
 				}
-				else
-				{
-					printk("ERROR: error while polling: %d\n", ret_mic);
-					return;
-				}
-			} else if (motion_data->motion_type == STARTED)
-			{	
-				// TODO
+			} else 
+			{
+				LOG_WRN("Discard old motion event");
 			}
-
 		}
 		else if (ret_motion == 0)
 		{

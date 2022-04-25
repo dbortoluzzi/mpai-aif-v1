@@ -23,6 +23,7 @@
     #include <config_store.h>
 #endif
 
+// TODO: generate dinamically 
 static int AIW_CAE_REV = 1;
 
 #define MPAI_LIBS_AIF_NAME "demo"
