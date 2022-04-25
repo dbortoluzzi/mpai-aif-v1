@@ -18,7 +18,13 @@ LOG_MODULE_REGISTER(MPAI_LIBS_AIF_CONTROLLER, LOG_LEVEL_INF);
 static int aiw_id;
 
 /************* PRIVATE HEADER *************/
+/* search channel by name*/
 channel_map_element_t _linear_search_channel(const char *name);
+/* init and start aim after parsing from MPAI Store Config*/
+bool _start_aim_after_parsing_callback(const char * aim_name); 
+/* update input channels in MPAI_AIM_List */
+void _update_input_channels_after_parsing_callback(const char * aim_name, const char* port_name); 
+/* search message store by aiw_id*/
 message_store_map_element_t _linear_search_message_store(int aiw_id);
 
 /* AIM initialization List */
@@ -361,44 +367,31 @@ mpai_error_t MPAI_AIFU_Controller_Initialize()
 	// }
 #endif
 
+	bool aif_ok = false;
 #if defined(CONFIG_MPAI_CONFIG_STORE) && defined(CONFIG_MPAI_CONFIG_STORE_USES_COAP)
-	char *aif_result = MPAI_Config_Store_Get_AIF("demo");
-	if (aif_result != NULL)
-	{
-		// Parse AIF Json Metadata
-		cJSON *root_aif = cJSON_Parse(aif_result);
-		if (root_aif != NULL)
-		{
-			// read aif
-			cJSON *aif_name_cjson = cJSON_GetObjectItem(root_aif, "title");
-			if (aif_name_cjson != NULL)
-			{
-				char *aif_name = aif_name_cjson->valuestring;
-				LOG_INF("Initializing AIF with title \"%s\"...", log_strdup(aif_name));
-			}
-			free(aif_name_cjson);
-		}
-		free(root_aif);
-		k_free(aif_result);
-	}
-
+	char *aif_result = MPAI_Config_Store_Get_AIF(MPAI_LIBS_AIF_NAME);
+	aif_ok = MPAI_Metadata_Parser_Parse_AIF_JSON(aif_result);
 #endif
 
-	mpai_error_t err_aiw = MPAI_AIFU_AIW_Start(MPAI_LIBS_CAE_REV_AIW_NAME, &aiw_id);
-	if (err_aiw.code != MPAI_AIF_OK)
+	if (aif_ok)
 	{
-		LOG_ERR("Error starting AIW %s: %s", MPAI_LIBS_CAE_REV_AIW_NAME, log_strdup(MPAI_ERR_STR(err_aiw.code)));
-		return;
+		mpai_error_t err_aiw = MPAI_AIFU_AIW_Start(MPAI_LIBS_CAE_REV_AIW_NAME, &aiw_id);
+		if (err_aiw.code != MPAI_AIF_OK)
+		{
+			LOG_ERR("Error starting AIW %s: %s", MPAI_LIBS_CAE_REV_AIW_NAME, log_strdup(MPAI_ERR_STR(err_aiw.code)));
+			return;
+		}
+
+		LOG_INF("MPAI_AIF initialized correctly");
 	}
 
-	LOG_INF("MPAI_AIF initialized correctly");
 
 #if defined(CONFIG_MPAI_CONFIG_STORE) && defined(CONFIG_MPAI_CONFIG_STORE_USES_COAP)
 	/* Close the socket when it's no longer usefull*/
 	(void)close(get_coap_sock());
 #endif
 
-	// k_sleep(K_SECONDS(2));
+	// k_sleep(K_SECONDS(5));
 
 	// MPAI_AIFU_Controller_Destroy();
 
@@ -428,145 +421,8 @@ mpai_error_t MPAI_AIFU_AIW_Start_Loading_From_MPAI_Store(const char *name, int a
 	// }
 	// printk("\n");
 
-	bool aif_ok = true;
-	cJSON *root = cJSON_Parse(aiw_result);
-	if (root != NULL)
-	{
-		// read aiw
-		cJSON *aiw_name_cjson = cJSON_GetObjectItem(root, "title");
-		if (aiw_name_cjson != NULL)
-		{
-			bool aiw_init_ok = true;
-			char *aiw_name = aiw_name_cjson->valuestring;
-			LOG_INF("Initializing AIW with title \"%s\"...", log_strdup(aiw_name));
-
-			// read aiw topology
-			cJSON *aiw_topology_cjson = cJSON_GetObjectItem(root, "Topology");
-			if (aiw_topology_cjson != NULL)
-			{
-				if (cJSON_Array == aiw_topology_cjson->type)
-				{
-					int aiw_topology_el_count = cJSON_GetArraySize(aiw_topology_cjson);
-					// read each topology element topology
-					for (int idx = 0; idx < aiw_topology_el_count; idx++)
-					{
-						cJSON *aiw_topology_el_cjson = cJSON_GetArrayItem(aiw_topology_cjson, idx);
-						// read input channel by aim (the json describe input channel match to output channel)
-						cJSON *aiw_topology_output_cjson = cJSON_GetObjectItem(aiw_topology_el_cjson, "Output");
-						if (aiw_topology_output_cjson != NULL)
-						{
-
-							cJSON *aiw_output_aim_name_cjson = cJSON_GetObjectItem(aiw_topology_output_cjson, "AIMName");
-							cJSON *aiw_output_channel_cjson = cJSON_GetObjectItem(aiw_topology_output_cjson, "PortName");
-
-							// search channel in config
-							channel_map_element_t channel_map_element = _linear_search_channel(aiw_output_channel_cjson->valuestring);
-							if (channel_map_element._channel_name != NULL && strcmp(aiw_output_aim_name_cjson->valuestring, "") != 0)
-							{
-								// search aim_init to add the input ports
-								aim_initialization_cb_t *aim_init_cb = MPAI_AIFU_AIM_Find_AIM_Init_Config(aiw_output_aim_name_cjson->valuestring);
-								if (aim_init_cb->_input_channels == NULL || sizeof(aim_init_cb->_input_channels) == 0)
-								{
-									aim_init_cb->_input_channels = (subscriber_channel_t *)k_malloc(sizeof(subscriber_channel_t));
-									aim_init_cb->_input_channels[0] = channel_map_element._channel;
-									aim_init_cb->_count_channels++;
-								}
-								else
-								{
-									int8_t old_size = aim_init_cb->_count_channels;
-									subscriber_channel_t *channel_list_tmp = (subscriber_channel_t *)k_malloc((old_size + 1) * sizeof(subscriber_channel_t));
-									memcpy(channel_list_tmp, aim_init_cb->_input_channels, old_size * sizeof(subscriber_channel_t));
-									channel_list_tmp[old_size] = channel_map_element._channel;
-									k_free(aim_init_cb->_input_channels);
-									aim_init_cb->_input_channels = channel_list_tmp;
-									aim_init_cb->_count_channels++;
-								}
-							}
-							free(aiw_output_aim_name_cjson);
-							free(aiw_output_channel_cjson);
-						}
-						free(aiw_topology_output_cjson);
-						free(aiw_topology_el_cjson);
-					}
-				}
-			}
-
-			// read AIMs of AIW
-			cJSON *aiw_subaims_cjson = cJSON_GetObjectItem(root, "SubAIMs");
-			if (cJSON_Array == aiw_subaims_cjson->type)
-			{
-				int aims_count = cJSON_GetArraySize(aiw_subaims_cjson);
-				// loop on AIMs
-				for (int idx = 0; idx < aims_count; idx++)
-				{
-					bool aim_init_ok = false;
-					cJSON *aim_cjson = cJSON_GetArrayItem(aiw_subaims_cjson, idx);
-					cJSON *aim_identifier_cjson = cJSON_GetObjectItem(aim_cjson, "Identifier");
-					if (aim_identifier_cjson != NULL)
-					{
-						cJSON *aim_specification_cjson = cJSON_GetObjectItem(aim_identifier_cjson, "Specification");
-						if (aim_identifier_cjson != NULL)
-						{
-							cJSON *aim_name_cjson = cJSON_GetObjectItem(aim_specification_cjson, "AIM");
-							char *aim_name = aim_name_cjson->valuestring;
-
-							aim_initialization_cb_t *aim_init_cb = MPAI_AIFU_AIM_Find_AIM_Init_Config(aim_name);
-							if (aim_init_cb != NULL)
-							{
-								LOG_INF("AIM %s found for AIW %s, now initializing...", log_strdup(aim_name), log_strdup(aiw_name));
-								char *aim_result = MPAI_Config_Store_Get_AIM(aim_name);
-								if (aim_result != NULL)
-								{
-									LOG_DBG("Calling AIM %s: success", log_strdup(aim_name));
-
-									// start AIM according with the aim_init configuration
-									mpai_error_t err_aim = MPAI_AIFU_AIM_Start_Loading_From_Config_Init(aiw_id, aim_init_cb);
-									if (err_aim.code == MPAI_AIF_OK)
-									{
-										aim_init_ok = true;
-									}
-									else
-									{
-										LOG_ERR("Stop initialization");
-										while (1)
-										{
-										};
-									}
-								}
-								k_free(aim_result);
-								free(aim_name_cjson);
-							}
-							else
-							{
-								LOG_ERR("AIM %s not found", log_strdup(aim_name));
-							}
-						}
-						free(aim_specification_cjson);
-					}
-					free(aim_identifier_cjson);
-					aiw_init_ok = aiw_init_ok & aim_init_ok;
-				}
-			}
-			else
-			{
-				aiw_init_ok = false;
-			}
-
-			free(aiw_name_cjson);
-			free(aiw_topology_cjson);
-			free(root);
-			aif_ok = aif_ok && aiw_init_ok;
-		}
-		else 
-		{
-			aif_ok = false;
-		}
-	}
-	else
-	{
-		aif_ok = false;
-	}
-	if (aif_ok)
+	bool aiw_ok = MPAI_Metadata_Parser_Parse_AIW_JSON(aiw_result, aiw_id, _start_aim_after_parsing_callback, _update_input_channels_after_parsing_callback);
+	if (aiw_ok)
 	{
 		MPAI_ERR_INIT(err, MPAI_AIF_OK);
 		return err;
@@ -586,10 +442,10 @@ mpai_error_t MPAI_AIFU_AIW_Start(const char *name, int *AIW_ID)
 	// At the moment, we handle only AIW CAE-REV
 	if (strcmp(name, MPAI_LIBS_CAE_REV_AIW_NAME) == 0)
 	{
-#if defined(CONFIG_MPAI_CONFIG_STORE)
 		int aiw_id = MPAI_AIW_CAE_REV_Init();
 		*AIW_ID = aiw_id;
 
+#if defined(CONFIG_MPAI_CONFIG_STORE)
 		mpai_error_t err_aiw = MPAI_AIFU_AIW_Start_Loading_From_MPAI_Store(name, aiw_id);
 		return err_aiw;
 #endif
@@ -787,4 +643,65 @@ message_store_map_element_t _linear_search_message_store(int aiw_id)
 	}
 	message_store_map_element_t empty = {};
 	return empty;
+}
+
+bool _start_aim_after_parsing_callback(const char * aim_name)
+{
+	aim_initialization_cb_t *aim_init_cb = MPAI_AIFU_AIM_Find_AIM_Init_Config(aim_name);
+	if (aim_init_cb != NULL)
+	{
+		LOG_INF("AIM %s found, now initializing...", log_strdup(aim_name));
+		char *aim_result = MPAI_Config_Store_Get_AIM(aim_name);
+		bool aim_parse_ok = MPAI_Metadata_Parser_Parse_AIM_JSON(aim_result);
+		if (aim_parse_ok)
+		{
+			LOG_DBG("Calling AIM %s: success", log_strdup(aim_name));
+
+			// start AIM according with the aim_init configuration
+			mpai_error_t err_aim = MPAI_AIFU_AIM_Start_Loading_From_Config_Init(aiw_id, aim_init_cb);
+			if (err_aim.code == MPAI_AIF_OK)
+			{
+				return true;
+			}
+			else
+			{
+				LOG_ERR("Stop initialization");
+				while (1)
+				{
+				};
+			}
+		}
+		k_free(aim_result);
+	}
+	else
+	{
+		LOG_ERR("AIM %s not found", log_strdup(aim_name));
+	}
+}
+
+void _update_input_channels_after_parsing_callback(const char * aim_name, const char* output_port_name)
+{
+	// search channel in config
+	channel_map_element_t channel_map_element = _linear_search_channel(output_port_name);
+	if (channel_map_element._channel_name != NULL && strcmp(aim_name, "") != 0)
+	{
+		// search aim_init to add the input ports
+		aim_initialization_cb_t *aim_init_cb = MPAI_AIFU_AIM_Find_AIM_Init_Config(aim_name);
+		if (aim_init_cb->_input_channels == NULL || sizeof(aim_init_cb->_input_channels) == 0)
+		{
+			aim_init_cb->_input_channels = (subscriber_channel_t *)k_malloc(sizeof(subscriber_channel_t));
+			aim_init_cb->_input_channels[0] = channel_map_element._channel;
+			aim_init_cb->_count_channels++;
+		}
+		else
+		{
+			int8_t old_size = aim_init_cb->_count_channels;
+			subscriber_channel_t *channel_list_tmp = (subscriber_channel_t *)k_malloc((old_size + 1) * sizeof(subscriber_channel_t));
+			memcpy(channel_list_tmp, aim_init_cb->_input_channels, old_size * sizeof(subscriber_channel_t));
+			channel_list_tmp[old_size] = channel_map_element._channel;
+			k_free(aim_init_cb->_input_channels);
+			aim_init_cb->_input_channels = channel_list_tmp;
+			aim_init_cb->_count_channels++;
+		}
+	}	
 }

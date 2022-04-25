@@ -30,7 +30,7 @@
  * @param aif_name 
  * @return char* 
  */
-char* MPAI_Config_Store_Get_AIF(char* aif_name);
+char* MPAI_Config_Store_Get_AIF(const char* aif_name);
 
 /**
  * @brief Retrieve AIW configuration in a JSON format
@@ -38,7 +38,7 @@ char* MPAI_Config_Store_Get_AIF(char* aif_name);
  * @param aiw_name 
  * @return char* 
  */
-char* MPAI_Config_Store_Get_AIW(char* aiw_name);
+char* MPAI_Config_Store_Get_AIW(const char* aiw_name);
 
 /**
  * @brief Retrieve AIM configuration in a JSON format
@@ -46,6 +46,6 @@ char* MPAI_Config_Store_Get_AIW(char* aiw_name);
  * @param aim_name 
  * @return char* 
  */
-char* MPAI_Config_Store_Get_AIM(char* aim_name);
+char* MPAI_Config_Store_Get_AIM(const char* aim_name);
 
 #endif

@@ -55,6 +55,8 @@ typedef struct _mpai_parser_t
 } mpai_parser_t;
 
 typedef mpai_error_t *(module_t)();
+typedef bool (aim_callback_t)(const char* aim_name);
+typedef void (topology_output_callback_t)(const char* aim_name, const char* port_name);
 
 /********** MACRO ***********/
 #define MPAI_ERR_INIT(sname, ...) mpai_error_t sname __VA_OPT__(= { __VA_ARGS__ })

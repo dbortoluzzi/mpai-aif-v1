@@ -30,7 +30,7 @@
 
 #include <errno.h>
 #include <sys/byteorder.h>
-#include <cJSON.h>
+#include <aif_metadata_parser.h>
 
 #ifdef CONFIG_APP_TEST_WRITE_TO_FLASH
 	#include <flash_store.h>

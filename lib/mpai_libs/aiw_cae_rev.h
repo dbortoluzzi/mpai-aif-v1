@@ -25,6 +25,7 @@
 
 static int AIW_CAE_REV = 1;
 
+#define MPAI_LIBS_AIF_NAME "demo"
 #define MPAI_LIBS_CAE_REV_AIW_NAME "CAE-REV"
 #define MPAI_LIBS_CAE_REV_AIM_DATA_MIC_NAME "VolumePeaksAnalysis"
 #define MPAI_LIBS_CAE_REV_AIM_SENSORS_NAME "ControlUnitSensorsReading"
