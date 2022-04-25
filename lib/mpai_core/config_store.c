@@ -20,6 +20,8 @@ char* MPAI_Config_Store_Get_AIF(char* aif_name)
 	char* aif_full_name = append_strings(AIF_CONFIG[0], aif_name);
 	char * aif_config_path[] = { aif_full_name, NULL };/*TODO: UNION DEFAULT OPTIONS*/
 	return get_large_coap_msgs(aif_config_path);
+#else
+	return "{}";
 #endif
 } 
 
@@ -29,6 +31,8 @@ char* MPAI_Config_Store_Get_AIW(char* aiw_name)
 	char* aiw_full_name = append_strings(AIW_CONFIG[0], aiw_name);
 	char * aiw_config_path[] = { aiw_full_name, NULL };/*TODO: UNION DEFAULT OPTIONS*/
 	return get_large_coap_msgs(aiw_config_path);
+#else
+	return "{}";
 #endif
 }
 
@@ -38,5 +42,7 @@ char* MPAI_Config_Store_Get_AIM(char* aim_name)
 	char* aim_full_name = append_strings(AIM_CONFIG[0], aim_name);
 	char * aim_config_path[] = { aim_full_name, NULL };/*TODO: UNION DEFAULT OPTIONS*/
 	return get_large_coap_msgs(aim_config_path);
+#else
+	return "{}";
 #endif
 }

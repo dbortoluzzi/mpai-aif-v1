@@ -366,18 +366,11 @@ mpai_error_t MPAI_AIFU_Controller_Initialize()
 	char *aif_result = MPAI_Config_Store_Get_AIF("demo");
 	if (aif_result != NULL)
 	{
-		// printk("AIF RESULT: \n");
-		// for ( size_t i = 0; i < strlen(aif_result); i++ )
-		// {
-		// 	printk("%c", (char)aif_result[i]);
-		// 	k_sleep(K_MSEC(5));
-		// }
-		// printk("\n");
-
+		// Parse AIF Json Metadata
 		cJSON *root_aif = cJSON_Parse(aif_result);
 		if (root_aif != NULL)
 		{
-			// read aiw
+			// read aif
 			cJSON *aif_name_cjson = cJSON_GetObjectItem(root_aif, "title");
 			if (aif_name_cjson != NULL)
 			{
@@ -424,8 +417,8 @@ mpai_error_t MPAI_AIFU_Controller_Destroy()
 	return err;
 }
 
-#if defined(CONFIG_MPAI_CONFIG_STORE) && defined(CONFIG_MPAI_CONFIG_STORE_USES_COAP)
-mpai_error_t MPAI_AIFU_AIW_Start_From_MPAI_Store(const char *name)
+#if defined(CONFIG_MPAI_CONFIG_STORE)
+mpai_error_t MPAI_AIFU_AIW_Start_Loading_From_MPAI_Store(const char *name, int aiw_id)
 {
 	char *aiw_result = MPAI_Config_Store_Get_AIW(name);
 	// printk("AIW RESULT: \n");
@@ -499,10 +492,12 @@ mpai_error_t MPAI_AIFU_AIW_Start_From_MPAI_Store(const char *name)
 				}
 			}
 
+			// read AIMs of AIW
 			cJSON *aiw_subaims_cjson = cJSON_GetObjectItem(root, "SubAIMs");
 			if (cJSON_Array == aiw_subaims_cjson->type)
 			{
 				int aims_count = cJSON_GetArraySize(aiw_subaims_cjson);
+				// loop on AIMs
 				for (int idx = 0; idx < aims_count; idx++)
 				{
 					bool aim_init_ok = false;
@@ -525,7 +520,8 @@ mpai_error_t MPAI_AIFU_AIW_Start_From_MPAI_Store(const char *name)
 								{
 									LOG_DBG("Calling AIM %s: success", log_strdup(aim_name));
 
-									mpai_error_t err_aim = MPAI_AIFU_AIM_Start(AIW_CAE_REV, aim_init_cb);
+									// start AIM according with the aim_init configuration
+									mpai_error_t err_aim = MPAI_AIFU_AIM_Start(aiw_id, aim_init_cb);
 									if (err_aim.code == MPAI_AIF_OK || err_aim.code == MPAI_AIM_CREATION_SKIPPED)
 									{
 										aim_init_ok = true;
@@ -562,6 +558,10 @@ mpai_error_t MPAI_AIFU_AIW_Start_From_MPAI_Store(const char *name)
 			free(root);
 			aif_ok = aif_ok && aiw_init_ok;
 		}
+		else 
+		{
+			aif_ok = false;
+		}
 	}
 	else
 	{
@@ -587,11 +587,11 @@ mpai_error_t MPAI_AIFU_AIW_Start(const char *name, int *AIW_ID)
 	// At the moment, we handle only AIW CAE-REV
 	if (strcmp(name, MPAI_LIBS_CAE_REV_AIW_NAME) == 0)
 	{
-#if defined(CONFIG_MPAI_CONFIG_STORE) && defined(CONFIG_MPAI_CONFIG_STORE_USES_COAP)
+#if defined(CONFIG_MPAI_CONFIG_STORE)
 		int aiw_id = MPAI_AIW_CAE_REV_Init();
 		*AIW_ID = aiw_id;
 
-		mpai_error_t err_aiw = MPAI_AIFU_AIW_Start_From_MPAI_Store(name);
+		mpai_error_t err_aiw = MPAI_AIFU_AIW_Start_Loading_From_MPAI_Store(name, aiw_id);
 		return err_aiw;
 #endif
 	}

@@ -156,14 +156,14 @@ mpai_error_t MPAI_AIFU_AIM_GetStatus(int AIW_ID, const char* name, int* status);
  */
 mpai_error_t MPAI_AIFU_AIM_Start(int aiw_id, aim_initialization_cb_t* aim_init);
 
-#if defined(CONFIG_MPAI_CONFIG_STORE) && defined (CONFIG_MPAI_CONFIG_STORE_USES_COAP)
+#if defined(CONFIG_MPAI_CONFIG_STORE)
 /**
  * @brief Start an AIW, loading configurations from MPAI Store
  * 
  * @param name 
  * @return mpai_error_t 
  */
-mpai_error_t MPAI_AIFU_AIW_Start_From_MPAI_Store(const char* name);
+mpai_error_t MPAI_AIFU_AIW_Start_Loading_From_MPAI_Store(const char *name, int aiw_id);
 #endif
 
 #endif

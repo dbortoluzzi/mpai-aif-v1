@@ -1,4 +1,7 @@
 /*
+ * @file
+ * @brief Headers of the MPAI AIW CAE-REV (Rehabilitation Exercises Validation)
+ *
  * Copyright (c) 2022 University of Turin, Daniele Bortoluzzi <danieleb88@gmail.com>
  *
  * SPDX-License-Identifier: Apache-2.0

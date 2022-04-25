@@ -28,17 +28,12 @@ MPAI_Component_AIM_t* aim_temp_limit = NULL;
 MPAI_Component_AIM_t* aim_data_motion = NULL;
 MPAI_Component_AIM_t* aim_rehabilitation = NULL;
 
+/* callbacks used after AIM creation */
 bool _set_aim_data_mic(MPAI_Component_AIM_t* aim);
 bool _set_aim_produce_sensors(MPAI_Component_AIM_t* aim);
 bool _set_aim_data_motion(MPAI_Component_AIM_t* aim);
 bool _set_aim_rehabilitation(MPAI_Component_AIM_t* aim);
 bool _set_aim_temp_limit(MPAI_Component_AIM_t* aim);
-
-mpai_error_t init_data_mic_aim();
-mpai_error_t init_sensors_aim();
-mpai_error_t init_temp_limit_aim();
-mpai_error_t init_motion_aim();
-mpai_error_t init_rehabilitation_aim();
 
 #ifdef CONFIG_MPAI_AIM_CONTROL_UNIT_SENSORS_PERIODIC
 
