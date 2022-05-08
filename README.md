@@ -69,10 +69,8 @@ java -Dmpai.store.host=$IP_ADDRESS -jar coap-server-0.0.1-SNAPSHOT.jar
 
 # INSTALLATION  
 1. Install PlatformIO Core [here](http://docs.platformio.org/page/core.html)
-2. Download `development platform with examples [here](https://github.com/platformio/platform-ststm32/archive/develop.zip)
-3. Extract ZIP archive
-4. Run (if requested) [MPAI Server COAP](https://github.com/dbortoluzzi/mpai_store_coap_server)
-5. Configure WLAN (if requested), creating a file *wifi_config.c* like below:
+2. Run (if requested) [MPAI Server COAP](https://github.com/dbortoluzzi/mpai_store_coap_server)
+3. Configure WLAN (if requested), creating a file *wifi_config.c* like below:
 
 ```c
 
@@ -83,7 +81,7 @@ java -Dmpai.store.host=$IP_ADDRESS -jar coap-server-0.0.1-SNAPSHOT.jar
     char* AUTO_CONNECT_SSID_PSK = "<PASSWORD>";
 ```
 
-6. Run these commands:
+4. Run these commands:
 
 ```bash
     # Change directory to example
