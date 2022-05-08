@@ -96,10 +96,10 @@ java -Dmpai.store.host=$IP_ADDRESS -jar coap-server-0.0.1-SNAPSHOT.jar
     > platformio run --target upload
 
     # Build specific environment
-    > platformio run -e iotnode_box
+    > platformio run -e disco_l475vg_iot01a
 
     # Upload firmware for the specific environment
-    > platformio run -e iotnode_box --target upload
+    > platformio run -e disco_l475vg_iot01a --target upload
 
     # Clean build files
     > platformio run --target clean
