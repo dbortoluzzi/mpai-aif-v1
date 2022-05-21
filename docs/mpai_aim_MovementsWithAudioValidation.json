@@ -8,7 +8,7 @@
       "Version": "1"
     }
   },
-  "Description": "This AIM implements a validation of body movements during rehabilitation exercizes, according with music rythm",
+  "Description": "This AIM implements a validation of limbs movements during rehabilitation exercises, according to music rhythm",
   "Ports": [],
   "Topology": [],
   "SubAIMs": [],
