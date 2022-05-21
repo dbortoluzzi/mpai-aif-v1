@@ -15,19 +15,19 @@
   "Description": "AIW that implements Use-Case CAE-REV (Rehabilitation Exercises Validation)",
   "Types": [
     {
-      "Name": "SENSORS_DATA",
+      "Name": "Sensors_Data_t",
       "Type": "mpai_parser_t"
     },
     {
-      "Name": "MIC_BUFFER_DATA",
+      "Name": "Mic_Buffer_Data_t",
       "Type": "mpai_parser_t"
     },
     {
-      "Name": "MIC_PEAK_DATA",
+      "Name": "Mic_Peak_Data_t",
       "Type": "mpai_parser_t"
     },
     {
-      "Name": "MOTION_DATA",
+      "Name": "Motion_Data_t",
       "Type": "mpai_parser_t"
     }
   ],
@@ -35,7 +35,7 @@
     {
       "Name": "SensorsDataChannel",
       "Direction": "InputOutput",
-      "RecordType": "SENSORS_DATA",
+      "RecordType": "Sensors_Data_t",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -43,7 +43,7 @@
     {
       "Name": "MicBufferDataChannel",
       "Direction": "InputOutput",
-      "RecordType": "MIC_BUFFER_DATA",
+      "RecordType": "Mic_Buffer_Data_t",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -51,7 +51,7 @@
     {
       "Name": "MicPeakDataChannel",
       "Direction": "InputOutput",
-      "RecordType": "MIC_PEAK_DATA",
+      "RecordType": "Mic_Peak_Data_t",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
@@ -59,7 +59,7 @@
     {
       "Name": "MotionDataChannel",
       "Direction": "InputOutput",
-      "RecordType": "MOTION_DATA",
+      "RecordType": "Motion_Data_t",
       "Technology": "Software",
       "Protocol": "",
       "IsRemote": false
