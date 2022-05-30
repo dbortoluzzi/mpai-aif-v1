@@ -74,7 +74,14 @@ java -Dmpai.store.host=$IP_ADDRESS -jar coap-server-0.0.1-SNAPSHOT.jar
     - python (3.6 or above)
 3. Install udev rules from [here](https://docs.platformio.org/en/latest/faq.html#faq-udev-rules)
 4. Run (if requested) [MPAI Server CoAP](https://github.com/dbortoluzzi/mpai_store_coap_server)
-5. Configure WLAN (if requested), creating a file *wifi_config.c* like below:
+5. Edit configuration on `zephyr/prj.conf`, setting the IP address of mpai coap server
+   
+```yaml
+
+    CONFIG_COAP_SERVER_IPV4_ADDR="$IP_ADDRESS" 
+```
+  
+6. Configure WLAN (if requested), creating a file *wifi_config.c* like below:
 
 ```c
 
@@ -85,7 +92,7 @@ java -Dmpai.store.host=$IP_ADDRESS -jar coap-server-0.0.1-SNAPSHOT.jar
     char* AUTO_CONNECT_SSID_PSK = "<PASSWORD>";
 ```
 
-4. Run these commands:
+7. Run these commands:
 
 ```bash
     # Change directory to example
