@@ -78,7 +78,7 @@ java -Dmpai.store.host=$IP_ADDRESS -jar coap-server-0.0.1-SNAPSHOT.jar
    
 ```yaml
 
-    CONFIG_COAP_SERVER_IPV4_ADDR="$IP_ADDRESS" 
+    CONFIG_COAP_SERVER_IPV4_ADDR="<IP_ADDRESS>" 
 ```
   
 6. Configure WLAN (if requested), creating a file *wifi_config.c* like below:
