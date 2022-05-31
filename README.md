@@ -72,7 +72,7 @@ java -Dmpai.store.host=$IP_ADDRESS -jar coap-server-0.0.1-SNAPSHOT.jar
 2. Install dependencies:
     - cmake (3.20.0 or above)
     - python (3.6 or above)
-3. Install udev rules from [here](https://docs.platformio.org/en/latest/faq.html#faq-udev-rules)
+3. Install udev rules from [here](https://docs.platformio.org/en/latest//faq/general.html#platformio-udev-rules)
 4. Run (if requested) [MPAI Server CoAP](https://github.com/dbortoluzzi/mpai_store_coap_server)
 5. Edit configuration on `zephyr/prj.conf`, setting the IP address of mpai coap server
    
