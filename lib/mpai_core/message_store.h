@@ -67,6 +67,7 @@ mpai_error_t MPAI_MessageStore_copy(MPAI_AIM_MessageStore_t* me, module_t* subsc
 /**
  * @brief Create the message store
  */
+// TODO: remove topic name, because now the topic is switched to channel
 MPAI_AIM_MessageStore_t* MPAI_MessageStore_Creator(int aiw_id, char* topic_name, size_t topic_size);
 
 /**
