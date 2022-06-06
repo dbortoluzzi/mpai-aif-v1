@@ -70,7 +70,7 @@ mpai_error_t MPAI_MessageStore_register(MPAI_AIM_MessageStore_t *me, module_t *s
 	return err;
 }
 
-mpai_error_t MPAI_MessageStore_publish(MPAI_AIM_MessageStore_t *me, mpai_parser_t *message, subscriber_channel_t channel)
+mpai_error_t MPAI_MessageStore_publish(MPAI_AIM_MessageStore_t *me, mpai_message_t *message, subscriber_channel_t channel)
 {
 	// check errors
 	if (me == NULL) {
@@ -108,7 +108,7 @@ int MPAI_MessageStore_poll(MPAI_AIM_MessageStore_t *me, module_t *subscriber, k_
 	return -EINVAL;
 }
 
-mpai_error_t MPAI_MessageStore_copy(MPAI_AIM_MessageStore_t *me, module_t *subscriber, subscriber_channel_t channel, mpai_parser_t *message)
+mpai_error_t MPAI_MessageStore_copy(MPAI_AIM_MessageStore_t *me, module_t *subscriber, subscriber_channel_t channel, mpai_message_t *message)
 {
 	// check errors
 	if (me == NULL) {

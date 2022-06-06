@@ -529,7 +529,7 @@ void produce_sensors_data(void *arg1, void *arg2) {
 	#endif
 
 	// Publish sensor message 
-	mpai_parser_t msg = {
+	mpai_message_t msg = {
 		.data = sensor_result_ptr,
 		.timestamp = k_uptime_get()
 	};

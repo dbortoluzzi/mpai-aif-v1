@@ -16,19 +16,19 @@
   "Types": [
     {
       "Name": "Sensors_Data_t",
-      "Type": "mpai_parser_t"
+      "Type": "mpai_message_t"
     },
     {
       "Name": "Mic_Buffer_Data_t",
-      "Type": "mpai_parser_t"
+      "Type": "mpai_message_t"
     },
     {
       "Name": "Mic_Peak_Data_t",
-      "Type": "mpai_parser_t"
+      "Type": "mpai_message_t"
     },
     {
       "Name": "Motion_Data_t",
-      "Type": "mpai_parser_t"
+      "Type": "mpai_message_t"
     }
   ],
   "Ports": [

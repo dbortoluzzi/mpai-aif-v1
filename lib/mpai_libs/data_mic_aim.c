@@ -355,7 +355,7 @@ void publish_buffer_to_message_store()
         memcpy(mic_data->data, TARGET_AUDIO_BUFFER, sizeof(TARGET_AUDIO_BUFFER));
         
         // Publish sensor message 
-        mpai_parser_t msg = {
+        mpai_message_t msg = {
             .data = mic_data,
             .timestamp = k_uptime_get()
         };
@@ -374,7 +374,7 @@ void publish_peak_to_message_store(int32_t peak_value)
     memcpy(mic_peak.data, &peak_value, sizeof(peak_value));
     
     // Publish sensor message 
-    mpai_parser_t msg = {
+    mpai_message_t msg = {
         .data = &mic_peak,
         .timestamp = k_uptime_get()
     };

@@ -44,7 +44,7 @@ void th_subscribe_sensors_data(void *dummy1, void *dummy2, void *dummy3)
 	ARG_UNUSED(dummy2);
 	ARG_UNUSED(dummy3);
 
-	mpai_parser_t aim_message;
+	mpai_message_t aim_message;
 
 	LOG_DBG("START SUBSCRIBER");
 

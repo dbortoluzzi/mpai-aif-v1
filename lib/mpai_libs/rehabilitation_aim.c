@@ -58,8 +58,8 @@ void th_subscribe_rehabilitation_data(void *dummy1, void *dummy2, void *dummy3)
 	ARG_UNUSED(dummy2);
 	ARG_UNUSED(dummy3);
 
-	mpai_parser_t aim_motion_message;
-	mpai_parser_t aim_peak_audio_message;
+	mpai_message_t aim_motion_message;
+	mpai_message_t aim_peak_audio_message;
 	int64_t last_event_peak_audio = 0;
 
 	LOG_DBG("START SUBSCRIBER");

@@ -44,7 +44,7 @@ static void publish_motion_to_message_store(MOTION_TYPE motion_type, float accel
 	motion_data.accel_total = accel_total;
 	
 	// Publish sensor message 
-	mpai_parser_t msg = {
+	mpai_message_t msg = {
 		.data = &motion_data,
 		.timestamp = k_uptime_get()
 	};
@@ -67,7 +67,7 @@ void th_subscribe_motion_data(void *dummy1, void *dummy2, void *dummy3)
 	ARG_UNUSED(dummy2);
 	ARG_UNUSED(dummy3);
 
-	mpai_parser_t aim_message;
+	mpai_message_t aim_message;
 
 	LOG_DBG("START SUBSCRIBER");
 

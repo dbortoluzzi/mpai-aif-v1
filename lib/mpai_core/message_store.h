@@ -52,7 +52,7 @@ mpai_error_t MPAI_MessageStore_register(MPAI_AIM_MessageStore_t* me, module_t* s
 /**
  * @brief Publish a message to a specified channel of a message store 
  */
-mpai_error_t MPAI_MessageStore_publish(MPAI_AIM_MessageStore_t* me, mpai_parser_t* message, subscriber_channel_t channel);
+mpai_error_t MPAI_MessageStore_publish(MPAI_AIM_MessageStore_t* me, mpai_message_t* message, subscriber_channel_t channel);
 
 /**
  * @brief Poll a message message store from a specified channel
@@ -62,7 +62,7 @@ int MPAI_MessageStore_poll(MPAI_AIM_MessageStore_t* me, module_t* subscriber, k_
 /**
  * @brief Copy a message message store when is available
  */
-mpai_error_t MPAI_MessageStore_copy(MPAI_AIM_MessageStore_t* me, module_t* subscriber, subscriber_channel_t channel, mpai_parser_t* message);
+mpai_error_t MPAI_MessageStore_copy(MPAI_AIM_MessageStore_t* me, module_t* subscriber, subscriber_channel_t channel, mpai_message_t* message);
 
 /**
  * @brief Create the message store

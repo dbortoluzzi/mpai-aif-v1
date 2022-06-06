@@ -48,11 +48,11 @@ typedef struct __mpai_component {
     char* name;
 } component_t;
 
-typedef struct _mpai_parser_t 
+typedef struct _mpai_message_t 
 {
 	void* data;
 	int64_t timestamp;
-} mpai_parser_t;
+} mpai_message_t;
 
 typedef mpai_error_t *(module_t)();
 typedef bool (aim_callback_t)(const char* aim_name);

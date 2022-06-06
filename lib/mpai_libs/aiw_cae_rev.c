@@ -57,7 +57,7 @@ K_TIMER_DEFINE(aim_timer, aim_timer_handler, NULL);
 int MPAI_AIW_CAE_REV_Init() 
 {
     // create message store for the AIW
-    message_store_test_case_aiw = MPAI_MessageStore_Creator(AIW_CAE_REV, MPAI_LIBS_CAE_REV_AIW_NAME, sizeof(mpai_parser_t));
+    message_store_test_case_aiw = MPAI_MessageStore_Creator(AIW_CAE_REV, MPAI_LIBS_CAE_REV_AIW_NAME, sizeof(mpai_message_t));
 	message_store_map_element_t message_store_map_el_test_case_aiw = {._aiw_id = AIW_CAE_REV, ._message_store = message_store_test_case_aiw};
 	message_store_list[mpai_message_store_count++] = message_store_map_el_test_case_aiw;
     // link global message store to single message stores of the AIMs 
