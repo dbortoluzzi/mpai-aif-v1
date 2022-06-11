@@ -1,18 +1,18 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://mpai.community/standards/resources/MPAI-AIF/V1/AIW-AIM-metadata.schema.json",
-  "title": "CAE AIF v1 AIW/AIM metadata",
+  "title": "IOT AIF v1 AIW/AIM metadata",
   "Identifier": {
     "ImplementerID": 1,
     "Specification": {
-      "Standard": "MPAI-CAE",
-      "AIW": "CAE-REV",
-      "AIM": "CAE-REV",
+      "Standard": "MPAI-IOT",
+      "AIW": "IOT-REV",
+      "AIM": "IOT-REV",
       "Version": "1"
     }
   },
   "APIProfile": "Main",
-  "Description": "AIW that implements Use-Case CAE-REV (Rehabilitation Exercises Validation)",
+  "Description": "AIW that implements Use-Case IOT-REV (Rehabilitation Exercises Validation)",
   "Types": [
     {
       "Name": "Sensors_Data_t",
@@ -113,8 +113,8 @@
       "Identifier": {
         "ImplementerID": 1,
         "Specification": {
-          "Standard": "MPAI-CAE",
-          "AIW": "CAE-REV",
+          "Standard": "MPAI-IOT",
+          "AIW": "IOT-REV",
           "AIM": "VolumePeaksAnalysis",
           "Version": "1"
         }
@@ -125,8 +125,8 @@
       "Identifier": {
         "ImplementerID": 1,
         "Specification": {
-          "Standard": "MPAI-CAE",
-          "AIW": "CAE-REV",
+          "Standard": "MPAI-IOT",
+          "AIW": "IOT-REV",
           "AIM": "ControlUnitSensorsReading",
           "Version": "1"
         }
@@ -137,8 +137,8 @@
       "Identifier": {
         "ImplementerID": 1,
         "Specification": {
-          "Standard": "MPAI-CAE",
-          "AIW": "CAE-REV",
+          "Standard": "MPAI-IOT",
+          "AIW": "IOT-REV",
           "AIM": "MotionRecognitionAnalysis",
           "Version": "1"
         }
@@ -149,8 +149,8 @@
       "Identifier": {
         "ImplementerID": 1,
         "Specification": {
-          "Standard": "MPAI-CAE",
-          "AIW": "CAE-REV",
+          "Standard": "MPAI-IOT",
+          "AIW": "IOT-REV",
           "AIM": "MovementsWithAudioValidation",
           "Version": "1"
         }
@@ -190,7 +190,7 @@
   "Documentation": [
     {
       "Type": "Tutorial",
-      "URI": "https://mpai.community/standards/mpai-cae/"
+      "URI": "https://mpai.community/standards/mpai-iot/"
     }
   ]
 }

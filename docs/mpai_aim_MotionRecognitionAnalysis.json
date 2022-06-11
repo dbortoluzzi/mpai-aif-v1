@@ -2,7 +2,7 @@
   "Identifier": {
     "ImplementerID": 1,
     "Specification": {
-      "Name": "CAE",
+      "Name": "IOT",
       "AIW": "REV",
       "AIM": "MotionRecognitionAnalysis",
       "Version": "1"
@@ -17,7 +17,7 @@
   "Documentation": [
     {
       "Type": "Tutorial",
-      "URI": "https://mpai.community/standards/mpai-cae/"
+      "URI": "https://mpai.community/standards/mpai-iot/"
     }
   ]
 }

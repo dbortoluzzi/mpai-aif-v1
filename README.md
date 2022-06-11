@@ -28,7 +28,7 @@ In order to test the architecture few tests AIMs have been implemented:
 ## BRIEF DESCRIPTION OF BOOT PROCESS
 Implementing the MPAI-AIF specification, the system at the boot time:
 - Reads the AIF configuration from MPAI Store
-- Reads the AIW configuration (in this case *CAE-REV* AIW) from MPAI Store:
+- Reads the AIW configuration (in this case *IOT-REV* AIW) from MPAI Store:
     - AIW name
     - Topology, identifying which channel is connected with respective AIM
     - List of AIM's used
@@ -49,7 +49,7 @@ An additional AIM monitors if the movement is detected as correct and executed i
 
 ### Technical overview:
 
-The *CAE-REV AIW* ("Context-based Audio Enhancement" for "Rehabilitation Exercises Validation") is described by this JSON according with MPAI-AIF specification 1.0 and can be downloaded [here](/docs/mpai_aiw_cae_rev.json): 
+The *IOT-REV AIW* ("Context-based Audio Enhancement" for "Rehabilitation Exercises Validation") is described by this JSON according with MPAI-AIF specification 1.0 and can be downloaded [here](/docs/mpai_aiw_iot_rev.json): 
 
 The MPAI AIW consists of 4 AIMs:
 1. *VolumePeaksAnalysis* ([json](/docs/mpai_aim_VolumePeaksAnalysis.json)): uses microphones to identify audio pattern (in this case volume peaks) and publish it to the channel `MicPeakDataChannel` of the message store

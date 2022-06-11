@@ -133,10 +133,10 @@ mpai_error_t MPAI_AIFU_Controller_Initialize()
 
 	if (aif_ok)
 	{
-		mpai_error_t err_aiw = MPAI_AIFU_AIW_Start(MPAI_LIBS_CAE_REV_AIW_NAME, &aiw_id);
+		mpai_error_t err_aiw = MPAI_AIFU_AIW_Start(MPAI_LIBS_IOT_REV_AIW_NAME, &aiw_id);
 		if (err_aiw.code != MPAI_AIF_OK)
 		{
-			LOG_ERR("Error starting AIW %s: %s", MPAI_LIBS_CAE_REV_AIW_NAME, log_strdup(MPAI_ERR_STR(err_aiw.code)));
+			LOG_ERR("Error starting AIW %s: %s", MPAI_LIBS_IOT_REV_AIW_NAME, log_strdup(MPAI_ERR_STR(err_aiw.code)));
 			return;
 		}
 
@@ -159,7 +159,7 @@ mpai_error_t MPAI_AIFU_Controller_Initialize()
 
 mpai_error_t MPAI_AIFU_Controller_Destroy()
 {
-	MPAI_AIW_CAE_REV_Destroy();
+	MPAI_AIW_IOT_REV_Destroy();
 
 	memset(MPAI_AIM_List, 0, MPAI_AIF_AIM_MAX * sizeof(aim_initialization_cb_t *));
 
@@ -171,10 +171,10 @@ mpai_error_t MPAI_AIFU_AIW_Start(const char *name, int *AIW_ID)
 {
 	LOG_INF("Starting AIW %s...", log_strdup(name));
 
-	// At the moment, we handle only AIW CAE-REV
-	if (strcmp(name, MPAI_LIBS_CAE_REV_AIW_NAME) == 0)
+	// At the moment, we handle only AIW IOT-REV
+	if (strcmp(name, MPAI_LIBS_IOT_REV_AIW_NAME) == 0)
 	{
-		int aiw_id = MPAI_AIW_CAE_REV_Init();
+		int aiw_id = MPAI_AIW_IOT_REV_Init();
 		*AIW_ID = aiw_id;
 
 #if defined(CONFIG_MPAI_CONFIG_STORE)
@@ -191,10 +191,10 @@ mpai_error_t MPAI_AIFU_AIW_Pause(int AIW_ID)
 {
 	LOG_INF("Pausing AIW %d...", AIW_ID);
 
-	// At the moment, we handle only AIW CAE-REV
-	if (AIW_ID == AIW_CAE_REV)
+	// At the moment, we handle only AIW IOT-REV
+	if (AIW_ID == AIW_IOT_REV)
 	{
-		MPAI_AIW_CAE_REV_Pause();
+		MPAI_AIW_IOT_REV_Pause();
 
 		MPAI_ERR_INIT(err, MPAI_AIF_OK);
 		return err;
@@ -208,10 +208,10 @@ mpai_error_t MPAI_AIFU_AIW_Resume(int AIW_ID)
 {
 	LOG_INF("Resuming AIW %d...", AIW_ID);
 
-	// At the moment, we handle only AIW CAE-REV
-	if (AIW_ID == AIW_CAE_REV)
+	// At the moment, we handle only AIW IOT-REV
+	if (AIW_ID == AIW_IOT_REV)
 	{
-		MPAI_AIW_CAE_REV_Resume();
+		MPAI_AIW_IOT_REV_Resume();
 
 		MPAI_ERR_INIT(err, MPAI_AIF_OK);
 		return err;
@@ -225,10 +225,10 @@ mpai_error_t MPAI_AIFU_AIW_Stop(int AIW_ID)
 {
 	LOG_INF("Stopping AIW %d...", AIW_ID);
 
-	// At the moment, we handle only AIW CAE-REV
-	if (AIW_ID == AIW_CAE_REV)
+	// At the moment, we handle only AIW IOT-REV
+	if (AIW_ID == AIW_IOT_REV)
 	{
-		MPAI_AIW_CAE_REV_Stop();
+		MPAI_AIW_IOT_REV_Stop();
 
 		MPAI_ERR_INIT(err, MPAI_AIF_OK);
 		return err;

@@ -36,7 +36,7 @@
 	#include <flash_store.h>
 #endif
 
-#include <aiw_cae_rev.h>
+#include <aiw_iot_rev.h>
 
 #ifdef CONFIG_COAP_SERVER
 	#include <coap_connect.h>

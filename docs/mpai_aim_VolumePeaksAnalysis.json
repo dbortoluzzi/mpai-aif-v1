@@ -2,13 +2,13 @@
   "Identifier": {
     "ImplementerID": 1,
     "Specification": {
-      "Name": "CAE",
+      "Name": "IOT",
       "AIW": "REV",
       "AIM": "VolumePeaksAnalysis",
       "Version": "1"
     }
   },
-  "Description": "This AIM implements analysis transform function for CAE-REV that recognizes volume peaks from microphone array audio.",
+  "Description": "This AIM implements analysis transform function for IOT-REV that recognizes volume peaks from microphone array audio.",
   "Ports": [],
   "Topology": [],
   "SubAIMs": [],
@@ -17,7 +17,7 @@
   "Documentation": [
     {
       "Type": "Tutorial",
-      "URI": "https://mpai.community/standards/mpai-cae/"
+      "URI": "https://mpai.community/standards/mpai-iot/"
     }
   ]
 }
