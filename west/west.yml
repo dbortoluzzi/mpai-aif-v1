@@ -9,7 +9,7 @@ manifest:
     - name: zephyrproject-rtos
       url-base: https://github.com/zephyrproject-rtos
     - name: pubsub-lib
-      url-base: https://github.com/dbortoluzzi/
+      url-base: https://github.com/dbortoluzzi
     - name: cJSON-lib
       url-base: https://github.com/DaveGamble
   projects:

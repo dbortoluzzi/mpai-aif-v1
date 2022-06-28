@@ -13,7 +13,7 @@ FILE(GLOB app_sources_mpai_libs ../lib/mpai_libs/*.c)
 FILE(GLOB app_sources_mpai_stm32 ../lib/stm32_libs/*.c)
 FILE(GLOB app_sources_mpai_util ../lib/util_libs/*.c)
 FILE(GLOB app_sources_cjson_libs ../lib/cJSON/cJSON*.c)
-FILE(GLOB app_sources_pubsub_libs ../lib/pubsub/src/*.c)
+#FILE(GLOB app_sources_pubsub_libs ../lib/pubsub/src/*.c)
 
 message("C++ compiler flags: ${CMAKE_CXX_FLAGS}")
 
@@ -22,7 +22,10 @@ target_compile_options(app
     ${flags}
     )
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPUBSUB_MAX_CHANNELS=10")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPUBSUB_MAX_CHANNELS=10")
+zephyr_compile_definitions(
+  PUBSUB_MAX_CHANNELS=10
+)
 
 target_sources(app PRIVATE
   ${app_sources}
@@ -31,9 +34,10 @@ target_sources(app PRIVATE
   ${app_sources_mpai_stm32}
   ${app_sources_mpai_util}
   ${app_sources_cjson_libs}
-  ${app_sources_pubsub_libs}  
+#  ${app_sources_pubsub_libs}  
   )
 
-target_include_directories(app PRIVATE ${ZEPHYR_BASE}/subsys/net/ip ../lib/mpai_core ../lib/mpai_libs ../lib/stm32_libs ../lib/util_libs ../lib/cJSON ../lib/pubsub/include)
+target_include_directories(app PRIVATE ${ZEPHYR_BASE}/subsys/net/ip ../lib/mpai_core ../lib/mpai_libs ../lib/stm32_libs ../lib/util_libs ../lib/cJSON)
+#../lib/pubsub/include)
 
 
