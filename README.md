@@ -67,7 +67,7 @@ In order to run it ($IP_ADDRESS is the CoAP endpoint):
 java -Dmpai.store.host=$IP_ADDRESS -jar coap-server-0.0.1-SNAPSHOT.jar
 ```
 
-# INSTALLATION  
+# INSTALLATION (with PlatformIO)
 1. Install PlatformIO Core [here](http://docs.platformio.org/page/core.html)
 2. Install dependencies:
     - cmake (3.20.0 or above)
@@ -112,6 +112,22 @@ java -Dmpai.store.host=$IP_ADDRESS -jar coap-server-0.0.1-SNAPSHOT.jar
 
     # Clean build files
     > platformio run --target clean
+```
+
+# INSTALLATION (with west)
+The following steps (to be exectuted only once) create a west workspace for the application.
+
+```bash
+    # Download Zephyr and modules
+    > west update
+
+    # Register Zephyr
+    > west zephyr-export
+```
+    
+To build the project go to the `west` subdirectory and give the command:
+```bash
+    >  west build -b disco_l475_iot1 -s . 
 ```
 
 # Licence
