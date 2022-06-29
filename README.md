@@ -126,7 +126,7 @@ java -Dmpai.store.host=$IP_ADDRESS -jar coap-server-0.0.1-SNAPSHOT.jar
     # Register Zephyr
     > west zephyr-export
 ```
-2. Edit configuration on `west/zephyr/prj.conf`, setting the IP address of mpai coap server
+2. Edit configuration on `west/prj.conf`, setting the IP address of mpai coap server
    
 ```yaml
 
