@@ -67,7 +67,7 @@ In order to run it ($IP_ADDRESS is the CoAP endpoint):
 java -Dmpai.store.host=$IP_ADDRESS -jar coap-server-0.0.1-SNAPSHOT.jar
 ```
 
-# INSTALLATION  
+# INSTALLATION (with PlatformIO)
 1. Install PlatformIO Core [here](http://docs.platformio.org/page/core.html)
 2. Install dependencies:
     - cmake (3.20.0 or above)
@@ -96,7 +96,7 @@ java -Dmpai.store.host=$IP_ADDRESS -jar coap-server-0.0.1-SNAPSHOT.jar
 
 ```bash
     # Change directory to example
-    > cd iotnode_box_test_sensors
+    > cd iotnode_test_sensors
 
     # Build project
     > platformio run
@@ -112,6 +112,43 @@ java -Dmpai.store.host=$IP_ADDRESS -jar coap-server-0.0.1-SNAPSHOT.jar
 
     # Clean build files
     > platformio run --target clean
+```
+
+# INSTALLATION (with west)
+1. Create a west workspace for the application.
+
+```bash
+    cd iotnode_test_sensors
+
+    # Download Zephyr and modules
+    > west update
+
+    # Register Zephyr
+    > west zephyr-export
+```
+2. Edit configuration on `west/prj.conf`, setting the IP address of mpai coap server
+   
+```yaml
+
+    CONFIG_COAP_SERVER_IPV4_ADDR="<IP_ADDRESS>" 
+```
+  
+3. Configure WLAN (if requested), creating a file *wifi_config.c* like below:
+
+```c
+
+    #include "wifi_config.h"
+
+    char* AUTO_CONNECT_SSID = "<SSID>";
+
+    char* AUTO_CONNECT_SSID_PSK = "<PASSWORD>";
+```
+
+4. Run (if requested) [MPAI Server CoAP](https://github.com/dbortoluzzi/mpai_store_coap_server)
+
+5. To build the project go to the `west` subdirectory and give the command:
+```bash
+    >  west build -b disco_l475_iot1 -s . 
 ```
 
 # Licence
