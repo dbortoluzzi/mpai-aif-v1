@@ -73,7 +73,7 @@ java -Dmpai.store.host=$IP_ADDRESS -jar coap-server-0.0.1-SNAPSHOT.jar
     - cmake (3.20.0 or above)
     - python (3.6 or above)
 3. Install udev rules from [here](https://docs.platformio.org/en/latest//faq/general.html#platformio-udev-rules)
-4. Run (if requested) [MPAI Server CoAP](https://github.com/dbortoluzzi/mpai_store_coap_server)
+4. Run (if requested) [MPAI Server CoAP](https://github.com/dbortoluzzi/mpai_store_coap_server). If you don't want to run your own CoAP server, we have a public server up-and-running at IP address `130.192.212.32`
 5. Edit configuration on `zephyr/prj.conf`, setting the IP address of mpai coap server
    
 ```yaml
@@ -126,7 +126,7 @@ java -Dmpai.store.host=$IP_ADDRESS -jar coap-server-0.0.1-SNAPSHOT.jar
     # Register Zephyr
     > west zephyr-export
 ```
-2. Edit configuration on `west/prj.conf`, setting the IP address of mpai coap server
+2. Edit configuration on `zephyr/prj.conf`, setting the IP address of mpai coap server
    
 ```yaml
 
@@ -144,7 +144,7 @@ java -Dmpai.store.host=$IP_ADDRESS -jar coap-server-0.0.1-SNAPSHOT.jar
     char* AUTO_CONNECT_SSID_PSK = "<PASSWORD>";
 ```
 
-4. Run (if requested) [MPAI Server CoAP](https://github.com/dbortoluzzi/mpai_store_coap_server)
+4. Run (if requested) [MPAI Server CoAP](https://github.com/dbortoluzzi/mpai_store_coap_server). If you don't want to run your own CoAP server, we have a public server up-and-running at IP address `130.192.212.32`
 
 5. To build the project go to the `west` subdirectory and give the command:
 ```bash
